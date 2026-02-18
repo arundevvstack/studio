@@ -11,7 +11,7 @@ import {
   browserLocalPersistence,
   updateProfile
 } from 'firebase/auth';
-import { auth } from './config';
+import { initializeFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 const ADMIN_EMAIL = 'arundevv.com@gmail.com';
@@ -31,6 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  // Use the standard initialization
+  const { auth } = initializeFirebase();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -38,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   const isAdmin = user?.email === ADMIN_EMAIL;
 
@@ -72,6 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await createUserWithEmailAndPassword(auth, email, pass);
       if (result.user) {
         await updateProfile(result.user, { displayName: name });
+        // Refresh local state
+        setUser({ ...result.user, displayName: name } as User);
         toast({
           title: "Account Initialized",
           description: `Welcome to the network, ${name}. Your workspace is ready.`,

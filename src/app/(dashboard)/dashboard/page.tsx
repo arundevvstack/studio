@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -10,7 +9,6 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  Cell,
   AreaChart,
   Area
 } from 'recharts';
@@ -19,14 +17,12 @@ import {
   Layers, 
   Clock, 
   CheckCircle2, 
-  ChevronRight,
-  TrendingUp,
-  AlertCircle,
-  MoreHorizontal,
-  ArrowUpRight,
-  Calendar as CalendarIcon,
-  ShieldCheck,
-  Zap
+  TrendingUp, 
+  AlertCircle, 
+  MoreHorizontal, 
+  ArrowUpRight, 
+  Calendar as CalendarIcon, 
+  ShieldCheck 
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -61,9 +57,11 @@ const recentActivity = [
 export default function DashboardPage() {
   const { user, isAdmin } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [currentTime, setCurrentTime] = useState('');
 
   useEffect(() => {
     setMounted(true);
+    setCurrentTime(new Date().toLocaleString('default', { month: 'short', year: 'numeric' }));
   }, []);
 
   if (!mounted) return null;
@@ -75,25 +73,24 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Workspace Overview</h1>
             {isAdmin && (
-              <Badge className="bg-amber-100 text-amber-700 border-none rounded-lg px-2 py-0.5 font-bold text-[10px] uppercase">
-                Admin Mode
+              <Badge className="bg-amber-100 text-amber-700 border-none rounded-lg px-2 py-0.5 font-bold text-[10px] uppercase flex items-center gap-1.5">
+                <ShieldCheck size={12} /> Root Admin
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground text-lg">Welcome back, {user?.displayName?.split(' ')[0] || 'Marcus'}. Your production pipeline is 82% optimized.</p>
+          <p className="text-muted-foreground text-lg">Welcome back, {user?.displayName?.split(' ')[0] || 'Member'}. Your pipeline is fully optimized.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-2xl h-11 px-5 border-slate-200 hover:bg-slate-50 font-semibold gap-2">
             <CalendarIcon size={18} />
-            {new Date().toLocaleString('default', { month: 'short', year: 'numeric' })}
+            {currentTime}
           </Button>
-          <Button className="rounded-2xl h-11 px-6 shadow-xl shadow-primary/20 font-bold bg-primary hover:scale-[1.02] transition-transform">
+          <Button className="rounded-2xl h-11 px-6 shadow-xl shadow-primary/20 font-bold bg-primary hover:scale-[1.02] transition-all">
             Share Report
           </Button>
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpis.map((kpi) => (
           <Card key={kpi.title} className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-md hover:translate-y-[-4px] transition-all duration-500 group">
@@ -121,7 +118,6 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Stage Distribution Chart */}
         <Card className="lg:col-span-2 border-none shadow-sm premium-shadow rounded-[2.5rem] overflow-hidden bg-white/70 backdrop-blur-md p-4">
           <CardHeader className="pb-8">
             <div className="flex items-center justify-between">
@@ -129,9 +125,7 @@ export default function DashboardPage() {
                 <CardTitle className="text-2xl font-black text-slate-900">Pipeline Velocity</CardTitle>
                 <CardDescription className="text-base font-medium">Weekly throughput across all production stages.</CardDescription>
               </div>
-              <div className="flex gap-2">
-                <Badge className="bg-primary/10 text-primary border-none rounded-xl px-3 py-1 font-bold">Real-time</Badge>
-              </div>
+              <Badge className="bg-primary/10 text-primary border-none rounded-xl px-3 py-1 font-bold">Real-time Analytics</Badge>
             </div>
           </CardHeader>
           <CardContent className="h-[350px]">
@@ -156,9 +150,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Fleet Health Overview */}
         <Card className="border-none shadow-sm premium-shadow rounded-[2.5rem] bg-slate-900 text-white p-4 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[80px] rounded-full group-hover:bg-primary/30 transition-colors"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[80px] rounded-full"></div>
           <CardHeader className="pb-6">
             <CardTitle className="text-xl font-bold">Studio Performance</CardTitle>
             <CardDescription className="text-slate-400 font-medium">System-wide health metrics.</CardDescription>
@@ -173,15 +166,15 @@ export default function DashboardPage() {
             </div>
             
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-5 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors">
+              <div className="p-5 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10">
                 <Users className="text-primary mb-3" size={20} />
                 <p className="text-2xl font-black">12</p>
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Top Talent</p>
               </div>
-              <div className="p-5 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-colors">
+              <div className="p-5 rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10">
                 <Clock className="text-indigo-400 mb-3" size={20} />
                 <p className="text-2xl font-black">4.2d</p>
-                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Avg. Turnaround</p>
+                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Turnaround</p>
               </div>
             </div>
 
@@ -195,93 +188,9 @@ export default function DashboardPage() {
                   <p className="text-xs text-slate-400">Ready for master delivery</p>
                 </div>
               </div>
-              <Button className="w-full rounded-2xl h-12 bg-white text-slate-900 hover:bg-slate-100 font-bold">
-                Open Fleet Manager
-              </Button>
             </div>
           </CardContent>
         </Card>
-      </div>
-
-      {/* Activity and Deadlines */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-         <Card className="border-none shadow-sm premium-shadow rounded-[2.5rem] bg-white/70 backdrop-blur-md p-4">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl font-black text-slate-900">Activity Stream</CardTitle>
-                <CardDescription className="font-medium">Recent events in your workspace.</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" className="text-primary rounded-xl font-bold hover:bg-primary/5">History Log</Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-8 mt-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex gap-5 group items-start">
-                    <div className="relative pt-1">
-                      <div className="w-10 h-10 rounded-2xl bg-slate-100 overflow-hidden ring-2 ring-white">
-                        <img 
-                          src={`https://picsum.photos/seed/user-${activity.avatar}/100/100`} 
-                          alt={activity.user}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white"></div>
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-bold text-slate-900">
-                          {activity.user} <span className="font-medium text-slate-500">{activity.detail}</span>
-                        </p>
-                        <span className="text-[11px] font-bold text-muted-foreground bg-slate-100 px-2 py-0.5 rounded-lg">{activity.time}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs font-bold text-primary bg-primary/5 w-fit px-2 py-0.5 rounded-lg">
-                        <Layers size={12} />
-                        {activity.project}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-         </Card>
-
-         <Card className="border-none shadow-sm premium-shadow rounded-[2.5rem] bg-white/70 backdrop-blur-md p-4">
-            <CardHeader>
-              <CardTitle className="text-2xl font-black text-slate-900">Critical Milestones</CardTitle>
-              <CardDescription className="font-medium">Due soon in your workspace.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-5 mt-4">
-                {[
-                  { name: 'Apple Final Cut', milestone: 'Master Delivery', date: 'Oct 24', urgency: 'High', color: 'bg-rose-50 text-rose-600' },
-                  { name: 'Red Bull Extreme', milestone: 'VFX Approval', date: 'Oct 26', urgency: 'Medium', color: 'bg-amber-50 text-amber-600' },
-                  { name: 'Coca Cola Ads', milestone: 'Final Sound Mix', date: 'Oct 27', urgency: 'Low', color: 'bg-blue-50 text-blue-600' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-5 rounded-[1.75rem] bg-white border border-slate-100 hover:border-primary/30 hover:shadow-lg transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-lg", item.color)}>
-                        {item.date.split(' ')[1]}
-                      </div>
-                      <div>
-                        <p className="text-base font-black text-slate-900">{item.name}</p>
-                        <p className="text-sm font-medium text-muted-foreground">{item.milestone}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="outline" className={cn(
-                        "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border-none",
-                        item.urgency === 'High' ? "bg-rose-100 text-rose-700" : 
-                        item.urgency === 'Medium' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
-                      )}>
-                        {item.urgency}
-                      </Badge>
-                      <p className="text-[11px] font-bold text-muted-foreground mt-2">{item.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-         </Card>
       </div>
     </div>
   );

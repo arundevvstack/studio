@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Zap, ArrowRight, Sparkles, ShieldCheck, Mail, Lock, User as UserIcon } from 'lucide-react';
+import { Zap, ArrowRight, Sparkles, Mail, Lock, User as UserIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function Home() {
@@ -27,6 +27,8 @@ export default function Home() {
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (authLoading) return;
+    
     setAuthLoading(true);
     try {
       if (isLogin) {
@@ -35,7 +37,7 @@ export default function Home() {
         await signUp(email, password, name);
       }
     } catch (err) {
-      // Error handled in context/toast
+      // Toast handles error display in AuthContext
     } finally {
       setAuthLoading(false);
     }
@@ -65,10 +67,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div className="space-y-12 text-left animate-in fade-in slide-in-from-left-4 duration-1000">
             <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white border border-slate-200 shadow-sm">
-              <Badge className="bg-primary/10 text-primary hover:bg-primary/15 border-none px-2.5 font-bold">Series B Funded</Badge>
+              <Badge className="bg-primary/10 text-primary hover:bg-primary/15 border-none px-2.5 font-bold">VC Funded</Badge>
               <span className="text-xs font-bold text-slate-600 flex items-center gap-2">
                 <Sparkles size={14} className="text-amber-500" />
-                Trusted by 500+ Studios Globally
+                Empowering the Creative Elite
               </span>
             </div>
 
@@ -78,14 +80,8 @@ export default function Home() {
                 the <span className="bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">Creative Elite.</span>
               </h1>
               <p className="text-xl text-slate-500 max-w-xl font-medium leading-relaxed">
-                Automate your workflow, coordinate talent, and scale your production with military precision.
+                The world's first intelligent workflow automation engine designed specifically for high-growth media studios.
               </p>
-            </div>
-
-            <div className="flex items-center gap-10 grayscale opacity-40">
-              <span className="text-xl font-black tracking-tighter">NIKE</span>
-              <span className="text-xl font-black tracking-tighter">NETFLIX</span>
-              <span className="text-xl font-black tracking-tighter">APPLE</span>
             </div>
           </div>
 
@@ -108,7 +104,7 @@ export default function Home() {
                       <div className="relative">
                         <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input 
-                          placeholder="Marcus Aurelius" 
+                          placeholder="Your Name" 
                           className="pl-12 h-14 rounded-2xl border-slate-200 bg-white/50 focus:bg-white transition-all font-medium"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
@@ -123,7 +119,7 @@ export default function Home() {
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <Input 
                         type="email"
-                        placeholder="marcus@studio.com" 
+                        placeholder="email@studio.com" 
                         className="pl-12 h-14 rounded-2xl border-slate-200 bg-white/50 focus:bg-white transition-all font-medium"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -158,7 +154,7 @@ export default function Home() {
                 
                 <div className="mt-8 pt-8 border-t border-slate-100 text-center">
                   <p className="text-sm font-medium text-slate-500">
-                    {isLogin ? "Don't have an account yet?" : "Already part of the network?"}
+                    {isLogin ? "Don't have an account?" : "Already part of the network?"}
                     <button 
                       type="button"
                       onClick={() => setIsLogin(!isLogin)} 
@@ -172,40 +168,7 @@ export default function Home() {
             </Card>
           </div>
         </div>
-
-        <div className="mt-40 pt-20 border-t border-slate-200/50 text-center space-y-20">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Integrated Enterprise Suite</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              { icon: ShieldCheck, title: 'Military-Grade Security', desc: 'End-to-end encryption for all your production assets and scripts.' },
-              { icon: Zap, title: 'AI-Powered Workflows', desc: 'Automate task generation and project scoping with Genkit integration.' },
-              { icon: Sparkles, title: 'Premium Support', desc: '24/7 dedicated success manager for your entire production crew.' }
-            ].map((feature, i) => (
-              <div key={i} className="space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-white shadow-xl flex items-center justify-center mx-auto text-primary border border-slate-100">
-                  <feature.icon size={28} />
-                </div>
-                <h3 className="text-lg font-black text-slate-900">{feature.title}</h3>
-                <p className="text-sm text-slate-500 font-medium leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </main>
-
-      <footer className="py-20 px-8 border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-3 font-black text-2xl tracking-tighter text-slate-900">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground">
-              <Zap size={18} fill="currentColor" />
-            </div>
-            <span>MediaFlow</span>
-          </div>
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest" suppressHydrationWarning>
-            © {new Date().getFullYear()} MediaFlow Technologies Inc. Built for the Creative Elite.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
