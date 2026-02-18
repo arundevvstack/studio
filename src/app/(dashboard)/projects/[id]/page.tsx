@@ -41,7 +41,8 @@ import {
   Plus,
   ShieldAlert,
   Clock,
-  Trash2
+  Trash2,
+  Layers
 } from 'lucide-react';
 import { summarizeProjectStatus } from '@/ai/flows/summarize-project-status';
 import Link from 'next/link';
@@ -64,10 +65,10 @@ export default function ProjectDetailPage() {
   // Progress Slider State
   const [localProgress, setLocalProgress] = useState<number | null>(null);
 
-  // Task Creation State
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
-  const [newTaskName, setNewTaskName] = useState('');
-  const [isCreatingTask, setIsCreatingTask] = useState(false);
+  // Phase (formerly Task) Creation State
+  const [isPhaseDialogOpen, setIsPhaseDialogOpen] = useState(false);
+  const [newPhaseName, setNewPhaseName] = useState('');
+  const [isCreatingPhase, setIsCreatingPhase] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -80,12 +81,12 @@ export default function ProjectDetailPage() {
 
   const { data: project, isLoading: isProjectLoading, error: projectError } = useDoc<Project>(projectRef);
 
-  const tasksQuery = useMemoFirebase(() => {
+  const phasesQuery = useMemoFirebase(() => {
     if (!db || !id) return null;
     return query(collection(db, 'projects', id, 'tasks'), orderBy('createdAt', 'desc'));
   }, [db, id]);
 
-  const { data: tasks, isLoading: isTasksLoading } = useCollection<Task>(tasksQuery);
+  const { data: phases, isLoading: isPhasesLoading } = useCollection<Task>(phasesQuery);
 
   // Sync local progress with project progress when not dragging
   useEffect(() => {
@@ -105,16 +106,16 @@ export default function ProjectDetailPage() {
     updateProject(db, id, { progress: newProgress });
   };
 
-  const handleCreateTask = async (e: React.FormEvent) => {
+  const handleCreatePhase = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!db || !project || !newTaskName.trim()) return;
+    if (!db || !project || !newPhaseName.trim()) return;
 
-    setIsCreatingTask(true);
-    const newTaskRef = doc(collection(db, 'projects', id, 'tasks'));
-    const taskData: Partial<Task> = {
-      id: newTaskRef.id,
+    setIsCreatingPhase(true);
+    const newPhaseRef = doc(collection(db, 'projects', id, 'tasks'));
+    const phaseData: Partial<Task> = {
+      id: newPhaseRef.id,
       projectId: id,
-      name: newTaskName,
+      name: newPhaseName,
       completed: false,
       priority: 'Medium',
       projectAssignedTeamMemberIds: project.assignedTeamMemberIds || [],
@@ -122,44 +123,44 @@ export default function ProjectDetailPage() {
       updatedAt: serverTimestamp(),
     };
 
-    setDoc(newTaskRef, taskData)
+    setDoc(newPhaseRef, phaseData)
       .then(() => {
-        toast({ title: "Task Deployed", description: "Mission objective added to pipeline." });
-        setNewTaskName('');
-        setIsTaskDialogOpen(false);
+        toast({ title: "Phase Deployed", description: "New production phase added to pipeline." });
+        setNewPhaseName('');
+        setIsPhaseDialogOpen(false);
       })
       .catch((error) => {
         const permissionError = new FirestorePermissionError({
-          path: newTaskRef.path,
+          path: newPhaseRef.path,
           operation: 'create',
-          requestResourceData: taskData
+          requestResourceData: phaseData
         });
         errorEmitter.emit('permission-error', permissionError);
       })
-      .finally(() => setIsCreatingTask(false));
+      .finally(() => setIsCreatingPhase(false));
   };
 
-  const toggleTaskStatus = (task: Task) => {
+  const togglePhaseStatus = (phase: Task) => {
     if (!db) return;
-    const taskRef = doc(db, 'projects', id, 'tasks', task.id);
-    updateDoc(taskRef, { 
-      completed: !task.completed,
+    const phaseRef = doc(db, 'projects', id, 'tasks', phase.id);
+    updateDoc(phaseRef, { 
+      completed: !phase.completed,
       updatedAt: serverTimestamp()
     }).catch(error => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: taskRef.path,
+        path: phaseRef.path,
         operation: 'update',
-        requestResourceData: { completed: !task.completed }
+        requestResourceData: { completed: !phase.completed }
       }));
     });
   };
 
-  const deleteTask = (taskId: string) => {
+  const deletePhase = (phaseId: string) => {
     if (!db) return;
-    const taskRef = doc(db, 'projects', id, 'tasks', taskId);
-    deleteDoc(taskRef).catch(error => {
+    const phaseRef = doc(db, 'projects', id, 'tasks', phaseId);
+    deleteDoc(phaseRef).catch(error => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: taskRef.path,
+        path: phaseRef.path,
         operation: 'delete'
       }));
     });
@@ -171,7 +172,7 @@ export default function ProjectDetailPage() {
     try {
       const result = await summarizeProjectStatus({
         description: project.description || 'No description provided',
-        tasks: (tasks || []).map(t => t.name),
+        tasks: (phases || []).map(t => t.name),
         notes: ['Project assets reviewed', 'Initial pipeline established']
       });
       setAiSummary(result.summary);
@@ -323,10 +324,10 @@ export default function ProjectDetailPage() {
              </CardContent>
           </Card>
 
-          <Tabs defaultValue="tasks" className="w-full">
+          <Tabs defaultValue="phases" className="w-full">
             <TabsList className="bg-transparent h-auto p-0 gap-8 border-b rounded-none w-full justify-start mb-8">
-              <TabsTrigger value="tasks" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
-                <CheckSquare size={16} className="mr-2" /> Tasks
+              <TabsTrigger value="phases" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
+                <Layers size={16} className="mr-2" /> Phases
               </TabsTrigger>
               <TabsTrigger value="timeline" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
                 <History size={16} className="mr-2" /> Timeline
@@ -339,41 +340,41 @@ export default function ProjectDetailPage() {
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="tasks" className="mt-0 focus-visible:ring-0">
+            <TabsContent value="phases" className="mt-0 focus-visible:ring-0">
                <Card className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-xl">
                  <CardContent className="p-4">
                     <div className="divide-y divide-slate-100">
-                      {isTasksLoading ? (
+                      {isPhasesLoading ? (
                         <div className="p-10 text-center text-muted-foreground animate-pulse font-bold text-xs uppercase tracking-widest">
-                          Synchronizing Mission Tasks...
+                          Synchronizing Production Phases...
                         </div>
-                      ) : !tasks || tasks.length === 0 ? (
+                      ) : !phases || phases.length === 0 ? (
                         <div className="p-10 text-center text-muted-foreground font-medium italic">
-                          No tasks have been deployed for this mission.
+                          No phases have been deployed for this mission.
                         </div>
                       ) : (
-                        tasks.map((task) => (
-                          <div key={task.id} className="flex items-center justify-between p-5 hover:bg-slate-50/80 transition-all rounded-2xl group cursor-pointer">
-                             <div className="flex items-center gap-5" onClick={() => toggleTaskStatus(task)}>
+                        phases.map((phase) => (
+                          <div key={phase.id} className="flex items-center justify-between p-5 hover:bg-slate-50/80 transition-all rounded-2xl group cursor-pointer">
+                             <div className="flex items-center gap-5" onClick={() => togglePhaseStatus(phase)}>
                                 <div className={cn(
                                   "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
-                                  task.completed ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" : "border-slate-200 group-hover:border-primary/50"
+                                  phase.completed ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" : "border-slate-200 group-hover:border-primary/50"
                                 )}>
-                                  {task.completed && <CheckSquare size={14} strokeWidth={3} />}
+                                  {phase.completed && <CheckSquare size={14} strokeWidth={3} />}
                                 </div>
                                 <div>
-                                  <p className={cn("text-base font-bold text-slate-900 transition-all", task.completed && "line-through text-slate-400")}>{task.name}</p>
+                                  <p className={cn("text-base font-bold text-slate-900 transition-all", phase.completed && "line-through text-slate-400")}>{phase.name}</p>
                                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
-                                    <Clock size={10} /> {formatDeadline(task.createdAt)}
+                                    <Clock size={10} /> {formatDeadline(phase.createdAt)}
                                   </p>
                                 </div>
                              </div>
                              <div className="flex items-center gap-3">
                                <Badge variant="outline" className={cn(
                                  "rounded-lg text-[10px] font-black uppercase tracking-widest px-3 py-1 border-none",
-                                 task.completed ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-600"
-                               )}>{task.completed ? 'Completed' : 'Pending'}</Badge>
-                               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-rose-500 rounded-lg" onClick={() => deleteTask(task.id)}>
+                                 phase.completed ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-600"
+                               )}>{phase.completed ? 'Completed' : 'Pending'}</Badge>
+                               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-rose-500 rounded-lg" onClick={() => deletePhase(phase.id)}>
                                  <Trash2 size={14} />
                                </Button>
                              </div>
@@ -382,31 +383,31 @@ export default function ProjectDetailPage() {
                       )}
                     </div>
                     <div className="p-6 border-t border-slate-50 flex justify-center">
-                       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+                       <Dialog open={isPhaseDialogOpen} onOpenChange={setIsPhaseDialogOpen}>
                          <DialogTrigger asChild>
                            <Button variant="ghost" className="text-primary text-xs font-black uppercase tracking-[0.2em] gap-2 hover:bg-primary/5 rounded-xl h-12 px-8">
-                             <Plus className="h-4 w-4" strokeWidth={3} /> Add Mission Task
+                             <Plus className="h-4 w-4" strokeWidth={3} /> Add Production Phase
                            </Button>
                          </DialogTrigger>
                          <DialogContent className="rounded-[2rem] border-none shadow-2xl premium-shadow">
                            <DialogHeader>
-                             <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight">Deploy New Objective</DialogTitle>
+                             <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight">Deploy New Phase</DialogTitle>
                            </DialogHeader>
-                           <form onSubmit={handleCreateTask} className="space-y-6 pt-4">
+                           <form onSubmit={handleCreatePhase} className="space-y-6 pt-4">
                              <div className="space-y-2">
-                               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Task Identifier</Label>
+                               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Phase Name</Label>
                                <Input 
                                  placeholder="e.g. Master Color Grading" 
-                                 value={newTaskName}
-                                 onChange={(e) => setNewTaskName(e.target.value)}
+                                 value={newPhaseName}
+                                 onChange={(e) => setNewPhaseName(e.target.value)}
                                  className="rounded-2xl h-14 font-bold px-6 bg-slate-50 border-none focus-visible:ring-2 focus-visible:ring-primary"
                                  autoFocus
                                />
                              </div>
                              <DialogFooter className="pt-4 gap-3">
-                               <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => setIsTaskDialogOpen(false)}>Abort</Button>
-                               <Button type="submit" className="rounded-xl font-black px-8 bg-primary shadow-lg shadow-primary/20" disabled={isCreatingTask || !newTaskName.trim()}>
-                                 {isCreatingTask ? 'Deploying...' : 'Confirm Mission'}
+                               <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => setIsPhaseDialogOpen(false)}>Abort</Button>
+                               <Button type="submit" className="rounded-xl font-black px-8 bg-primary shadow-lg shadow-primary/20" disabled={isCreatingPhase || !newPhaseName.trim()}>
+                                 {isCreatingPhase ? 'Deploying...' : 'Confirm Phase'}
                                </Button>
                              </DialogFooter>
                            </form>
