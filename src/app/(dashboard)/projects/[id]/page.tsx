@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Project } from '@/lib/types';
-import { getProject, updateProject } from '@/lib/firebase/firestore';
+import { updateProject } from '@/lib/firebase/firestore';
 import { 
   Tabs, 
   TabsContent, 
@@ -29,37 +29,40 @@ import {
   MessageSquare,
   History,
   FileText,
-  Plus
+  Plus,
+  ShieldAlert
 } from 'lucide-react';
 import { summarizeProjectStatus } from '@/ai/flows/summarize-project-status';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export default function ProjectDetailPage() {
   const { id } = useParams() as { id: string };
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
+  const db = useFirestore();
+  const { toast } = useToast();
+  
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     setIsMounted(true);
-    const fetchProject = async () => {
-      const data = await getProject(id);
-      setProject(data);
-      setLoading(false);
-    };
-    fetchProject();
-  }, [id]);
+  }, []);
 
-  const handleUpdateProgress = async (val: number[]) => {
-    if (!project) return;
+  const projectRef = useMemoFirebase(() => {
+    if (!db || !id) return null;
+    return doc(db, 'projects', id);
+  }, [db, id]);
+
+  const { data: project, isLoading, error } = useDoc<Project>(projectRef);
+
+  const handleUpdateProgress = (val: number[]) => {
+    if (!project || !db) return;
     const newProgress = val[0];
-    setProject({ ...project, progress: newProgress });
-    updateProject(id, { progress: newProgress });
+    updateProject(db, id, { progress: newProgress });
   };
 
   const handleGenerateSummary = async () => {
@@ -72,6 +75,7 @@ export default function ProjectDetailPage() {
         notes: ['Client requested more contrast', 'Music track licensed']
       });
       setAiSummary(result.summary);
+      toast({ title: "AI Sync", description: "Project intelligence updated." });
     } catch (err) {
       toast({ title: "Error", description: "Could not generate AI summary", variant: "destructive" });
     } finally {
@@ -81,151 +85,190 @@ export default function ProjectDetailPage() {
 
   const formatDeadline = (deadline: any) => {
     if (!isMounted || !deadline) return 'TBD';
-    return new Date(deadline.seconds * 1000).toLocaleDateString();
+    if (deadline?.seconds) return new Date(deadline.seconds * 1000).toLocaleDateString();
+    return new Date(deadline).toLocaleDateString();
   };
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading project...</div>;
-  if (!project) return <div className="p-8 text-center text-muted-foreground">Project not found</div>;
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="w-12 h-12 rounded-2xl border-4 border-primary/20 border-t-primary animate-spin" />
+        <p className="text-muted-foreground font-bold animate-pulse uppercase tracking-widest text-xs">Accessing Production Data...</p>
+      </div>
+    );
+  }
+
+  if (error || (!project && !isLoading)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="p-4 rounded-full bg-destructive/10 text-destructive">
+          <ShieldAlert size={48} />
+        </div>
+        <h2 className="text-2xl font-black">Production Not Found</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          This project identifier does not exist or you lack sufficient clearance to access its assets.
+        </p>
+        <Button asChild variant="outline" className="rounded-xl">
+          <Link href="/projects">Return to Portfolio</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl border hover:bg-muted">
-            <Link href="/projects"><ChevronLeft size={20} /></Link>
+          <Button variant="ghost" size="icon" asChild className="rounded-xl border hover:bg-white shadow-sm h-12 w-12 transition-all">
+            <Link href="/projects"><ChevronLeft size={24} /></Link>
           </Button>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-               <h1 className="text-3xl font-bold tracking-tight">{project.projectName}</h1>
-               <Badge className="rounded-lg bg-primary/10 text-primary border-none text-[10px] font-bold">
-                 #{id.slice(0, 5)}
+            <div className="flex items-center gap-3 mb-1">
+               <h1 className="text-3xl font-black tracking-tighter text-slate-900">{project.projectName}</h1>
+               <Badge className="rounded-lg bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-2.5">
+                 Entity #{id.slice(0, 8)}
                </Badge>
             </div>
-            <p className="text-muted-foreground text-sm font-medium flex items-center gap-2">
-              <Users size={14} /> {project.client} 
-              <span className="mx-2 text-slate-300">•</span>
-              <Calendar size={14} /> Due {formatDeadline(project.deadline)}
+            <p className="text-muted-foreground text-sm font-bold flex items-center gap-2">
+              <span className="text-primary font-black">{project.client}</span>
+              <span className="text-slate-300">•</span>
+              <Calendar size={14} className="text-slate-400" /> 
+              <span>Target Delivery: {formatDeadline(project.deadline)}</span>
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-xl font-medium border-slate-200">Edit Project</Button>
-          <Button className="rounded-xl font-medium shadow-lg shadow-primary/20">Mark as Released</Button>
+          <Button variant="outline" className="rounded-2xl font-bold border-slate-200 h-11 px-6 hover:bg-slate-50">
+            Modify Scope
+          </Button>
+          <Button className="rounded-2xl font-black shadow-xl shadow-primary/20 h-11 px-8 bg-primary hover:scale-[1.02] transition-all">
+            Execute Release
+          </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-8">
-          <Card className="border-none shadow-sm premium-shadow rounded-3xl bg-white/50 backdrop-blur-sm overflow-hidden">
-             <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg">Project Health & Progress</CardTitle>
+          <Card className="border-none shadow-sm premium-shadow rounded-[2.5rem] bg-white/70 backdrop-blur-xl overflow-hidden p-2">
+             <CardHeader className="flex flex-row items-center justify-between pb-6 pt-6 px-8">
+                <div>
+                  <CardTitle className="text-xl font-black text-slate-900">Production Intelligence</CardTitle>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Real-time throughput metrics</p>
+                </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="rounded-xl text-primary bg-primary/5 hover:bg-primary/10 gap-2 border-none"
+                  className="rounded-2xl text-primary bg-primary/5 hover:bg-primary/10 gap-2 border-none font-bold px-4 h-10"
                   onClick={handleGenerateSummary}
                   disabled={isSummarizing}
                 >
-                  <Sparkles size={16} />
-                  {isSummarizing ? 'Analyzing...' : 'AI Summary'}
+                  <Sparkles size={16} className={cn(isSummarizing && "animate-spin")} />
+                  {isSummarizing ? 'Synthesizing...' : 'AI Summary'}
                 </Button>
              </CardHeader>
-             <CardContent className="space-y-6">
+             <CardContent className="space-y-8 px-8 pb-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/50">
-                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Current Stage</p>
-                    <p className="text-lg font-bold text-slate-800">{project.stage}</p>
+                  <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Phase</p>
+                    <p className="text-lg font-black text-slate-800">{project.stage}</p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/50">
-                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Priority</p>
+                  <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Priority</p>
                     <Badge className={cn(
-                      "rounded-lg",
-                      project.priority === 'High' ? "bg-destructive/10 text-destructive border-none" : "bg-primary/10 text-primary border-none"
-                    )}>{project.priority}</Badge>
+                      "rounded-xl px-3 py-1 font-black text-[10px] uppercase tracking-widest",
+                      project.priority === 'High' ? "bg-rose-50 text-rose-600 border-none" : "bg-indigo-50 text-indigo-600 border-none"
+                    )}>{project.priority} Matrix</Badge>
                   </div>
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-white/50">
-                    <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Budget Spend</p>
-                    <p className="text-lg font-bold text-slate-800">${(project.budget || 0).toLocaleString()}</p>
+                  <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Cap-Ex Spend</p>
+                    <p className="text-lg font-black text-slate-800">${(project.budget || 0).toLocaleString()}</p>
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-sm">Overall Completion</h4>
-                    <span className="text-2xl font-black text-primary">{project.progress}%</span>
+                <div className="space-y-5 pt-4">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <h4 className="font-black text-slate-900">Optimization Progress</h4>
+                      <p className="text-xs font-medium text-muted-foreground">Adjust production completion slider</p>
+                    </div>
+                    <span className="text-4xl font-black text-primary tracking-tighter">{project.progress}%</span>
                   </div>
                   <Slider 
-                    value={[project.progress]} 
+                    value={[project.progress || 0]} 
                     max={100} 
                     step={1} 
                     onValueChange={handleUpdateProgress}
                     className="py-4"
                   />
-                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground px-1 uppercase tracking-tighter">
+                  <div className="flex justify-between text-[10px] font-black text-slate-400 px-1 uppercase tracking-widest">
                     <span>Kickoff</span>
                     <span>Midpoint</span>
-                    <span>Delivery</span>
+                    <span>Market Ready</span>
                   </div>
                 </div>
 
                 {aiSummary && (
-                   <div className="mt-8 p-6 rounded-2xl bg-primary/5 border border-primary/20 animate-in zoom-in-95 duration-500">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkles size={18} className="text-primary" />
-                        <h4 className="text-sm font-bold uppercase tracking-wider text-primary">Intelligence Report</h4>
+                   <div className="mt-8 p-8 rounded-[2rem] bg-slate-900 text-white border border-white/10 animate-in zoom-in-95 duration-500 shadow-2xl relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[80px] rounded-full"></div>
+                      <div className="flex items-center gap-3 mb-4 relative z-10">
+                        <Sparkles size={20} className="text-primary" />
+                        <h4 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Executive Intelligence Report</h4>
                       </div>
-                      <p className="text-sm leading-relaxed text-slate-700 italic">"{aiSummary}"</p>
+                      <p className="text-base leading-relaxed text-slate-300 italic relative z-10 font-medium font-serif">"{aiSummary}"</p>
                    </div>
                 )}
              </CardContent>
           </Card>
 
           <Tabs defaultValue="tasks" className="w-full">
-            <TabsList className="bg-transparent h-auto p-0 gap-6 border-b rounded-none w-full justify-start mb-6">
-              <TabsTrigger value="tasks" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none pb-4 px-0 font-bold text-muted-foreground data-[state=active]:text-foreground">
+            <TabsList className="bg-transparent h-auto p-0 gap-8 border-b rounded-none w-full justify-start mb-8">
+              <TabsTrigger value="tasks" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
                 <CheckSquare size={16} className="mr-2" /> Tasks
               </TabsTrigger>
-              <TabsTrigger value="timeline" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none pb-4 px-0 font-bold text-muted-foreground data-[state=active]:text-foreground">
+              <TabsTrigger value="timeline" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
                 <History size={16} className="mr-2" /> Timeline
               </TabsTrigger>
-              <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none pb-4 px-0 font-bold text-muted-foreground data-[state=active]:text-foreground">
+              <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
                 <MessageSquare size={16} className="mr-2" /> Notes
               </TabsTrigger>
-              <TabsTrigger value="files" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none pb-4 px-0 font-bold text-muted-foreground data-[state=active]:text-foreground">
-                <FileText size={16} className="mr-2" /> Assets
+              <TabsTrigger value="files" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
+                <FileText size={16} className="mr-2" /> Digital Assets
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="tasks" className="mt-0 focus-visible:ring-0">
-               <Card className="border-none shadow-sm premium-shadow rounded-2xl bg-white/50 backdrop-blur-sm">
-                 <CardContent className="p-0">
-                    <div className="divide-y">
+               <Card className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-xl">
+                 <CardContent className="p-4">
+                    <div className="divide-y divide-slate-100">
                       {[
-                        { title: 'Final Script Approval', status: 'Completed', date: 'Oct 12' },
-                        { title: 'Source B-Roll from Archive', status: 'In Progress', date: 'Oct 15' },
-                        { title: 'Record Voiceover', status: 'Pending', date: 'Oct 18' },
-                        { title: 'Color Grade V1', status: 'Pending', date: 'Oct 22' },
+                        { title: 'Executive Brief Approval', status: 'Completed', date: 'Feb 12' },
+                        { title: 'Asset Localization V1', status: 'In Progress', date: 'Feb 15' },
+                        { title: 'Final Master Rendering', status: 'Pending', date: 'Feb 18' },
+                        { title: 'Global CDN Deployment', status: 'Pending', date: 'Feb 22' },
                       ].map((task, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                           <div className="flex items-center gap-4">
+                        <div key={i} className="flex items-center justify-between p-5 hover:bg-slate-50/80 transition-all rounded-2xl group cursor-pointer">
+                           <div className="flex items-center gap-5">
                               <div className={cn(
-                                "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                                task.status === 'Completed' ? "bg-primary border-primary text-white" : "border-slate-300"
+                                "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
+                                task.status === 'Completed' ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" : "border-slate-200 group-hover:border-primary/50"
                               )}>
-                                {task.status === 'Completed' && <CheckSquare size={12} />}
+                                {task.status === 'Completed' && <CheckSquare size={14} strokeWidth={3} />}
                               </div>
                               <div>
-                                <p className={cn("text-sm font-bold", task.status === 'Completed' && "line-through text-muted-foreground")}>{task.title}</p>
-                                <p className="text-[10px] font-medium text-muted-foreground uppercase">{task.date}</p>
+                                <p className={cn("text-base font-bold text-slate-900 transition-all", task.status === 'Completed' && "line-through text-slate-400")}>{task.title}</p>
+                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{task.date}</p>
                               </div>
                            </div>
-                           <Badge variant="outline" className="rounded-lg text-[10px]">{task.status}</Badge>
+                           <Badge variant="outline" className={cn(
+                             "rounded-lg text-[10px] font-black uppercase tracking-widest px-3 py-1 border-none",
+                             task.status === 'Completed' ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-600"
+                           )}>{task.status}</Badge>
                         </div>
                       ))}
                     </div>
-                    <div className="p-4 border-t flex justify-center">
-                       <Button variant="ghost" className="text-primary text-xs font-bold gap-2">
-                         <Plus className="h-4 w-4" /> Add Task
+                    <div className="p-6 border-t border-slate-50 flex justify-center">
+                       <Button variant="ghost" className="text-primary text-xs font-black uppercase tracking-[0.2em] gap-2 hover:bg-primary/5 rounded-xl h-12 px-8">
+                         <Plus className="h-4 w-4" strokeWidth={3} /> Add Mission Task
                        </Button>
                     </div>
                  </CardContent>
@@ -235,49 +278,49 @@ export default function ProjectDetailPage() {
         </div>
 
         <div className="space-y-8">
-           <Card className="border-none shadow-sm premium-shadow rounded-3xl bg-white/50 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground">Team Assigned</CardTitle>
+           <Card className="border-none shadow-sm premium-shadow rounded-[2.5rem] bg-white/70 backdrop-blur-xl p-2">
+              <CardHeader className="pt-6 px-6">
+                <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Assigned Talent</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5 px-6 pb-6">
                  {[
-                   { name: 'Marcus J.', role: 'Director', avatar: 'https://picsum.photos/seed/m1/100/100' },
-                   { name: 'Sarah L.', role: 'Editor', avatar: 'https://picsum.photos/seed/s2/100/100' },
-                   { name: 'James W.', role: 'Audio', avatar: 'https://picsum.photos/seed/j3/100/100' },
+                   { name: 'Marcus Jordan', role: 'Executive Director', avatar: 'https://picsum.photos/seed/m1/100/100' },
+                   { name: 'Sarah Lyons', role: 'Creative Lead', avatar: 'https://picsum.photos/seed/s2/100/100' },
+                   { name: 'James Wilson', role: 'Strategic Producer', avatar: 'https://picsum.photos/seed/j3/100/100' },
                  ].map((member, i) => (
-                   <div key={i} className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl overflow-hidden border shadow-sm">
-                        <img src={member.avatar} alt={member.name} />
+                   <div key={i} className="flex items-center gap-4 group cursor-pointer">
+                      <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-sm ring-2 ring-slate-100 group-hover:ring-primary/20 transition-all">
+                        <img src={member.avatar} alt={member.name} className="object-cover w-full h-full" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold">{member.name}</p>
-                        <p className="text-[11px] text-muted-foreground">{member.role}</p>
+                        <p className="text-sm font-black text-slate-900 group-hover:text-primary transition-colors">{member.name}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">{member.role}</p>
                       </div>
                    </div>
                  ))}
-                 <Button variant="outline" className="w-full rounded-xl mt-2 text-xs font-bold border-dashed hover:border-solid">Manage Team</Button>
+                 <Button variant="outline" className="w-full rounded-2xl h-12 mt-4 text-xs font-black uppercase tracking-widest border-dashed border-2 hover:border-solid hover:bg-slate-50 transition-all">Manage Personnel</Button>
               </CardContent>
            </Card>
 
-           <Card className="border-none shadow-sm premium-shadow rounded-3xl bg-slate-900 text-white overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
-              <CardHeader>
-                <CardTitle className="text-sm uppercase tracking-widest text-slate-400">Budget Details</CardTitle>
+           <Card className="border-none shadow-2xl premium-shadow rounded-[2.5rem] bg-slate-900 text-white overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-primary shadow-[0_0_20px_rgba(var(--primary),0.5)]"></div>
+              <CardHeader className="pt-8 px-8">
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Financial Overview</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-8 px-8 pb-10">
                  <div>
-                    <p className="text-2xl font-black">${(project.budget || 0).toLocaleString()}</p>
-                    <p className="text-xs text-slate-400">Total Authorized Budget</p>
+                    <p className="text-4xl font-black tracking-tighter text-white">${(project.budget || 0).toLocaleString()}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">Authorized Deployment</p>
                  </div>
-                 <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                       <span className="text-slate-400">Spent to date</span>
-                       <span className="font-bold text-primary">$4,250</span>
+                 <div className="space-y-3">
+                    <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
+                       <span className="text-slate-500">Resource Consumption</span>
+                       <span className="text-primary">45%</span>
                     </div>
-                    <Progress value={45} className="h-1 bg-slate-800" />
+                    <Progress value={45} className="h-2.5 bg-slate-800 rounded-full" />
                  </div>
-                 <Button variant="outline" className="w-full rounded-xl text-xs font-bold bg-white/10 border-white/20 text-white hover:bg-white hover:text-slate-900 border-none transition-all">
-                    View Invoices
+                 <Button className="w-full rounded-2xl h-14 text-xs font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white hover:text-slate-900 border-none transition-all shadow-xl">
+                    Generate Financials
                  </Button>
               </CardContent>
            </Card>
