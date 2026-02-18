@@ -11,7 +11,7 @@ export interface Project {
   deadline: any; // Firebase Timestamp
   progress: number;
   budget: number;
-  assignedTeam: string[];
+  assignedTeamMemberIds: string[]; // Matches backend.json and security rules
   description: string;
   tags: string[];
   createdAt: any;
@@ -24,13 +24,18 @@ export interface Task {
   name: string;
   description: string;
   completed: boolean;
+  priority: ProjectPriority;
   dueDate: any;
+  projectAssignedTeamMemberIds: string[]; // Required for security rules denormalization
+  createdAt: any;
+  updatedAt: any;
 }
 
 export interface ProjectNote {
   id: string;
   projectId: string;
   content: string;
-  author: string;
+  authorId: string;
+  projectAssignedTeamMemberIds: string[]; // Required for security rules denormalization
   createdAt: any;
 }

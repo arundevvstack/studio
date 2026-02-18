@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Project } from '@/lib/types';
+import { Project, Task } from '@/lib/types';
 import { updateProject } from '@/lib/firebase/firestore';
 import { 
   Tabs, 
@@ -21,23 +21,36 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { 
   ChevronLeft, 
   Sparkles, 
   Calendar, 
-  Users, 
   CheckSquare, 
   MessageSquare,
   History,
   FileText,
   Plus,
-  ShieldAlert
+  ShieldAlert,
+  Clock,
+  Trash2
 } from 'lucide-react';
 import { summarizeProjectStatus } from '@/ai/flows/summarize-project-status';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
+import { doc, collection, query, orderBy, serverTimestamp, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ProjectDetailPage() {
   const { id } = useParams() as { id: string };
@@ -47,6 +60,11 @@ export default function ProjectDetailPage() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  
+  // Task Creation State
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [newTaskName, setNewTaskName] = useState('');
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -57,12 +75,79 @@ export default function ProjectDetailPage() {
     return doc(db, 'projects', id);
   }, [db, id]);
 
-  const { data: project, isLoading, error } = useDoc<Project>(projectRef);
+  const { data: project, isLoading: isProjectLoading, error: projectError } = useDoc<Project>(projectRef);
+
+  const tasksQuery = useMemoFirebase(() => {
+    if (!db || !id) return null;
+    return query(collection(db, 'projects', id, 'tasks'), orderBy('createdAt', 'desc'));
+  }, [db, id]);
+
+  const { data: tasks, isLoading: isTasksLoading } = useCollection<Task>(tasksQuery);
 
   const handleUpdateProgress = (val: number[]) => {
     if (!project || !db) return;
     const newProgress = val[0];
     updateProject(db, id, { progress: newProgress });
+  };
+
+  const handleCreateTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !project || !newTaskName.trim()) return;
+
+    setIsCreatingTask(true);
+    const newTaskRef = doc(collection(db, 'projects', id, 'tasks'));
+    const taskData: Partial<Task> = {
+      id: newTaskRef.id,
+      projectId: id,
+      name: newTaskName,
+      completed: false,
+      priority: 'Medium',
+      projectAssignedTeamMemberIds: project.assignedTeamMemberIds || [],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    setDoc(newTaskRef, taskData)
+      .then(() => {
+        toast({ title: "Task Deployed", description: "Mission objective added to pipeline." });
+        setNewTaskName('');
+        setIsTaskDialogOpen(false);
+      })
+      .catch((error) => {
+        const permissionError = new FirestorePermissionError({
+          path: newTaskRef.path,
+          operation: 'create',
+          requestResourceData: taskData
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      })
+      .finally(() => setIsCreatingTask(false));
+  };
+
+  const toggleTaskStatus = (task: Task) => {
+    if (!db) return;
+    const taskRef = doc(db, 'projects', id, 'tasks', task.id);
+    updateDoc(taskRef, { 
+      completed: !task.completed,
+      updatedAt: serverTimestamp()
+    }).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: taskRef.path,
+        operation: 'update',
+        requestResourceData: { completed: !task.completed }
+      }));
+    });
+  };
+
+  const deleteTask = (taskId: string) => {
+    if (!db) return;
+    const taskRef = doc(db, 'projects', id, 'tasks', taskId);
+    deleteDoc(taskRef).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: taskRef.path,
+        operation: 'delete'
+      }));
+    });
   };
 
   const handleGenerateSummary = async () => {
@@ -71,8 +156,8 @@ export default function ProjectDetailPage() {
     try {
       const result = await summarizeProjectStatus({
         description: project.description || 'No description provided',
-        tasks: ['Complete initial shoot', 'Audio sync', 'Color grading'],
-        notes: ['Client requested more contrast', 'Music track licensed']
+        tasks: (tasks || []).map(t => t.name),
+        notes: ['Project assets reviewed', 'Initial pipeline established']
       });
       setAiSummary(result.summary);
       toast({ title: "AI Sync", description: "Project intelligence updated." });
@@ -89,7 +174,7 @@ export default function ProjectDetailPage() {
     return new Date(deadline).toLocaleDateString();
   };
 
-  if (isLoading) {
+  if (isProjectLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <div className="w-12 h-12 rounded-2xl border-4 border-primary/20 border-t-primary animate-spin" />
@@ -98,7 +183,7 @@ export default function ProjectDetailPage() {
     );
   }
 
-  if (error || (!project && !isLoading)) {
+  if (projectError || (!project && !isProjectLoading)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <div className="p-4 rounded-full bg-destructive/10 text-destructive">
@@ -240,36 +325,75 @@ export default function ProjectDetailPage() {
                <Card className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-xl">
                  <CardContent className="p-4">
                     <div className="divide-y divide-slate-100">
-                      {[
-                        { title: 'Executive Brief Approval', status: 'Completed', date: 'Feb 12' },
-                        { title: 'Asset Localization V1', status: 'In Progress', date: 'Feb 15' },
-                        { title: 'Final Master Rendering', status: 'Pending', date: 'Feb 18' },
-                        { title: 'Global CDN Deployment', status: 'Pending', date: 'Feb 22' },
-                      ].map((task, i) => (
-                        <div key={i} className="flex items-center justify-between p-5 hover:bg-slate-50/80 transition-all rounded-2xl group cursor-pointer">
-                           <div className="flex items-center gap-5">
-                              <div className={cn(
-                                "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
-                                task.status === 'Completed' ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" : "border-slate-200 group-hover:border-primary/50"
-                              )}>
-                                {task.status === 'Completed' && <CheckSquare size={14} strokeWidth={3} />}
-                              </div>
-                              <div>
-                                <p className={cn("text-base font-bold text-slate-900 transition-all", task.status === 'Completed' && "line-through text-slate-400")}>{task.title}</p>
-                                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{task.date}</p>
-                              </div>
-                           </div>
-                           <Badge variant="outline" className={cn(
-                             "rounded-lg text-[10px] font-black uppercase tracking-widest px-3 py-1 border-none",
-                             task.status === 'Completed' ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-600"
-                           )}>{task.status}</Badge>
+                      {isTasksLoading ? (
+                        <div className="p-10 text-center text-muted-foreground animate-pulse font-bold text-xs uppercase tracking-widest">
+                          Synchronizing Mission Tasks...
                         </div>
-                      ))}
+                      ) : !tasks || tasks.length === 0 ? (
+                        <div className="p-10 text-center text-muted-foreground font-medium italic">
+                          No tasks have been deployed for this mission.
+                        </div>
+                      ) : (
+                        tasks.map((task) => (
+                          <div key={task.id} className="flex items-center justify-between p-5 hover:bg-slate-50/80 transition-all rounded-2xl group cursor-pointer">
+                             <div className="flex items-center gap-5" onClick={() => toggleTaskStatus(task)}>
+                                <div className={cn(
+                                  "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
+                                  task.completed ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" : "border-slate-200 group-hover:border-primary/50"
+                                )}>
+                                  {task.completed && <CheckSquare size={14} strokeWidth={3} />}
+                                </div>
+                                <div>
+                                  <p className={cn("text-base font-bold text-slate-900 transition-all", task.completed && "line-through text-slate-400")}>{task.name}</p>
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                                    <Clock size={10} /> {formatDeadline(task.createdAt)}
+                                  </p>
+                                </div>
+                             </div>
+                             <div className="flex items-center gap-3">
+                               <Badge variant="outline" className={cn(
+                                 "rounded-lg text-[10px] font-black uppercase tracking-widest px-3 py-1 border-none",
+                                 task.completed ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-600"
+                               )}>{task.completed ? 'Completed' : 'Pending'}</Badge>
+                               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-rose-500 rounded-lg" onClick={() => deleteTask(task.id)}>
+                                 <Trash2 size={14} />
+                               </Button>
+                             </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                     <div className="p-6 border-t border-slate-50 flex justify-center">
-                       <Button variant="ghost" className="text-primary text-xs font-black uppercase tracking-[0.2em] gap-2 hover:bg-primary/5 rounded-xl h-12 px-8">
-                         <Plus className="h-4 w-4" strokeWidth={3} /> Add Mission Task
-                       </Button>
+                       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+                         <DialogTrigger asChild>
+                           <Button variant="ghost" className="text-primary text-xs font-black uppercase tracking-[0.2em] gap-2 hover:bg-primary/5 rounded-xl h-12 px-8">
+                             <Plus className="h-4 w-4" strokeWidth={3} /> Add Mission Task
+                           </Button>
+                         </DialogTrigger>
+                         <DialogContent className="rounded-[2rem] border-none shadow-2xl premium-shadow">
+                           <DialogHeader>
+                             <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight">Deploy New Objective</DialogTitle>
+                           </DialogHeader>
+                           <form onSubmit={handleCreateTask} className="space-y-6 pt-4">
+                             <div className="space-y-2">
+                               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Task Identifier</Label>
+                               <Input 
+                                 placeholder="e.g. Master Color Grading" 
+                                 value={newTaskName}
+                                 onChange={(e) => setNewTaskName(e.target.value)}
+                                 className="rounded-2xl h-14 font-bold px-6 bg-slate-50 border-none focus-visible:ring-2 focus-visible:ring-primary"
+                                 autoFocus
+                               />
+                             </div>
+                             <DialogFooter className="pt-4 gap-3">
+                               <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => setIsTaskDialogOpen(false)}>Abort</Button>
+                               <Button type="submit" className="rounded-xl font-black px-8 bg-primary shadow-lg shadow-primary/20" disabled={isCreatingTask || !newTaskName.trim()}>
+                                 {isCreatingTask ? 'Deploying...' : 'Confirm Mission'}
+                               </Button>
+                             </DialogFooter>
+                           </form>
+                         </DialogContent>
+                       </Dialog>
                     </div>
                  </CardContent>
                </Card>
