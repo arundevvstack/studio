@@ -4,11 +4,12 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   onAuthStateChanged, 
   User, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  updateProfile
 } from 'firebase/auth';
 import { auth } from './config';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signIn: (email: string, pass: string) => Promise<void>;
+  signUp: (email: string, pass: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
@@ -35,27 +37,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signIn = async (email: string, pass: string) => {
     try {
       setLoading(true);
       await setPersistence(auth, browserLocalPersistence);
-      const provider = new GoogleAuthProvider();
-      provider.addScope('profile');
-      provider.addScope('email');
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithEmailAndPassword(auth, email, pass);
       if (result.user) {
         toast({
           title: "Welcome back!",
-          description: `Successfully signed in as ${result.user.displayName}`,
+          description: `Successfully signed in as ${result.user.displayName || result.user.email}`,
         });
       }
     } catch (error: any) {
-      console.error("Sign-in error:", error);
       toast({
         variant: "destructive",
         title: "Sign-in failed",
-        description: error.message || "Please check your Firebase console for configuration errors.",
+        description: error.message || "Invalid credentials.",
       });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, pass: string, name: string) => {
+    try {
+      setLoading(true);
+      const result = await createUserWithEmailAndPassword(auth, email, pass);
+      if (result.user) {
+        await updateProfile(result.user, { displayName: name });
+        toast({
+          title: "Account created!",
+          description: `Welcome to MediaFlow, ${name}!`,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Sign-up failed",
+        description: error.message,
+      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -78,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, logOut }}>
       {children}
     </AuthContext.Provider>
   );
