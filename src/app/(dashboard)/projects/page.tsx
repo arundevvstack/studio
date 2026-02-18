@@ -40,14 +40,13 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { useAuth } from '@/lib/firebase/auth-context';
 
 export default function ProjectsPage() {
   const [view, setView] = useState<'grid' | 'table'>('table');
   const [search, setSearch] = useState('');
   const [isMounted, setIsMounted] = useState(false);
   
-  const { user, isAdmin, loading: authLoading } = useAuth();
+  const { user, isAdmin, isUserLoading } = useUser();
   const db = useFirestore();
 
   useEffect(() => {
@@ -55,10 +54,10 @@ export default function ProjectsPage() {
   }, []);
 
   const projectsQuery = useMemoFirebase(() => {
-    // Wait for database, user, and initial auth state to be resolved
-    if (!db || !user || authLoading) return null;
+    // Crucial: Only initiate query once user and their admin status are resolved.
+    if (!db || !user || isUserLoading) return null;
     
-    // Admins can see everything
+    // Admins see all projects globally.
     if (isAdmin) {
       return query(
         collection(db, 'projects'), 
@@ -66,13 +65,13 @@ export default function ProjectsPage() {
       );
     }
     
-    // Members must filter by assigned IDs to satisfy security rules
+    // Non-admins must filter by assigned IDs to comply with security rules.
     return query(
       collection(db, 'projects'),
       where('assignedTeamMemberIds', 'array-contains', user.uid),
       orderBy('createdAt', 'desc')
     );
-  }, [db, user, isAdmin, authLoading]);
+  }, [db, user, isAdmin, isUserLoading]);
 
   const { data: projects, isLoading, error } = useCollection<Project>(projectsQuery);
 
@@ -108,7 +107,7 @@ export default function ProjectsPage() {
         <h2 className="text-2xl font-black">Access Restricted</h2>
         <p className="text-muted-foreground text-center max-w-md">
           Clearance is required to view the production portfolio. 
-          If you believe this is an error, please refresh your session.
+          The studio is currently synchronizing your permissions.
         </p>
         <Button asChild variant="outline" className="rounded-xl">
           <Link href="/dashboard">Return to Dashboard</Link>
