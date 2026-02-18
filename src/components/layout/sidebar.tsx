@@ -22,7 +22,7 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Projects', href: '/projects', icon: FolderKanban },
   { name: 'Kanban', href: '/kanban', icon: Trello },
-  { name: 'Calendar', href: '/calendar', icon: Calendar, disabled: true },
+  { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Reports', href: '/reports', icon: BarChart3, disabled: true },
 ];
 
