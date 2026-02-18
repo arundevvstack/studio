@@ -47,8 +47,7 @@ export default function ProjectsPage() {
   const [search, setSearch] = useState('');
   const [isMounted, setIsMounted] = useState(false);
   
-  const { user } = useUser();
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const db = useFirestore();
 
   useEffect(() => {

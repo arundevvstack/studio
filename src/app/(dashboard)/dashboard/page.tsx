@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user || authLoading) return null;
     
+    // Only proceed once we definitely know if the user is an admin or not
     if (isAdmin) {
       return query(
         collection(db, 'projects'), 
