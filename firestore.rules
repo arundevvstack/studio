@@ -16,15 +16,22 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    /** 
+    /**
      * Checks if the user is a hardcoded root administrator.
+     * This is the source of truth for administrative access and avoids circular dependencies.
      */
-    function isAdmin() {
+    function isRootAdmin() {
       return isSignedIn() && (
         request.auth.uid == "3EQSAs91zzVclLcZYk2dzQToMeC3" ||
-        request.auth.token.email == "arundevv.com@gmail.com" ||
-        exists(/databases/$(database)/documents/app_roles_admin/$(request.auth.uid))
+        request.auth.token.email == "arundevv.com@gmail.com"
       );
+    }
+
+    /** 
+     * Checks if the user is an administrator via hardcoded values OR database role.
+     */
+    function isAdmin() {
+      return isRootAdmin() || exists(/databases/$(database)/documents/app_roles_admin/$(request.auth.uid));
     }
 
     /** Checks if the user is a member of a project based on the provided data map. */
@@ -48,7 +55,8 @@ service cloud.firestore {
     }
 
     match /app_roles_admin/{teamMemberId} {
-      allow read: if isSignedIn() && (request.auth.uid == teamMemberId || isAdmin());
+      // Use isRootAdmin here to break the cycle
+      allow read: if isSignedIn() && (request.auth.uid == teamMemberId || isRootAdmin());
       allow write: if false; 
     }
 

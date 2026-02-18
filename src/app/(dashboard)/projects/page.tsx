@@ -108,8 +108,8 @@ export default function ProjectsPage() {
         </div>
         <h2 className="text-2xl font-black">Access Restricted</h2>
         <p className="text-muted-foreground text-center max-w-md">
-          Authentication clearance is required to view the project portfolio. 
-          Please ensure your session is active.
+          Clearance is required to view the production portfolio. 
+          If you believe this is an error, please refresh your session.
         </p>
         <Button asChild variant="outline" className="rounded-xl">
           <Link href="/dashboard">Return to Dashboard</Link>
