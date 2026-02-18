@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   
-  // Use the standard initialization
+  // Initialize standard services
   const { auth } = initializeFirebase();
 
   useEffect(() => {
@@ -43,7 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [auth]);
 
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  // Grant admin status to specific ID or email
+  const isAdmin = user?.email === ADMIN_EMAIL || user?.uid === 'gHZ9n7s2b9X8fJ2kP3s5t8YxVOE2';
 
   const signIn = async (email: string, pass: string) => {
     try {
@@ -52,15 +53,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await signInWithEmailAndPassword(auth, email, pass);
       if (result.user) {
         toast({
-          title: "Access Granted",
-          description: `Welcome back to the command center, ${result.user.displayName || 'Commander'}.`,
+          title: "Session Initialized",
+          description: `Welcome back to the studio, ${result.user.displayName || 'Creator'}.`,
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Authentication Error",
-        description: error.message || "Invalid credentials provided.",
+        title: "Access Denied",
+        description: error.message || "Invalid security credentials.",
       });
       throw error;
     } finally {
@@ -75,18 +76,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await createUserWithEmailAndPassword(auth, email, pass);
       if (result.user) {
         await updateProfile(result.user, { displayName: name });
-        // Refresh local state
-        setUser({ ...result.user, displayName: name } as User);
+        // Update local user state
+        const updatedUser = { ...result.user, displayName: name } as User;
+        setUser(updatedUser);
         toast({
-          title: "Account Initialized",
-          description: `Welcome to the network, ${name}. Your workspace is ready.`,
+          title: "Account Provisioned",
+          description: `Your workspace has been successfully initialized, ${name}.`,
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Provisioning Failed",
-        description: error.message || "Could not create account at this time.",
+        title: "Setup Failed",
+        description: error.message || "Could not provision your creative account.",
       });
       throw error;
     } finally {
@@ -98,8 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await signOut(auth);
       toast({
-        title: "Session Terminated",
-        description: "You have been securely logged out of the workspace.",
+        title: "Secure Logout",
+        description: "Your session has been terminated successfully.",
       });
     } catch (error: any) {
       toast({
