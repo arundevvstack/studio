@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -12,7 +13,8 @@ import {
   Eye,
   Trash2,
   Edit2,
-  ChevronRight
+  ChevronRight,
+  ShieldAlert
 } from 'lucide-react';
 import { 
   Table, 
@@ -34,26 +36,46 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
-import { subscribeToProjects } from '@/lib/firebase/firestore';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useFirestore } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useAuth } from '@/lib/firebase/auth-context';
 
 export default function ProjectsPage() {
   const [view, setView] = useState<'grid' | 'table'>('table');
-  const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
   const [isMounted, setIsMounted] = useState(false);
+  
+  const { user } = useUser();
+  const { isAdmin } = useAuth();
   const db = useFirestore();
 
   useEffect(() => {
     setIsMounted(true);
-    const unsubscribe = subscribeToProjects(db, setProjects);
-    return () => unsubscribe();
-  }, [db]);
+  }, []);
 
-  const filteredProjects = projects.filter(p => 
+  // Memoize the query to satisfy security rules and avoid infinite loops
+  const projectsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    
+    // If not a hardcoded admin, we must filter by membership to satisfy rules list constraint
+    if (!isAdmin) {
+      return query(
+        collection(db, 'projects'),
+        where('assignedTeamMemberIds', 'array-contains', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+    }
+    
+    // Admins can see everything
+    return query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+  }, [db, user, isAdmin]);
+
+  const { data: projects, isLoading, error } = useCollection<Project>(projectsQuery);
+
+  const filteredProjects = (projects || []).filter(p => 
     p.projectName?.toLowerCase().includes(search.toLowerCase()) ||
     p.client?.toLowerCase().includes(search.toLowerCase())
   );
@@ -74,6 +96,24 @@ export default function ProjectsPage() {
     if (deadline?.seconds) return new Date(deadline.seconds * 1000).toLocaleDateString();
     return new Date(deadline).toLocaleDateString();
   };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="p-4 rounded-full bg-destructive/10 text-destructive">
+          <ShieldAlert size={48} />
+        </div>
+        <h2 className="text-2xl font-black">Access Restricted</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          You don't have the required permissions to view the project portfolio. 
+          Contact your administrator to be assigned to specific projects.
+        </p>
+        <Button asChild variant="outline" className="rounded-xl">
+          <Link href="/dashboard">Return to Dashboard</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-1000 max-w-[1600px] mx-auto pb-12">
@@ -126,7 +166,13 @@ export default function ProjectsPage() {
         </Button>
       </div>
 
-      {view === 'table' ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="h-96 rounded-[3rem] animate-pulse bg-slate-100 border-none" />
+          ))}
+        </div>
+      ) : view === 'table' ? (
         <Card className="border-none shadow-2xl premium-shadow rounded-[2.5rem] overflow-hidden bg-white/70 backdrop-blur-xl">
           <Table>
             <TableHeader className="bg-slate-50/50 h-16">

@@ -1,30 +1,47 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import { Project, ProjectStage } from '@/lib/types';
-import { subscribeToProjects } from '@/lib/firebase/firestore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreVertical, GripVertical, Clock } from 'lucide-react';
+import { Plus, MoreVertical, GripVertical, Clock, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import { useAuth } from '@/lib/firebase/auth-context';
 
 const STAGES: ProjectStage[] = ['Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'];
 
 export default function KanbanPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const { user } = useUser();
+  const { isAdmin } = useAuth();
+  const db = useFirestore();
 
   useEffect(() => {
     setIsMounted(true);
-    const unsubscribe = subscribeToProjects(setProjects);
-    return () => unsubscribe();
   }, []);
 
+  const projectsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    if (!isAdmin) {
+      return query(
+        collection(db, 'projects'),
+        where('assignedTeamMemberIds', 'array-contains', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+    }
+    return query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+  }, [db, user, isAdmin]);
+
+  const { data: projects, isLoading, error } = useCollection<Project>(projectsQuery);
+
   const projectsByStage = STAGES.reduce((acc, stage) => {
-    acc[stage] = projects.filter(p => p.stage === stage);
+    acc[stage] = (projects || []).filter(p => p.stage === stage);
     return acc;
   }, {} as Record<ProjectStage, Project[]>);
 
@@ -38,8 +55,23 @@ export default function KanbanPage() {
 
   const formatDeadline = (deadline: any) => {
     if (!isMounted || !deadline) return 'N/A';
-    return new Date(deadline.seconds * 1000).toLocaleDateString();
+    if (deadline?.seconds) return new Date(deadline.seconds * 1000).toLocaleDateString();
+    return new Date(deadline).toLocaleDateString();
   };
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="p-4 rounded-full bg-destructive/10 text-destructive">
+          <ShieldAlert size={48} />
+        </div>
+        <h2 className="text-2xl font-black">Access Restricted</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          Board visibility is restricted based on project assignments.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col space-y-6 overflow-hidden animate-in fade-in duration-500">
@@ -64,7 +96,11 @@ export default function KanbanPage() {
             </div>
 
             <div className="flex-1 bg-slate-100/50 rounded-2xl p-3 flex flex-col gap-3 min-h-[500px] border border-dashed border-slate-300">
-              {projectsByStage[stage].length === 0 ? (
+              {isLoading ? (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground/30 italic text-xs">
+                  Loading...
+                </div>
+              ) : projectsByStage[stage].length === 0 ? (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground/30 italic text-xs">
                   Empty stage
                 </div>
@@ -113,9 +149,11 @@ export default function KanbanPage() {
                 ))
               )}
               
-              <Button variant="ghost" className="w-full justify-start gap-2 h-10 rounded-xl text-muted-foreground hover:bg-slate-200/50 hover:text-slate-900 border-none transition-all">
-                <Plus size={16} />
-                <span className="text-xs font-semibold">Quick add</span>
+              <Button variant="ghost" className="w-full justify-start gap-2 h-10 rounded-xl text-muted-foreground hover:bg-slate-200/50 hover:text-slate-900 border-none transition-all" asChild>
+                <Link href="/projects/new">
+                  <Plus size={16} />
+                  <span className="text-xs font-semibold">Quick add</span>
+                </Link>
               </Button>
             </div>
           </div>

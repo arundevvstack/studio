@@ -1,3 +1,4 @@
+
 import { 
   collection, 
   setDoc, 
@@ -9,20 +10,42 @@ import {
   onSnapshot,
   serverTimestamp,
   getDoc,
-  Firestore
+  Firestore,
+  where
 } from 'firebase/firestore';
 import { Project } from '../types';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const PROJECTS_COLLECTION = 'projects';
 
-export const subscribeToProjects = (db: Firestore, callback: (projects: Project[]) => void) => {
-  const q = query(collection(db, PROJECTS_COLLECTION), orderBy('createdAt', 'desc'));
+/**
+ * Standard subscription for projects. 
+ * Note: Use useCollection hook in components for better error handling.
+ */
+export const subscribeToProjects = (db: Firestore, userId: string, isAdmin: boolean, callback: (projects: Project[]) => void) => {
+  let q = query(collection(db, PROJECTS_COLLECTION), orderBy('createdAt', 'desc'));
+  
+  if (!isAdmin) {
+    q = query(
+      collection(db, PROJECTS_COLLECTION), 
+      where('assignedTeamMemberIds', 'array-contains', userId),
+      orderBy('createdAt', 'desc')
+    );
+  }
+
   return onSnapshot(q, (snapshot) => {
     const projects = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as Project[];
     callback(projects);
+  }, (error) => {
+    const permissionError = new FirestorePermissionError({
+      path: PROJECTS_COLLECTION,
+      operation: 'list'
+    });
+    errorEmitter.emit('permission-error', permissionError);
   });
 };
 
@@ -44,22 +67,48 @@ export const createProject = async (db: Firestore, userId: string, data: Partial
     description: data.description || '',
   };
 
-  return await setDoc(newProjectRef, projectData);
+  return setDoc(newProjectRef, projectData)
+    .catch((error) => {
+      const permissionError = new FirestorePermissionError({
+        path: newProjectRef.path,
+        operation: 'create',
+        requestResourceData: projectData
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
 };
 
 export const updateProject = async (db: Firestore, id: string, data: Partial<Project>) => {
   const projectRef = doc(db, PROJECTS_COLLECTION, id);
-  return await updateDoc(projectRef, {
+  const updateData = {
     ...data,
     updatedAt: serverTimestamp()
-  });
+  };
+  
+  return updateDoc(projectRef, updateData)
+    .catch((error) => {
+      const permissionError = new FirestorePermissionError({
+        path: projectRef.path,
+        operation: 'update',
+        requestResourceData: updateData
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
 };
 
 export const getProject = async (db: Firestore, id: string): Promise<Project | null> => {
   const projectRef = doc(db, PROJECTS_COLLECTION, id);
-  const snapshot = await getDoc(projectRef);
-  if (snapshot.exists()) {
-    return { id: snapshot.id, ...snapshot.data() } as Project;
+  try {
+    const snapshot = await getDoc(projectRef);
+    if (snapshot.exists()) {
+      return { id: snapshot.id, ...snapshot.data() } as Project;
+    }
+  } catch (error) {
+    const permissionError = new FirestorePermissionError({
+      path: projectRef.path,
+      operation: 'get'
+    });
+    errorEmitter.emit('permission-error', permissionError);
   }
   return null;
 };
