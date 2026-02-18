@@ -1,4 +1,4 @@
-export type ProjectStage = 'Discussion' | 'Pre Production' | 'Production' | 'Post Production' | 'Released';
+export type ProjectStage = 'Pitch' | 'Discussion' | 'Pre Production' | 'Production' | 'Post Production' | 'Released';
 export type ProjectPriority = 'Low' | 'Medium' | 'High';
 
 export interface Project {

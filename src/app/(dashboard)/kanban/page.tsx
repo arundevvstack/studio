@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -14,7 +13,7 @@ import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebas
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { useAuth } from '@/lib/firebase/auth-context';
 
-const STAGES: ProjectStage[] = ['Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'];
+const STAGES: ProjectStage[] = ['Pitch', 'Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'];
 
 export default function KanbanPage() {
   const [isMounted, setIsMounted] = useState(false);

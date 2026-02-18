@@ -83,6 +83,7 @@ export default function CalendarPage() {
 
   const getStageColor = (stage: string) => {
     switch(stage) {
+      case 'Pitch': return 'bg-purple-500 text-white';
       case 'Released': return 'bg-emerald-500 text-white';
       case 'Discussion': return 'bg-blue-500 text-white';
       case 'Pre Production': return 'bg-indigo-500 text-white';

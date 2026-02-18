@@ -62,11 +62,12 @@ import { doc, collection, query, orderBy, serverTimestamp, setDoc, updateDoc, de
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-const STAGES: ProjectStage[] = ['Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'];
+const STAGES: ProjectStage[] = ['Pitch', 'Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'];
 const PRIORITIES: ProjectPriority[] = ['Low', 'Medium', 'High'];
 
 // Maps each lifecycle stage to a suggested baseline progress percentage
 const STAGE_PROGRESS_MAP: Record<ProjectStage, number> = {
+  'Pitch': 5,
   'Discussion': 15,
   'Pre Production': 35,
   'Production': 65,

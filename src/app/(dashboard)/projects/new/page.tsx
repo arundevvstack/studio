@@ -26,7 +26,7 @@ export default function NewProjectPage() {
   const [formData, setFormData] = useState({
     projectName: '',
     client: '',
-    stage: 'Discussion' as ProjectStage,
+    stage: 'Pitch' as ProjectStage,
     priority: 'Medium' as ProjectPriority,
     budget: '',
     description: '',
@@ -129,6 +129,7 @@ export default function NewProjectPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-3xl shadow-2xl border-slate-100">
+                    <SelectItem value="Pitch">Pitch</SelectItem>
                     <SelectItem value="Discussion">Discussion</SelectItem>
                     <SelectItem value="Pre Production">Pre Production</SelectItem>
                     <SelectItem value="Production">Production</SelectItem>

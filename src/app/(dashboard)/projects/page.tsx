@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -82,6 +81,7 @@ export default function ProjectsPage() {
 
   const getStageColor = (stage: string) => {
     switch(stage) {
+      case 'Pitch': return 'bg-purple-50 text-purple-700 border-purple-100';
       case 'Released': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
       case 'Discussion': return 'bg-blue-50 text-blue-700 border-blue-100';
       case 'Pre Production': return 'bg-indigo-50 text-indigo-700 border-indigo-100';
@@ -226,23 +226,6 @@ export default function ProjectsPage() {
                         <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl hover:bg-white hover:text-primary transition-all" asChild>
                           <Link href={`/projects/${project.id}`}><ChevronRight size={20} /></Link>
                         </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl hover:bg-white transition-all">
-                              <MoreHorizontal size={20} className="text-slate-400" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-3xl shadow-2xl border-slate-100 p-3 min-w-[200px]">
-                            <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Operations</DropdownMenuLabel>
-                            <DropdownMenuItem className="rounded-xl gap-3 cursor-pointer py-3 font-bold" asChild>
-                               <Link href={`/projects/${project.id}`}><Eye size={18} /> Deep View</Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="rounded-xl gap-3 cursor-pointer py-3 font-bold"><Edit2 size={18} /> Modify Scope</DropdownMenuItem>
-                            <DropdownMenuItem className="rounded-xl gap-3 text-rose-500 focus:text-rose-600 focus:bg-rose-50 cursor-pointer py-3 font-bold">
-                              <Trash2 size={18} /> Decommission
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>

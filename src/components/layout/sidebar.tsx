@@ -12,7 +12,8 @@ import {
   Plus,
   LogOut,
   ChevronRight,
-  Zap
+  Zap,
+  Workflow
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { useAuth } from '@/lib/firebase/auth-context';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Pipeline', href: '/pipeline', icon: Workflow },
   { name: 'Projects', href: '/projects', icon: FolderKanban },
   { name: 'Kanban', href: '/kanban', icon: Trello },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
