@@ -41,7 +41,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy, where } from 'firebase/firestore';
 import { Project } from '@/lib/types';
 import { useAuth } from '@/lib/firebase/auth-context';
 
@@ -59,8 +59,18 @@ export default function ReportsPage() {
 
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
+    
+    // Admins can see the whole studio, members only see their assigned ones.
+    if (!isAdmin) {
+      return query(
+        collection(db, 'projects'),
+        where('assignedTeamMemberIds', 'array-contains', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+    }
+    
     return query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-  }, [db, user]);
+  }, [db, user, isAdmin]);
 
   const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
 

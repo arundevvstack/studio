@@ -35,13 +35,13 @@ service cloud.firestore {
 
     /** 
      * Checks if the user has a global admin role.
-     * Includes hardcoded UID for 'arundevv.com@gmail.com' to provide requested Full Access.
+     * Hardcoded UID for requested Full Access to bypass exists() latency.
      */
     function isAdmin() {
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/app_roles_admin/$(request.auth.uid)) ||
         request.auth.uid == "3EQSAs91zzVclLcZYk2dzQToMeC3" ||
-        request.auth.token.email == "arundevv.com@gmail.com"
+        request.auth.token.email == "arundevv.com@gmail.com" ||
+        exists(/databases/$(database)/documents/app_roles_admin/$(request.auth.uid))
       );
     }
 

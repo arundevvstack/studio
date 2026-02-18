@@ -46,21 +46,28 @@ export default function PipelinePage() {
   const pipelineQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     
-    // We filter for 'Pitch' and 'Discussion' stages. 
-    // Firestore doesn't support OR on multiple 'where' with different values for the same field directly in a simple way without 'in'.
+    // Admins can see the whole pipeline, members only see their assigned ones.
+    if (!isAdmin) {
+      return query(
+        collection(db, 'projects'),
+        where('stage', 'in', ['Pitch', 'Discussion']),
+        where('assignedTeamMemberIds', 'array-contains', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+    }
+
     return query(
       collection(db, 'projects'),
       where('stage', 'in', ['Pitch', 'Discussion']),
       orderBy('createdAt', 'desc')
     );
-  }, [db, user]);
+  }, [db, user, isAdmin]);
 
   const { data: projects, isLoading, error } = useCollection<Project>(pipelineQuery);
 
   const filteredProjects = (projects || []).filter(p => 
-    (p.projectName?.toLowerCase().includes(search.toLowerCase()) ||
-    p.client?.toLowerCase().includes(search.toLowerCase())) &&
-    (!isAdmin ? p.assignedTeamMemberIds?.includes(user?.uid || '') : true)
+    p.projectName?.toLowerCase().includes(search.toLowerCase()) ||
+    p.client?.toLowerCase().includes(search.toLowerCase())
   );
 
   const getStageColor = (stage: string) => {
