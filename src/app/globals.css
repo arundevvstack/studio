@@ -10,7 +10,7 @@
     --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
-    --primary: 212 100% 50%; /* iOS System Blue */
+    --primary: 212 100% 50%; /* iOS System Blue #007AFF */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 20% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -42,7 +42,7 @@
 }
 
 .ios-blur {
-  @apply bg-white/70 backdrop-blur-2xl border border-white/40;
+  @apply bg-white/70 backdrop-blur-3xl border border-white/40;
 }
 
 .ios-card {
@@ -66,9 +66,13 @@
   @apply bg-slate-300/50 rounded-full hover:bg-slate-400/50 transition-colors;
 }
 
-/* iOS-style tactile interactions */
+/* iOS-style tactile interactions - Avoid scaling links directly to prevent click propagation issues */
 .ios-interactive {
-  @apply transition-all duration-200 active:scale-[0.97] cursor-pointer;
+  @apply transition-all duration-200 cursor-pointer;
+}
+
+.ios-interactive:active {
+  @apply opacity-70;
 }
 
 /* Ensure links are always above background blurs */

@@ -75,7 +75,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const unsubscribe = onAuthStateChanged(
       auth,
       (firebaseUser) => {
-        // Root Admin Check
         const isAdmin = !!firebaseUser && (
           firebaseUser.email === ADMIN_EMAIL || 
           firebaseUser.uid === ADMIN_UID
@@ -130,7 +129,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   };
 };
 
-export const useAuth = (): Auth => {
+export const useAuthInstance = (): Auth => {
   const { auth } = useFirebase();
   return auth;
 };
@@ -145,13 +144,16 @@ export const useFirebaseApp = (): FirebaseApp => {
   return firebaseApp;
 };
 
-type MemoFirebase <T> = T & {__memo?: boolean};
+type MemoFirebase<T> = T & {__memo?: boolean};
 
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
-  const memoized = factory();
-  if(typeof memoized !== 'object' || memoized === null) return memoized;
-  (memoized as MemoFirebase<T>).__memo = true;
-  return memoized;
+  // CRITICAL FIX: Use React.useMemo to stabilize the object and prevent infinite render loops.
+  return useMemo(() => {
+    const memoized = factory();
+    if (typeof memoized !== 'object' || memoized === null) return memoized;
+    (memoized as MemoFirebase<T>).__memo = true;
+    return memoized;
+  }, deps);
 }
 
 export const useUser = (): UserHookResult => {

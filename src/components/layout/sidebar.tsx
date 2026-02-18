@@ -35,7 +35,7 @@ export function Sidebar() {
   return (
     <div className="flex h-screen w-80 flex-col bg-white/40 backdrop-blur-3xl border-r border-slate-200/50 px-6 py-10 shrink-0 relative z-40">
       <div className="px-4 mb-12">
-        <Link href="/dashboard" className="flex items-center gap-4 group cursor-pointer">
+        <Link href="/dashboard" className="flex items-center gap-4 group cursor-pointer ios-interactive">
           <div className="w-12 h-12 rounded-[1.25rem] bg-primary flex items-center justify-center text-primary-foreground shadow-2xl shadow-primary/30 group-hover:rotate-6 transition-transform">
             <Zap size={26} fill="currentColor" />
           </div>
@@ -44,18 +44,17 @@ export function Sidebar() {
       </div>
 
       <div className="px-2 mb-10">
-        <Button 
-          className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary border-none" 
-          asChild
-        >
-          <Link href="/projects/new">
+        <Link href="/projects/new" className="block">
+          <Button 
+            className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary border-none"
+          >
             <Plus size={22} strokeWidth={3} />
             Create Project
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </div>
 
-      <div className="flex-1 space-y-2 px-2 overflow-y-auto">
+      <div className="flex-1 space-y-2 px-2 overflow-y-auto scrollbar-hide">
         <p className="px-4 text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4">Workspace</p>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
