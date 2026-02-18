@@ -15,6 +15,7 @@ import { initializeFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
 const ADMIN_EMAIL = 'arundevv.com@gmail.com';
+const ADMIN_UID = '3EQSAs91zzVclLcZYk2dzQToMeC3';
 
 interface AuthContextType {
   user: User | null;
@@ -43,8 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [auth]);
 
-  // Grant admin status to specific ID or email
-  const isAdmin = user?.email === ADMIN_EMAIL || user?.uid === 'gHZ9n7s2b9X8fJ2kP3s5t8YxVOE2';
+  // Grant admin status to specific UID or Email
+  const isAdmin = user?.email === ADMIN_EMAIL || user?.uid === ADMIN_UID;
 
   const signIn = async (email: string, pass: string) => {
     try {

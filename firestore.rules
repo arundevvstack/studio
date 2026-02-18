@@ -19,13 +19,6 @@ service cloud.firestore {
      * - /projects/{projectId}/[subcollections]: Notes, Tasks, and Events are secured via a denormalized 
      *   `projectAssignedTeamMemberIds` field, allowing sub-resource rules to remain independent of the parent.
      * - /tags/{tagId}: Global categorization tags accessible to all authenticated users but managed by admins.
-     * 
-     * KEY SECURITY DECISIONS:
-     * 1. Denormalization for Authorization: Project membership is copied from projects into all sub-resources 
-     *    (Notes, Tasks, TimelineEvents) to allow for secure list queries and O(1) rule evaluation.
-     * 2. DBAC for Admins: Administrative roles are verified by checking the /app_roles_admin collection.
-     * 3. Prototyping Flexibility: Rules strictly enforce WHO can access data based on identity and 
-     *    relationships but remain flexible on the specific schema (types/optional fields) of the content.
      */
 
     // --- Global Helper Functions ---
@@ -40,9 +33,16 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Checks if the user has a global admin role via the DBAC collection. */
+    /** 
+     * Checks if the user has a global admin role.
+     * Includes hardcoded UID for 'arundevv.com@gmail.com' to provide requested Full Access.
+     */
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/app_roles_admin/$(request.auth.uid));
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/app_roles_admin/$(request.auth.uid)) ||
+        request.auth.uid == "3EQSAs91zzVclLcZYk2dzQToMeC3" ||
+        request.auth.token.email == "arundevv.com@gmail.com"
+      );
     }
 
     /** Checks if the user is a member of a project based on the provided data map. */
@@ -59,10 +59,6 @@ service cloud.firestore {
 
     /**
      * @description Rules for user profiles. Users manage their own profiles.
-     * @path /teamMembers/{teamMemberId}
-     * @allow (get) If the user is the owner or an admin.
-     * @deny (update) If the user attempts to change another user's profile.
-     * @principle Path-based ownership for private user data.
      */
     match /teamMembers/{teamMemberId} {
       allow get: if isOwner(teamMemberId) || isAdmin();
@@ -74,10 +70,6 @@ service cloud.firestore {
 
     /**
      * @description DBAC collection for global admins. Managed externally/manually.
-     * @path /app_roles_admin/{teamMemberId}
-     * @allow (get) If the user is an admin.
-     * @deny (write) Any user-initiated writes (managed by system/admin).
-     * @principle Structural segregation of sensitive role data.
      */
     match /app_roles_admin/{teamMemberId} {
       allow get: if isAdmin();
@@ -86,23 +78,14 @@ service cloud.firestore {
     }
 
     /**
-     * @description Collaborative project documents. Access granted to assigned team members.
-     * @path /projects/{projectId}
-     * @allow (create) If the user is authenticated and includes themselves in the members list.
-     * @deny (read) If the user is not in the assignedTeamMemberIds array.
-     * @principle Shared access via membership arrays (QAP pattern).
+     * @description Collaborative project documents.
      */
     match /projects/{projectId} {
       allow get, list: if isAdmin() || isProjectMember(resource.data);
-      allow create: if isSignedIn() && request.resource.data.id == projectId && (request.auth.uid in request.resource.data.assignedTeamMemberIds);
+      allow create: if isSignedIn() && request.resource.data.id == projectId && (isAdmin() || (request.auth.uid in request.resource.data.assignedTeamMemberIds));
       allow update: if (isAdmin() || isProjectMember(resource.data)) && resource != null && request.resource.data.id == resource.data.id;
       allow delete: if isAdmin() || (resource != null && isProjectMember(resource.data));
 
-      /**
-       * @description Sub-resource: Notes. Secured via denormalized project membership.
-       * @path /projects/{projectId}/notes/{noteId}
-       * @principle Authorization Independence through data denormalization.
-       */
       match /notes/{noteId} {
         allow get, list: if isAdmin() || isSubResourceMember(resource.data);
         allow create: if (isAdmin() || (isSignedIn() && request.auth.uid in request.resource.data.projectAssignedTeamMemberIds)) && request.resource.data.id == noteId && request.resource.data.projectId == projectId;
@@ -110,11 +93,6 @@ service cloud.firestore {
         allow delete: if isAdmin() || (resource != null && isSubResourceMember(resource.data));
       }
 
-      /**
-       * @description Sub-resource: Tasks. Secured via denormalized project membership.
-       * @path /projects/{projectId}/tasks/{taskId}
-       * @principle Authorization Independence through data denormalization.
-       */
       match /tasks/{taskId} {
         allow get, list: if isAdmin() || isSubResourceMember(resource.data);
         allow create: if (isAdmin() || (isSignedIn() && request.auth.uid in request.resource.data.projectAssignedTeamMemberIds)) && request.resource.data.id == taskId && request.resource.data.projectId == projectId;
@@ -122,11 +100,6 @@ service cloud.firestore {
         allow delete: if isAdmin() || (resource != null && isSubResourceMember(resource.data));
       }
 
-      /**
-       * @description Sub-resource: TimelineEvents. Secured via denormalized project membership.
-       * @path /projects/{projectId}/timelineEvents/{timelineEventId}
-       * @principle Authorization Independence through data denormalization.
-       */
       match /timelineEvents/{timelineEventId} {
         allow get, list: if isAdmin() || isSubResourceMember(resource.data);
         allow create: if (isAdmin() || (isSignedIn() && request.auth.uid in request.resource.data.projectAssignedTeamMemberIds)) && request.resource.data.id == timelineEventId && request.resource.data.projectId == projectId;
@@ -137,10 +110,6 @@ service cloud.firestore {
 
     /**
      * @description Global tags for project categorization.
-     * @path /tags/{tagId}
-     * @allow (read) All authenticated users.
-     * @allow (write) Restricted to global administrators.
-     * @principle Public authenticated read with privileged write access.
      */
     match /tags/{tagId} {
       allow get, list: if isSignedIn();
