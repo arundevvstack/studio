@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [auth]);
 
   // Grant admin status to specific UID or Email
-  const isAdmin = user?.email === ADMIN_EMAIL || user?.uid === ADMIN_UID;
+  const isAdmin = !!user && (user.email === ADMIN_EMAIL || user.uid === ADMIN_UID);
 
   const signIn = async (email: string, pass: string) => {
     try {
