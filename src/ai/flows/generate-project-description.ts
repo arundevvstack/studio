@@ -33,9 +33,8 @@ const projectDescriptionPrompt = ai.definePrompt({
   name: 'projectDescriptionPrompt',
   input: { schema: ProjectIdeaInputSchema },
   output: { schema: ProjectDescriptionOutputSchema },
-  prompt: `You are an expert project manager assistant. Your task is to expand a brief project idea or keywords into a detailed project description. 
-The description should cover the project's purpose, key objectives, target audience, and expected outcomes. 
-Ensure the description is professional, comprehensive, and suitable for initial project scoping.
+  prompt: `You are an expert project manager assistant. Your task is to expand a brief project idea or keywords into a detailed project description suitable for a media production company.
+The description should cover the project's creative direction, technical requirements, and target audience.
 
 Project Idea: {{{projectIdea}}}`,
 });

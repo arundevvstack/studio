@@ -13,7 +13,8 @@ import {
   Trash2,
   Edit2,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  RotateCcw
 } from 'lucide-react';
 import { 
   Table, 
@@ -23,13 +24,6 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -54,10 +48,8 @@ export default function ProjectsPage() {
   }, []);
 
   const projectsQuery = useMemoFirebase(() => {
-    // Crucial: Only initiate query once user and their admin status are resolved.
     if (!db || !user || isUserLoading) return null;
     
-    // Admins see all projects globally.
     if (isAdmin) {
       return query(
         collection(db, 'projects'), 
@@ -65,7 +57,6 @@ export default function ProjectsPage() {
       );
     }
     
-    // Non-admins must filter by assigned IDs to comply with security rules.
     return query(
       collection(db, 'projects'),
       where('assignedTeamMemberIds', 'array-contains', user.uid),
@@ -100,18 +91,24 @@ export default function ProjectsPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="p-4 rounded-full bg-destructive/10 text-destructive">
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 animate-in fade-in duration-500">
+        <div className="p-5 rounded-3xl bg-destructive/10 text-destructive shadow-lg shadow-destructive/5">
           <ShieldAlert size={48} />
         </div>
-        <h2 className="text-2xl font-black">Access Restricted</h2>
-        <p className="text-muted-foreground text-center max-w-md">
-          Clearance is required to view the production portfolio. 
-          The studio is currently synchronizing your permissions.
-        </p>
-        <Button asChild variant="outline" className="rounded-xl">
-          <Link href="/dashboard">Return to Dashboard</Link>
-        </Button>
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Sync Encountered a Blocker</h2>
+          <p className="text-muted-foreground text-center max-w-md font-medium leading-relaxed">
+            The studio is unable to provision your production portfolio at this time. This may be due to missing composite indexes or temporary clearance issues.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="rounded-2xl h-12 px-6 font-bold" onClick={() => window.location.reload()}>
+            <RotateCcw size={18} className="mr-2" /> Retry Session
+          </Button>
+          <Button asChild className="rounded-2xl h-12 px-8 font-black bg-primary">
+            <Link href="/dashboard">Return Home</Link>
+          </Button>
+        </div>
       </div>
     );
   }
@@ -121,10 +118,10 @@ export default function ProjectsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900">Project Portfolio</h1>
-          <p className="text-muted-foreground text-lg">Centralized command for all active productions.</p>
+          <p className="text-muted-foreground text-lg font-medium">Centralized command for all active studio productions.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+          <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border">
             <Button 
               variant={view === 'table' ? 'secondary' : 'ghost'} 
               size="sm" 
@@ -142,10 +139,10 @@ export default function ProjectsPage() {
               <LayoutGrid size={18} />
             </Button>
           </div>
-          <Button className="rounded-2xl h-12 px-6 shadow-xl shadow-primary/20 font-bold bg-primary hover:scale-[1.02] transition-all" asChild>
+          <Button className="rounded-2xl h-12 px-6 shadow-xl shadow-primary/20 font-black bg-primary hover:scale-[1.02] transition-all" asChild>
             <Link href="/projects/new">
               <Plus size={20} className="mr-2" strokeWidth={3} />
-              New Production
+              Launch Production
             </Link>
           </Button>
         </div>
@@ -156,21 +153,21 @@ export default function ProjectsPage() {
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
           <Input 
             placeholder="Search by project identifier or strategic client..." 
-            className="pl-14 border-none bg-slate-100/80 rounded-2xl h-14 text-lg font-medium"
+            className="pl-14 border-none bg-slate-100/80 rounded-2xl h-14 text-lg font-bold"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <Button variant="outline" className="rounded-2xl h-14 px-8 gap-2 border-slate-200 bg-white hover:bg-slate-50 font-bold">
           <Filter size={20} />
-          Refine Search
+          Refine
         </Button>
       </div>
 
-      {isLoading ? (
+      {(isLoading || isUserLoading) ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[1, 2, 3].map(i => (
-            <Card key={i} className="h-96 rounded-[3rem] animate-pulse bg-slate-100 border-none" />
+            <Card key={i} className="h-96 rounded-[3rem] animate-pulse bg-slate-100/50 border-none" />
           ))}
         </div>
       ) : view === 'table' ? (
@@ -197,8 +194,8 @@ export default function ProjectsPage() {
                   <TableRow key={project.id} className="hover:bg-white/40 transition-all border-b border-slate-50 last:border-0 group h-24">
                     <TableCell className="pl-10">
                       <Link href={`/projects/${project.id}`} className="block group">
-                        <div className="font-black text-slate-900 group-hover:text-primary transition-colors text-lg tracking-tight">{project.projectName}</div>
-                        <div className="text-sm text-slate-500 font-bold uppercase tracking-wider mt-0.5">{project.client}</div>
+                        <div className="font-black text-slate-900 group-hover:text-primary transition-colors text-lg tracking-tight leading-none">{project.projectName}</div>
+                        <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1.5">{project.client}</div>
                       </Link>
                     </TableCell>
                     <TableCell>
@@ -223,11 +220,9 @@ export default function ProjectsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-10">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl hover:bg-white hover:text-primary transition-all" asChild>
-                          <Link href={`/projects/${project.id}`}><ChevronRight size={20} /></Link>
-                        </Button>
-                      </div>
+                      <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl hover:bg-white hover:text-primary transition-all" asChild>
+                        <Link href={`/projects/${project.id}`}><ChevronRight size={20} /></Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
@@ -249,7 +244,7 @@ export default function ProjectsPage() {
               </div>
               <CardContent className="p-8">
                 <Link href={`/projects/${project.id}`}>
-                  <h3 className="font-black text-2xl mb-1 group-hover:text-primary transition-colors tracking-tight text-slate-900">{project.projectName}</h3>
+                  <h3 className="font-black text-2xl mb-1 group-hover:text-primary transition-colors tracking-tight text-slate-900 leading-tight">{project.projectName}</h3>
                 </Link>
                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">{project.client}</p>
                 
@@ -267,7 +262,7 @@ export default function ProjectsPage() {
                        <Clock size={16} className="text-primary" />
                        {formatDeadline(project.deadline)}
                     </div>
-                    <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all">
+                    <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
                        <ChevronRight size={18} />
                     </Button>
                   </div>
