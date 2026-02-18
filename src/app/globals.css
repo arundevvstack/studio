@@ -4,31 +4,26 @@
 
 @layer base {
   :root {
-    --background: 210 50% 98%;
+    --background: 210 20% 98%;
     --foreground: 224 71% 4%;
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
-    --primary: 230 85% 55%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --primary: 212 100% 50%; /* iOS System Blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
+    --muted: 210 20% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
+    --accent: 210 20% 96%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 230 85% 55%;
-    --radius: 1.5rem;
-    --chart-1: 230 85% 55%;
-    --chart-2: 212 95% 68%;
-    --chart-3: 216 92% 60%;
-    --chart-4: 210 98% 78%;
-    --chart-5: 212 97% 87%;
+    --ring: 212 100% 50%;
+    --radius: 2rem;
   }
 }
 
@@ -37,26 +32,30 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground selection:bg-primary/30;
+    @apply bg-[#F2F2F7] text-foreground selection:bg-primary/30 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
 .premium-shadow {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 0 0 1px 0 rgba(0, 0, 0, 0.1);
 }
 
-.glass-card {
-  @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl;
+.ios-blur {
+  @apply bg-white/70 backdrop-blur-2xl border border-white/40;
+}
+
+.ios-card {
+  @apply rounded-[2.5rem] premium-shadow ios-blur overflow-hidden;
 }
 
 .hero-gradient {
-  background: radial-gradient(circle at top right, hsla(var(--primary), 0.1), transparent),
-              radial-gradient(circle at bottom left, hsla(230, 85%, 55%, 0.05), transparent);
+  background: radial-gradient(circle at 0% 0%, hsla(var(--primary), 0.08), transparent 40%),
+              radial-gradient(circle at 100% 100%, hsla(var(--primary), 0.05), transparent 40%);
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -64,9 +63,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
+  @apply bg-slate-300/50 rounded-full hover:bg-slate-400/50 transition-colors;
 }
 
-.animate-in {
-  animation-duration: 0.5s;
+/* iOS-style button transitions */
+button {
+  @apply active:scale-[0.96] transition-all duration-200;
 }

@@ -33,30 +33,30 @@ export function Sidebar() {
   const { logOut } = useAuth();
 
   return (
-    <div className="flex h-full w-72 flex-col border-r bg-white/50 backdrop-blur-2xl px-4 py-8 relative shrink-0">
-      <div className="px-4 mb-10">
-        <Link href="/dashboard" className="flex items-center gap-3 font-black text-2xl tracking-tighter text-slate-900 group">
-          <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/30 group-hover:rotate-6 transition-transform">
-            <Zap size={22} fill="currentColor" />
+    <div className="flex h-screen w-80 flex-col bg-white/40 backdrop-blur-3xl border-r border-slate-200/50 px-6 py-10 shrink-0 relative">
+      <div className="px-4 mb-12">
+        <Link href="/dashboard" className="flex items-center gap-4 group">
+          <div className="w-12 h-12 rounded-[1.25rem] bg-primary flex items-center justify-center text-primary-foreground shadow-2xl shadow-primary/30 group-hover:rotate-6 transition-transform">
+            <Zap size={26} fill="currentColor" />
           </div>
-          <span className="bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">MediaFlow</span>
+          <span className="font-black text-3xl tracking-tighter text-slate-900">MediaFlow</span>
         </Link>
       </div>
 
-      <div className="px-2 mb-8">
+      <div className="px-2 mb-10">
         <Button 
-          className="w-full justify-center h-14 rounded-2xl font-black text-sm gap-2 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary" 
+          className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary" 
           asChild
         >
           <Link href="/projects/new">
-            <Plus size={20} strokeWidth={3} />
+            <Plus size={22} strokeWidth={3} />
             Create Project
           </Link>
         </Button>
       </div>
 
-      <div className="flex-1 space-y-1.5 px-2 overflow-y-auto scrollbar-hide">
-        <p className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-3">Main Navigation</p>
+      <div className="flex-1 space-y-2 px-2 overflow-y-auto scrollbar-hide">
+        <p className="px-4 text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4">Workspace</p>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -64,43 +64,38 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "group flex items-center justify-between px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300",
+                "group flex items-center justify-between px-5 py-4 text-[15px] font-bold rounded-[1.5rem] transition-all duration-300",
                 isActive 
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-white text-primary premium-shadow" 
+                  : "text-slate-500 hover:bg-white/60 hover:text-slate-900"
               )}
             >
               <div className="flex items-center">
-                <item.icon className={cn("mr-3 h-5 w-5", isActive ? "" : "text-slate-400 group-hover:text-slate-900")} strokeWidth={isActive ? 2.5 : 2} />
+                <item.icon className={cn("mr-4 h-6 w-6", isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-900")} strokeWidth={isActive ? 2.5 : 2} />
                 {item.name}
               </div>
-              {isActive && <ChevronRight size={14} className="opacity-50" />}
+              {isActive && <ChevronRight size={16} className="text-primary/50" />}
             </Link>
           );
         })}
       </div>
 
-      <div className="pt-6 border-t border-slate-100 px-2 space-y-1.5">
+      <div className="pt-8 mt-6 border-t border-slate-200/50 px-2 space-y-2">
         <Link
           href="/settings"
-          className={cn(
-            "flex items-center px-4 py-3 text-sm font-bold rounded-2xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-all duration-300"
-          )}
+          className="flex items-center px-5 py-4 text-[15px] font-bold rounded-[1.5rem] text-slate-500 hover:bg-white/60 hover:text-slate-900 transition-all duration-300"
         >
-          <Settings className="mr-3 h-5 w-5 text-slate-400" />
+          <Settings className="mr-4 h-6 w-6 text-slate-400" />
           Settings
         </Link>
         <button
           onClick={() => logOut()}
-          className="w-full flex items-center px-4 py-3 text-sm font-bold rounded-2xl text-rose-500 hover:bg-rose-50 transition-all duration-300"
+          className="w-full flex items-center px-5 py-4 text-[15px] font-bold rounded-[1.5rem] text-rose-500 hover:bg-rose-50 transition-all duration-300"
         >
-          <LogOut className="mr-3 h-5 w-5" />
-          Logout
+          <LogOut className="mr-4 h-6 w-6" />
+          Log out
         </button>
       </div>
-      
-      {/* Decorative Blur */}
-      <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-primary/10 rounded-full blur-[80px] pointer-events-none opacity-50"></div>
     </div>
   );
 }
