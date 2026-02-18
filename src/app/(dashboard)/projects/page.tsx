@@ -9,9 +9,6 @@ import {
   List, 
   Plus, 
   Clock, 
-  Eye,
-  Trash2,
-  Edit2,
   ChevronRight,
   ShieldAlert,
   RotateCcw
@@ -28,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -89,7 +86,7 @@ export default function ProjectsPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] space-y-8 animate-in fade-in duration-700">
+      <div className="flex flex-col items-center justify-center min-h-[500px] space-y-8">
         <div className="p-8 rounded-[2.5rem] bg-rose-50 text-rose-600 premium-shadow">
           <ShieldAlert size={64} />
         </div>
@@ -103,17 +100,14 @@ export default function ProjectsPage() {
           <Button variant="outline" className="rounded-[1.5rem] h-14 px-8 font-black" onClick={() => window.location.reload()}>
             <RotateCcw size={20} className="mr-3" /> Retry Sync
           </Button>
-          <Button asChild className="rounded-[1.5rem] h-14 px-10 font-black bg-primary">
-            <Link href="/dashboard">Return to Dashboard</Link>
-          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-[1400px] mx-auto pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 px-4">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000 max-w-[1400px] mx-auto pb-12 px-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div className="space-y-2">
           <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-tight">Project Portfolio</h1>
           <p className="text-slate-500 text-xl font-medium">Managing all studio productions from kickoff to final release.</p>
@@ -137,7 +131,7 @@ export default function ProjectsPage() {
               <LayoutGrid size={22} />
             </Button>
           </div>
-          <Button className="rounded-[1.5rem] h-14 px-10 shadow-2xl shadow-primary/25 font-black bg-primary hover:scale-[1.02] transition-all" asChild>
+          <Button className="rounded-[1.5rem] h-14 px-10 shadow-2xl shadow-primary/25 font-black bg-primary hover:scale-[1.02] transition-all border-none text-white" asChild>
             <Link href="/projects/new">
               <Plus size={24} className="mr-3" strokeWidth={3} />
               New Production
@@ -146,12 +140,12 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-6 bg-white/60 backdrop-blur-3xl p-6 rounded-[3rem] border border-white/40 ios-card px-4 mx-4">
+      <div className="flex items-center gap-6 bg-white/60 backdrop-blur-3xl p-6 rounded-[3rem] border border-white/40 shadow-sm ios-blur">
         <div className="flex-1 relative group">
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400 group-focus-within:text-primary transition-colors" />
           <Input 
             placeholder="Search production entities or clients..." 
-            className="pl-16 border-none bg-slate-200/50 rounded-[2rem] h-16 text-xl font-bold placeholder:text-slate-400"
+            className="pl-16 border-none bg-slate-200/50 rounded-[2rem] h-16 text-xl font-bold placeholder:text-slate-400 focus-visible:ring-0"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -163,75 +157,75 @@ export default function ProjectsPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {[1, 2, 3].map(i => (
-            <Card key={i} className="h-[400px] rounded-[3.5rem] animate-pulse bg-white/50 border-none" />
+            <div key={i} className="h-[400px] rounded-[3.5rem] animate-pulse bg-white/50 border-none" />
           ))}
         </div>
       ) : view === 'table' ? (
-        <div className="px-4">
-          <Card className="ios-card border-none">
-            <Table>
-              <TableHeader className="bg-slate-50/50 h-20">
-                <TableRow className="hover:bg-transparent border-b border-slate-100">
-                  <TableHead className="w-[400px] font-black uppercase tracking-widest text-[11px] text-slate-400 pl-12">Entity Brief</TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-[11px] text-slate-400">Current Phase</TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-[11px] text-slate-400">Optimization</TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-[11px] text-slate-400">Target Release</TableHead>
-                  <TableHead className="font-black uppercase tracking-widest text-[11px] text-slate-400 text-right pr-12">Action</TableHead>
+        <Card className="ios-card border-none">
+          <Table>
+            <TableHeader className="bg-slate-50/50 h-20">
+              <TableRow className="hover:bg-transparent border-b border-slate-100">
+                <TableHead className="w-[400px] font-black uppercase tracking-widest text-[11px] text-slate-400 pl-12">Entity Brief</TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[11px] text-slate-400">Current Phase</TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[11px] text-slate-400">Optimization</TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[11px] text-slate-400">Target Release</TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[11px] text-slate-400 text-right pr-12">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProjects.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-[400px] text-center text-slate-400 italic text-xl font-medium">
+                    No matching productions found.
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProjects.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-[400px] text-center text-slate-400 italic text-xl font-medium">
-                      No matching productions found.
+              ) : (
+                filteredProjects.map((project) => (
+                  <TableRow key={project.id} className="hover:bg-white/60 transition-all border-b border-slate-50 last:border-0 h-28">
+                    <TableCell className="pl-12">
+                      <Link href={`/projects/${project.id}`} className="block group ios-interactive">
+                        <div className="font-black text-slate-900 group-hover:text-primary transition-colors text-2xl tracking-tighter leading-tight">{project.projectName}</div>
+                        <div className="text-sm text-slate-400 font-black uppercase tracking-[0.2em] mt-2">{project.client}</div>
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={cn("rounded-2xl px-5 py-2 text-[12px] font-black uppercase tracking-widest border-none", getStageColor(project.stage))}>
+                        {project.stage}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="w-[280px]">
+                      <div className="space-y-3 pr-10">
+                        <div className="flex items-center justify-between text-[11px] font-black text-primary uppercase tracking-[0.2em]">
+                          <span>{project.progress}% Complete</span>
+                        </div>
+                        <Progress value={project.progress} className="h-3 rounded-full bg-slate-100/80" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3 text-base text-slate-500 font-bold">
+                        <div className="w-10 h-10 rounded-2xl bg-slate-100/80 flex items-center justify-center text-primary">
+                          <Clock size={20} strokeWidth={2.5} />
+                        </div>
+                        {formatDeadline(project.deadline)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right pr-12">
+                      <Button variant="ghost" size="icon" className="h-14 w-14 rounded-[1.5rem] hover:bg-white hover:text-primary transition-all border border-transparent hover:border-slate-100 ios-interactive" asChild>
+                        <Link href={`/projects/${project.id}`}>
+                          <ChevronRight size={28} />
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  filteredProjects.map((project) => (
-                    <TableRow key={project.id} className="hover:bg-white/60 transition-all border-b border-slate-50 last:border-0 group h-28">
-                      <TableCell className="pl-12">
-                        <Link href={`/projects/${project.id}`} className="block group">
-                          <div className="font-black text-slate-900 group-hover:text-primary transition-colors text-2xl tracking-tighter leading-tight">{project.projectName}</div>
-                          <div className="text-sm text-slate-400 font-black uppercase tracking-[0.2em] mt-2">{project.client}</div>
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn("rounded-2xl px-5 py-2 text-[12px] font-black uppercase tracking-widest border-none", getStageColor(project.stage))}>
-                          {project.stage}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="w-[280px]">
-                        <div className="space-y-3 pr-10">
-                          <div className="flex items-center justify-between text-[11px] font-black text-primary uppercase tracking-[0.2em]">
-                            <span>{project.progress}% Complete</span>
-                          </div>
-                          <Progress value={project.progress} className="h-3 rounded-full bg-slate-100/80" />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3 text-base text-slate-500 font-bold">
-                          <div className="w-10 h-10 rounded-2xl bg-slate-100/80 flex items-center justify-center text-primary">
-                            <Clock size={20} strokeWidth={2.5} />
-                          </div>
-                          {formatDeadline(project.deadline)}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right pr-12">
-                        <Button variant="ghost" size="icon" className="h-14 w-14 rounded-[1.5rem] hover:bg-white hover:text-primary transition-all border border-transparent hover:border-slate-100" asChild>
-                          <Link href={`/projects/${project.id}`}><ChevronRight size={28} /></Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-        </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {filteredProjects.map((project) => (
             <Card key={project.id} className="ios-card group border-none hover:translate-y-[-10px] transition-all duration-500">
               <div className="h-64 bg-slate-200 relative overflow-hidden">
@@ -242,9 +236,9 @@ export default function ProjectsPage() {
                   </Badge>
                 </div>
               </div>
-              <CardContent className="p-10 space-y-8">
+              <div className="p-10 space-y-8">
                 <div>
-                  <Link href={`/projects/${project.id}`}>
+                  <Link href={`/projects/${project.id}`} className="ios-interactive inline-block">
                     <h3 className="font-black text-3xl mb-2 group-hover:text-primary transition-colors tracking-tight text-slate-900 leading-tight">{project.projectName}</h3>
                   </Link>
                   <p className="text-sm font-black text-slate-400 uppercase tracking-[0.25em]">{project.client}</p>
@@ -263,13 +257,13 @@ export default function ProjectsPage() {
                      <Clock size={20} className="text-primary" />
                      {formatDeadline(project.deadline)}
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-[1.25rem] h-12 w-12 bg-slate-100/50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm" asChild>
+                  <Button variant="ghost" size="icon" className="rounded-[1.25rem] h-12 w-12 bg-slate-100/50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm ios-interactive" asChild>
                      <Link href={`/projects/${project.id}`}>
                         <ChevronRight size={24} />
                      </Link>
                   </Button>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           ))}
         </div>

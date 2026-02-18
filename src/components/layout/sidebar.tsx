@@ -22,10 +22,10 @@ import { useAuth } from '@/lib/firebase/auth-context';
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Pipeline', href: '/pipeline', icon: Workflow },
-  { name: 'Projects', href: '/projects', icon: FolderKanban },
-  { name: 'Kanban', href: '/kanban', icon: Trello },
-  { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
+  { name: 'Portfolio', href: '/projects', icon: FolderKanban },
+  { name: 'Board', href: '/kanban', icon: Trello },
+  { name: 'Schedule', href: '/calendar', icon: Calendar },
+  { name: 'Intelligence', href: '/reports', icon: BarChart3 },
 ];
 
 export function Sidebar() {
@@ -33,9 +33,9 @@ export function Sidebar() {
   const { logOut } = useAuth();
 
   return (
-    <div className="flex h-screen w-80 flex-col bg-white/40 backdrop-blur-3xl border-r border-slate-200/50 px-6 py-10 shrink-0 relative">
+    <div className="flex h-screen w-80 flex-col bg-white/40 backdrop-blur-3xl border-r border-slate-200/50 px-6 py-10 shrink-0 relative z-40">
       <div className="px-4 mb-12">
-        <Link href="/dashboard" className="flex items-center gap-4 group">
+        <Link href="/dashboard" className="flex items-center gap-4 group cursor-pointer">
           <div className="w-12 h-12 rounded-[1.25rem] bg-primary flex items-center justify-center text-primary-foreground shadow-2xl shadow-primary/30 group-hover:rotate-6 transition-transform">
             <Zap size={26} fill="currentColor" />
           </div>
@@ -45,7 +45,7 @@ export function Sidebar() {
 
       <div className="px-2 mb-10">
         <Button 
-          className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary" 
+          className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary border-none" 
           asChild
         >
           <Link href="/projects/new">
@@ -55,7 +55,7 @@ export function Sidebar() {
         </Button>
       </div>
 
-      <div className="flex-1 space-y-2 px-2 overflow-y-auto scrollbar-hide">
+      <div className="flex-1 space-y-2 px-2 overflow-y-auto">
         <p className="px-4 text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4">Workspace</p>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -64,7 +64,7 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "group flex items-center justify-between px-5 py-4 text-[15px] font-bold rounded-[1.5rem] transition-all duration-300",
+                "group flex items-center justify-between px-5 py-4 text-[15px] font-bold rounded-[1.5rem] transition-all duration-300 ios-interactive",
                 isActive 
                   ? "bg-white text-primary premium-shadow" 
                   : "text-slate-500 hover:bg-white/60 hover:text-slate-900"
@@ -83,14 +83,14 @@ export function Sidebar() {
       <div className="pt-8 mt-6 border-t border-slate-200/50 px-2 space-y-2">
         <Link
           href="/settings"
-          className="flex items-center px-5 py-4 text-[15px] font-bold rounded-[1.5rem] text-slate-500 hover:bg-white/60 hover:text-slate-900 transition-all duration-300"
+          className="flex items-center px-5 py-4 text-[15px] font-bold rounded-[1.5rem] text-slate-500 hover:bg-white/60 hover:text-slate-900 transition-all duration-300 ios-interactive"
         >
           <Settings className="mr-4 h-6 w-6 text-slate-400" />
           Settings
         </Link>
         <button
           onClick={() => logOut()}
-          className="w-full flex items-center px-5 py-4 text-[15px] font-bold rounded-[1.5rem] text-rose-500 hover:bg-rose-50 transition-all duration-300"
+          className="w-full flex items-center px-5 py-4 text-[15px] font-bold rounded-[1.5rem] text-rose-500 hover:bg-rose-50 transition-all duration-300 ios-interactive"
         >
           <LogOut className="mr-4 h-6 w-6" />
           Log out
