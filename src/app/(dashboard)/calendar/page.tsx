@@ -47,17 +47,17 @@ export default function CalendarPage() {
 
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    
+    const projectsRef = collection(db, 'projects');
     if (!isAdmin) {
       return query(
-        collection(db, 'projects'),
+        projectsRef,
         where('assignedTeamMemberIds', 'array-contains', user.uid),
         orderBy('deadline', 'asc')
       );
     }
     
-    return query(collection(db, 'projects'), orderBy('deadline', 'asc'));
-  }, [db, user, isAdmin]);
+    return query(projectsRef, orderBy('deadline', 'asc'));
+  }, [db, user?.uid, isAdmin]);
 
   const { data: projects, isLoading, error } = useCollection<Project>(projectsQuery);
 

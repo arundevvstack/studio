@@ -263,8 +263,10 @@ export default function ProjectsPage() {
                      <Clock size={20} className="text-primary" />
                      {formatDeadline(project.deadline)}
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-[1.25rem] h-12 w-12 bg-slate-100/50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                     <ChevronRight size={24} />
+                  <Button variant="ghost" size="icon" className="rounded-[1.25rem] h-12 w-12 bg-slate-100/50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm" asChild>
+                     <Link href={`/projects/${project.id}`}>
+                        <ChevronRight size={24} />
+                     </Link>
                   </Button>
                 </div>
               </CardContent>

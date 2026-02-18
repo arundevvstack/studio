@@ -44,22 +44,23 @@ export default function PipelinePage() {
   const pipelineQuery = useMemoFirebase(() => {
     if (!db || !user || isUserLoading) return null;
     
+    const baseRef = collection(db, 'projects');
     // Admins see all pipeline. Members only assigned.
     if (isAdmin) {
       return query(
-        collection(db, 'projects'),
+        baseRef,
         where('stage', 'in', ['Pitch', 'Discussion']),
         orderBy('createdAt', 'desc')
       );
     }
 
     return query(
-      collection(db, 'projects'),
+      baseRef,
       where('stage', 'in', ['Pitch', 'Discussion']),
       where('assignedTeamMemberIds', 'array-contains', user.uid),
       orderBy('createdAt', 'desc')
     );
-  }, [db, user, isAdmin, isUserLoading]);
+  }, [db, user?.uid, isAdmin, isUserLoading]);
 
   const { data: projects, isLoading, error } = useCollection<Project>(pipelineQuery);
 

@@ -58,17 +58,18 @@ export default function ReportsPage() {
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user || isUserLoading) return null;
     
+    const projectsRef = collection(db, 'projects');
     // Admins can see the whole studio, members only see their assigned ones.
     if (!isAdmin) {
       return query(
-        collection(db, 'projects'),
+        projectsRef,
         where('assignedTeamMemberIds', 'array-contains', user.uid),
         orderBy('createdAt', 'desc')
       );
     }
     
-    return query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-  }, [db, user, isAdmin, isUserLoading]);
+    return query(projectsRef, orderBy('createdAt', 'desc'));
+  }, [db, user?.uid, isAdmin, isUserLoading]);
 
   const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
 
