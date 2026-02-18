@@ -47,50 +47,55 @@ export default function NewProjectPage() {
 
   const handleGenerateDescription = async () => {
     if (!formData.projectName) {
-      toast({ title: "Naming is hard", description: "Give it a name first!", variant: "destructive" });
+      toast({ title: "Naming required", description: "Please provide a project name first.", variant: "destructive" });
       return;
     }
     setIsGenerating(true);
     try {
       const result = await generateProjectDescription({ projectIdea: formData.projectName });
       setFormData({ ...formData, description: result.description });
-      toast({ title: "AI Magic", description: "Expanded your project idea!" });
+      toast({ title: "AI Generation Success", description: "Created an expanded brief based on your idea." });
     } catch (err) {
-      toast({ title: "Error", description: "AI couldn't help this time.", variant: "destructive" });
+      toast({ title: "AI Generation Error", description: "Could not generate description at this time.", variant: "destructive" });
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      toast({ title: "Auth Error", description: "You must be signed in to create a project.", variant: "destructive" });
+      return;
+    }
     if (!formData.projectName || !formData.client) {
-      toast({ title: "Missing details", description: "Project name and client are required.", variant: "destructive" });
+      toast({ title: "Validation Error", description: "Project identifier and client are required.", variant: "destructive" });
       return;
     }
 
     setIsSubmitting(true);
-    try {
-      await createProject(db, user.uid, formData);
-      toast({ title: "Success", description: "Project created successfully!" });
-      router.push('/projects');
-    } catch (err) {
-      toast({ title: "Error", description: "Could not create project. Check permissions.", variant: "destructive" });
-    } finally {
-      setIsSubmitting(false);
-    }
+    
+    // Non-blocking mutation call
+    createProject(db, user.uid, formData);
+    
+    toast({ 
+      title: "Production Provisioned", 
+      description: `Project "${formData.projectName}" has been successfully added to the portfolio.` 
+    });
+    
+    // Navigate immediately (Optimistic UI)
+    router.push('/projects');
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 pb-20">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild className="rounded-2xl border hover:bg-white/50 h-12 w-12">
+        <Button variant="ghost" size="icon" asChild className="rounded-2xl border hover:bg-white/50 h-12 w-12 transition-all">
           <Link href="/projects"><ChevronLeft size={24} /></Link>
         </Button>
         <div>
           <h1 className="text-4xl font-black tracking-tight text-slate-900">Initiate Production</h1>
-          <p className="text-muted-foreground text-lg">Deploy a new high-growth media campaign.</p>
+          <p className="text-muted-foreground text-lg font-medium">Deploy a new high-growth media campaign to the studio pipeline.</p>
         </div>
       </div>
 
@@ -106,7 +111,8 @@ export default function NewProjectPage() {
                   value={formData.projectName} 
                   onChange={handleChange} 
                   placeholder="e.g. Nike Summer '24" 
-                  className="rounded-2xl border-slate-200 bg-white/50 focus:bg-white h-14 text-lg font-bold px-6"
+                  className="rounded-2xl border-slate-200 bg-white/50 focus:bg-white h-14 text-lg font-bold px-6 transition-all"
+                  required
                 />
               </div>
               <div className="space-y-3">
@@ -116,7 +122,8 @@ export default function NewProjectPage() {
                   value={formData.client} 
                   onChange={handleChange} 
                   placeholder="e.g. Nike EMEA" 
-                  className="rounded-2xl border-slate-200 bg-white/50 focus:bg-white h-14 text-lg font-bold px-6"
+                  className="rounded-2xl border-slate-200 bg-white/50 focus:bg-white h-14 text-lg font-bold px-6 transition-all"
+                  required
                 />
               </div>
             </div>
@@ -129,11 +136,11 @@ export default function NewProjectPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-3xl shadow-2xl border-slate-100">
-                    <SelectItem value="Pitch">Pitch</SelectItem>
-                    <SelectItem value="Discussion">Discussion</SelectItem>
-                    <SelectItem value="Pre Production">Pre Production</SelectItem>
-                    <SelectItem value="Production">Production</SelectItem>
-                    <SelectItem value="Post Production">Post Production</SelectItem>
+                    <SelectItem value="Pitch" className="font-bold">Pitch</SelectItem>
+                    <SelectItem value="Discussion" className="font-bold">Discussion</SelectItem>
+                    <SelectItem value="Pre Production" className="font-bold">Pre Production</SelectItem>
+                    <SelectItem value="Production" className="font-bold">Production</SelectItem>
+                    <SelectItem value="Post Production" className="font-bold">Post Production</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -144,9 +151,9 @@ export default function NewProjectPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="rounded-3xl shadow-2xl border-slate-100">
-                    <SelectItem value="Low">Low Priority</SelectItem>
-                    <SelectItem value="Medium">Medium Priority</SelectItem>
-                    <SelectItem value="High">High Priority</SelectItem>
+                    <SelectItem value="Low" className="font-bold">Low Priority</SelectItem>
+                    <SelectItem value="Medium" className="font-bold">Medium Priority</SelectItem>
+                    <SelectItem value="High" className="font-bold">High Priority</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -158,7 +165,7 @@ export default function NewProjectPage() {
                   value={formData.budget} 
                   onChange={handleChange} 
                   placeholder="e.g. 50000" 
-                  className="rounded-2xl border-slate-200 bg-white/50 focus:bg-white h-14 text-lg font-bold px-6"
+                  className="rounded-2xl border-slate-200 bg-white/50 focus:bg-white h-14 text-lg font-bold px-6 transition-all"
                 />
               </div>
             </div>
@@ -170,19 +177,20 @@ export default function NewProjectPage() {
                   type="button" 
                   variant="ghost" 
                   size="sm" 
-                  className="text-primary text-[11px] font-black uppercase tracking-widest hover:bg-primary/5 px-3 h-8 rounded-full"
+                  className="text-primary text-[11px] font-black uppercase tracking-widest hover:bg-primary/5 px-4 h-9 rounded-full transition-all border border-primary/10"
                   onClick={handleGenerateDescription}
                   disabled={isGenerating}
                 >
-                  <Wand2 size={14} className="mr-2" /> {isGenerating ? 'Synthesizing...' : 'AI Brief Generation'}
+                  <Wand2 size={14} className={cn("mr-2", isGenerating && "animate-spin")} /> 
+                  {isGenerating ? 'Synthesizing...' : 'AI Brief Generation'}
                 </Button>
               </div>
               <Textarea 
                 name="description" 
                 value={formData.description} 
                 onChange={handleChange} 
-                placeholder="Outline the core creative direction and strategic goals..." 
-                className="rounded-3xl border-slate-200 bg-white/50 focus:bg-white min-h-[200px] text-base p-6 transition-all"
+                placeholder="Outline the core creative direction and strategic goals of this production..." 
+                className="rounded-3xl border-slate-200 bg-white/50 focus:bg-white min-h-[220px] text-base p-6 transition-all leading-relaxed"
               />
             </div>
 

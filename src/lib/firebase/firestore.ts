@@ -18,7 +18,12 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 const PROJECTS_COLLECTION = 'projects';
 
-export const createProject = async (db: Firestore, userId: string, data: Partial<Project>) => {
+/**
+ * Initiates the creation of a new project.
+ * Uses a non-blocking pattern where the write is initiated and errors are handled asynchronously.
+ * @returns the ID of the new project document.
+ */
+export const createProject = (db: Firestore, userId: string, data: Partial<Project>) => {
   const newProjectRef = doc(collection(db, PROJECTS_COLLECTION));
   const projectData = {
     ...data,
@@ -27,7 +32,7 @@ export const createProject = async (db: Firestore, userId: string, data: Partial
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     progress: data.progress || 0,
-    stage: data.stage || 'Discussion',
+    stage: data.stage || 'Pitch',
     priority: data.priority || 'Medium',
     status: data.status || 'Active',
     projectName: data.projectName || 'Untitled Project',
@@ -36,7 +41,8 @@ export const createProject = async (db: Firestore, userId: string, data: Partial
     description: data.description || '',
   };
 
-  return setDoc(newProjectRef, projectData)
+  // Initiate write operation without awaiting
+  setDoc(newProjectRef, projectData)
     .catch((error) => {
       const permissionError = new FirestorePermissionError({
         path: newProjectRef.path,
@@ -45,16 +51,22 @@ export const createProject = async (db: Firestore, userId: string, data: Partial
       });
       errorEmitter.emit('permission-error', permissionError);
     });
+
+  return newProjectRef.id;
 };
 
-export const updateProject = async (db: Firestore, id: string, data: Partial<Project>) => {
+/**
+ * Initiates an update to an existing project.
+ * Uses a non-blocking pattern.
+ */
+export const updateProject = (db: Firestore, id: string, data: Partial<Project>) => {
   const projectRef = doc(db, PROJECTS_COLLECTION, id);
   const updateData = {
     ...data,
     updatedAt: serverTimestamp()
   };
   
-  return updateDoc(projectRef, updateData)
+  updateDoc(projectRef, updateData)
     .catch((error) => {
       const permissionError = new FirestorePermissionError({
         path: projectRef.path,
@@ -65,6 +77,9 @@ export const updateProject = async (db: Firestore, id: string, data: Partial<Pro
     });
 };
 
+/**
+ * Retrieves a single project document.
+ */
 export const getProject = async (db: Firestore, id: string): Promise<Project | null> => {
   const projectRef = doc(db, PROJECTS_COLLECTION, id);
   try {
