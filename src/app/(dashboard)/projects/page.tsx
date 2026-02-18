@@ -37,13 +37,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { subscribeToProjects } from '@/lib/firebase/firestore';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function ProjectsPage() {
   const [view, setView] = useState<'grid' | 'table'>('table');
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const unsubscribe = subscribeToProjects(setProjects);
     return () => unsubscribe();
   }, []);
@@ -62,6 +65,11 @@ export default function ProjectsPage() {
       case 'Post Production': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
       default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
+  };
+
+  const formatDeadline = (deadline: any) => {
+    if (!isMounted || !deadline) return 'N/A';
+    return new Date(deadline.seconds * 1000).toLocaleDateString();
   };
 
   return (
@@ -160,7 +168,7 @@ export default function ProjectsPage() {
                     <TableCell>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                         <Clock size={14} className="text-primary" />
-                        {project.deadline ? new Date(project.deadline.seconds * 1000).toLocaleDateString() : 'N/A'}
+                        {formatDeadline(project.deadline)}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -227,7 +235,7 @@ export default function ProjectsPage() {
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                        <Clock size={14} />
-                       {project.deadline ? new Date(project.deadline.seconds * 1000).toLocaleDateString() : 'No date'}
+                       {formatDeadline(project.deadline)}
                     </div>
                     <div className="flex -space-x-2">
                       <Users size={14} className="mr-2 text-muted-foreground" />

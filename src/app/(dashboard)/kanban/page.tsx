@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Project, ProjectStage } from '@/lib/types';
-import { subscribeToProjects, updateProject } from '@/lib/firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { subscribeToProjects } from '@/lib/firebase/firestore';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,10 @@ const STAGES: ProjectStage[] = ['Discussion', 'Pre Production', 'Production', 'P
 
 export default function KanbanPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const unsubscribe = subscribeToProjects(setProjects);
     return () => unsubscribe();
   }, []);
@@ -32,6 +34,11 @@ export default function KanbanPage() {
       case 'Medium': return 'text-orange-500 bg-orange-100';
       default: return 'text-blue-500 bg-blue-100';
     }
+  };
+
+  const formatDeadline = (deadline: any) => {
+    if (!isMounted || !deadline) return 'N/A';
+    return new Date(deadline.seconds * 1000).toLocaleDateString();
   };
 
   return (
@@ -91,7 +98,7 @@ export default function KanbanPage() {
                       <div className="flex items-center justify-between pt-2">
                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
                             <Clock size={12} />
-                            {project.deadline ? new Date(project.deadline.seconds * 1000).toLocaleDateString() : 'N/A'}
+                            {formatDeadline(project.deadline)}
                          </div>
                          <div className="flex -space-x-1.5">
                             {[1, 2].map(i => (

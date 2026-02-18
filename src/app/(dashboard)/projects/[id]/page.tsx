@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Project, ProjectStage, ProjectPriority } from '@/lib/types';
+import { useParams } from 'next/navigation';
+import { Project } from '@/lib/types';
 import { getProject, updateProject } from '@/lib/firebase/firestore';
 import { 
   Tabs, 
@@ -14,8 +14,7 @@ import {
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle,
-  CardDescription
+  CardTitle
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,17 +25,16 @@ import {
   Sparkles, 
   Calendar, 
   Users, 
-  DollarSign, 
-  FileText, 
   CheckSquare, 
   MessageSquare,
   History,
-  AlertCircle
+  FileText,
+  Plus
 } from 'lucide-react';
-import { suggestProjectTasks } from '@/ai/flows/suggest-project-tasks-flow';
 import { summarizeProjectStatus } from '@/ai/flows/summarize-project-status';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 export default function ProjectDetailPage() {
   const { id } = useParams() as { id: string };
@@ -44,9 +42,11 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
+    setIsMounted(true);
     const fetchProject = async () => {
       const data = await getProject(id);
       setProject(data);
@@ -59,7 +59,7 @@ export default function ProjectDetailPage() {
     if (!project) return;
     const newProgress = val[0];
     setProject({ ...project, progress: newProgress });
-    await updateProject(id, { progress: newProgress });
+    updateProject(id, { progress: newProgress });
   };
 
   const handleGenerateSummary = async () => {
@@ -79,8 +79,13 @@ export default function ProjectDetailPage() {
     }
   };
 
-  if (loading) return <div>Loading project...</div>;
-  if (!project) return <div>Project not found</div>;
+  const formatDeadline = (deadline: any) => {
+    if (!isMounted || !deadline) return 'TBD';
+    return new Date(deadline.seconds * 1000).toLocaleDateString();
+  };
+
+  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading project...</div>;
+  if (!project) return <div className="p-8 text-center text-muted-foreground">Project not found</div>;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -99,7 +104,7 @@ export default function ProjectDetailPage() {
             <p className="text-muted-foreground text-sm font-medium flex items-center gap-2">
               <Users size={14} /> {project.client} 
               <span className="mx-2 text-slate-300">•</span>
-              <Calendar size={14} /> Due {project.deadline ? new Date(project.deadline.seconds * 1000).toLocaleDateString() : 'TBD'}
+              <Calendar size={14} /> Due {formatDeadline(project.deadline)}
             </p>
           </div>
         </div>

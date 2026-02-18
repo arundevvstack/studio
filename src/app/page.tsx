@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/firebase/auth-context';
 import { Button } from '@/components/ui/button';
-import { Zap, ArrowRight, PlayCircle, ShieldCheck } from 'lucide-react';
+import { Zap, ArrowRight, PlayCircle, ShieldCheck, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 export default function Home() {
   const { user, loading, signInWithGoogle } = useAuth();
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -16,6 +18,10 @@ export default function Home() {
       router.push('/dashboard');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   if (loading) return null;
 
@@ -127,7 +133,7 @@ export default function Home() {
             <span>MediaFlow</span>
           </div>
           <p className="text-slate-500 font-bold text-sm">
-            © {new Date().getFullYear()} MediaFlow Inc. All rights reserved. Built for the elite.
+            © {currentYear || '...'} MediaFlow Inc. All rights reserved. Built for the elite.
           </p>
           <div className="flex gap-6">
             <a href="#" className="text-slate-500 hover:text-primary transition-colors font-bold text-sm">Privacy</a>
