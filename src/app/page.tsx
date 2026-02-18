@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 
 export default function Home() {
   const { user, loading, signIn, signUp } = useAuth();
-  const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,10 +24,6 @@ export default function Home() {
       router.push('/dashboard');
     }
   }, [user, loading, router]);
-
-  useEffect(() => {
-    setCurrentYear(new Date().getFullYear());
-  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,9 +83,9 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-10 grayscale opacity-40">
-              {['NIKE', 'NETFLIX', 'APPLE'].map((brand) => (
-                <span key={brand} className="text-xl font-black tracking-tighter">{brand}</span>
-              ))}
+              <span className="text-xl font-black tracking-tighter">NIKE</span>
+              <span className="text-xl font-black tracking-tighter">NETFLIX</span>
+              <span className="text-xl font-black tracking-tighter">APPLE</span>
             </div>
           </div>
 
@@ -147,6 +142,7 @@ export default function Home() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        minLength={6}
                       />
                     </div>
                   </div>
@@ -155,7 +151,7 @@ export default function Home() {
                     className="w-full h-14 rounded-2xl text-lg font-black shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary"
                     disabled={authLoading}
                   >
-                    {authLoading ? 'Verifying...' : isLogin ? 'Sign In Securely' : 'Create My Account'}
+                    {authLoading ? 'Authenticating...' : isLogin ? 'Sign In Securely' : 'Create My Account'}
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </form>
@@ -164,6 +160,7 @@ export default function Home() {
                   <p className="text-sm font-medium text-slate-500">
                     {isLogin ? "Don't have an account yet?" : "Already part of the network?"}
                     <button 
+                      type="button"
                       onClick={() => setIsLogin(!isLogin)} 
                       className="ml-2 text-primary font-bold hover:underline"
                     >
@@ -204,8 +201,8 @@ export default function Home() {
             </div>
             <span>MediaFlow</span>
           </div>
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
-            © {currentYear || '...'} MediaFlow Technologies Inc. Built for the Creative Elite.
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest" suppressHydrationWarning>
+            © {new Date().getFullYear()} MediaFlow Technologies Inc. Built for the Creative Elite.
           </p>
         </div>
       </footer>

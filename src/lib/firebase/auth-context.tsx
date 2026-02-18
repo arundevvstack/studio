@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -50,15 +49,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await signInWithEmailAndPassword(auth, email, pass);
       if (result.user) {
         toast({
-          title: "Welcome back!",
-          description: `Successfully signed in as ${result.user.displayName || result.user.email}`,
+          title: "Access Granted",
+          description: `Welcome back to the command center, ${result.user.displayName || 'Commander'}.`,
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Sign-in failed",
-        description: error.message || "Invalid credentials.",
+        title: "Authentication Error",
+        description: error.message || "Invalid credentials provided.",
       });
       throw error;
     } finally {
@@ -69,19 +68,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, pass: string, name: string) => {
     try {
       setLoading(true);
+      await setPersistence(auth, browserLocalPersistence);
       const result = await createUserWithEmailAndPassword(auth, email, pass);
       if (result.user) {
         await updateProfile(result.user, { displayName: name });
         toast({
-          title: "Account created!",
-          description: `Welcome to MediaFlow, ${name}!`,
+          title: "Account Initialized",
+          description: `Welcome to the network, ${name}. Your workspace is ready.`,
         });
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Sign-up failed",
-        description: error.message,
+        title: "Provisioning Failed",
+        description: error.message || "Could not create account at this time.",
       });
       throw error;
     } finally {
@@ -93,13 +93,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await signOut(auth);
       toast({
-        title: "Signed out",
-        description: "You have been securely logged out.",
+        title: "Session Terminated",
+        description: "You have been securely logged out of the workspace.",
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error signing out",
+        title: "Logout Error",
         description: error.message,
       });
     }
