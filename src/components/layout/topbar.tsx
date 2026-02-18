@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search, User as UserIcon } from 'lucide-react';
+import { Bell, Search, User as UserIcon, Command } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -13,50 +13,62 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/firebase/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 export function Topbar() {
   const { user, logOut } = useAuth();
 
   return (
-    <header className="h-16 border-b bg-card/50 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-8">
-      <div className="flex-1 max-w-md relative group">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+    <header className="h-20 border-b bg-white/40 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-10">
+      <div className="flex-1 max-w-xl relative group">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 transition-colors group-focus-within:text-primary" />
         <Input 
-          placeholder="Search projects, clients, tasks..." 
-          className="pl-10 bg-muted/50 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-primary h-9 transition-all"
+          placeholder="Quick search projects, teams or documents..." 
+          className="pl-12 pr-12 bg-slate-100/80 border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-primary h-12 transition-all font-medium text-slate-900"
         />
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-40 group-focus-within:opacity-0 transition-opacity">
+          <Command size={12} strokeWidth={3} />
+          <span className="text-[10px] font-black">K</span>
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative text-muted-foreground rounded-full hover:bg-accent transition-colors">
-          <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full border-2 border-background"></span>
+      <div className="flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-2 pr-4 border-r">
+          <Badge variant="outline" className="rounded-xl px-3 py-1 bg-emerald-50 text-emerald-700 border-emerald-100 font-bold text-[10px] uppercase tracking-wider">
+            Enterprise Cloud
+          </Badge>
+        </div>
+
+        <Button variant="ghost" size="icon" className="relative text-slate-500 rounded-2xl h-11 w-11 hover:bg-slate-100 transition-all group">
+          <Bell size={22} className="group-hover:rotate-12 transition-transform" />
+          <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-[3px] border-white"></span>
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-              <Avatar className="h-9 w-9 ring-2 ring-primary/20 hover:ring-primary/50 transition-all">
-                <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
-                <AvatarFallback className="bg-primary/10 text-primary">
+            <Button variant="ghost" className="relative h-11 w-11 rounded-2xl overflow-hidden group p-0">
+              <Avatar className="h-11 w-11 ring-2 ring-slate-100 group-hover:ring-primary/40 transition-all rounded-2xl">
+                <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} className="object-cover" />
+                <AvatarFallback className="bg-primary/10 text-primary font-black rounded-2xl">
                   {user?.displayName?.[0] || 'U'}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 rounded-2xl p-2 mt-1 shadow-2xl" align="end" forceMount>
-            <DropdownMenuLabel className="font-normal">
+          <DropdownMenuContent className="w-64 rounded-[1.75rem] p-3 mt-4 shadow-2xl border-slate-100" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal p-2">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-semibold leading-none">{user?.displayName}</p>
-                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                <p className="text-sm font-black leading-none text-slate-900">{user?.displayName}</p>
+                <p className="text-xs font-medium leading-none text-slate-500 mt-1">{user?.email}</p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="rounded-xl cursor-pointer">Profile</DropdownMenuItem>
-            <DropdownMenuItem className="rounded-xl cursor-pointer">Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="rounded-xl text-destructive focus:text-destructive cursor-pointer" onClick={() => logOut()}>
-              Log out
+            <DropdownMenuSeparator className="my-2" />
+            <DropdownMenuItem className="rounded-xl cursor-pointer font-bold py-2.5">Workspace Profile</DropdownMenuItem>
+            <DropdownMenuItem className="rounded-xl cursor-pointer font-bold py-2.5">Subscription Plan</DropdownMenuItem>
+            <DropdownMenuItem className="rounded-xl cursor-pointer font-bold py-2.5">Security Settings</DropdownMenuItem>
+            <DropdownMenuSeparator className="my-2" />
+            <DropdownMenuItem className="rounded-xl text-rose-500 focus:text-rose-600 focus:bg-rose-50 cursor-pointer font-bold py-2.5" onClick={() => logOut()}>
+              Sign Out Securely
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
