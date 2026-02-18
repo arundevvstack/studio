@@ -11,7 +11,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Singleton pattern for Firebase initialization
+function getFirebaseApp() {
+  if (getApps().length > 0) {
+    return getApp();
+  }
+  return initializeApp(firebaseConfig);
+}
+
+const app = getFirebaseApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 

@@ -4,13 +4,13 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 210 50% 98%;
     --foreground: 224 71% 4%;
     --card: 0 0% 100%;
     --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 230 85% 55%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,9 +22,9 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 1.25rem;
-    --chart-1: 221.2 83.2% 53.3%;
+    --ring: 230 85% 55%;
+    --radius: 1.5rem;
+    --chart-1: 230 85% 55%;
     --chart-2: 212 95% 68%;
     --chart-3: 216 92% 60%;
     --chart-4: 210 98% 78%;
@@ -64,29 +64,21 @@
   }
 }
 
-.glass-morphism {
-  @apply bg-white/40 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/10;
-}
-
 .premium-shadow {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
 }
 
-.glow {
-  @apply relative;
+.glass-card {
+  @apply bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl;
 }
 
-.glow::after {
-  content: '';
-  @apply absolute -inset-1 bg-primary/20 blur-xl opacity-0 transition-opacity duration-500 rounded-full;
-}
-
-.glow:hover::after {
-  @apply opacity-100;
+.hero-gradient {
+  background: radial-gradient(circle at top right, hsla(var(--primary), 0.1), transparent),
+              radial-gradient(circle at bottom left, hsla(230, 85%, 55%, 0.05), transparent);
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -94,5 +86,5 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/10 rounded-full hover:bg-muted-foreground/20 transition-colors;
+  @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors;
 }
