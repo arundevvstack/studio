@@ -20,6 +20,9 @@ const ProjectDescriptionOutputSchema = z.object({
 });
 export type ProjectDescriptionOutput = z.infer<typeof ProjectDescriptionOutputSchema>;
 
+/**
+ * Server Action to generate a detailed project description.
+ */
 export async function generateProjectDescription(
   input: ProjectIdeaInput
 ): Promise<ProjectDescriptionOutput> {
@@ -30,7 +33,9 @@ const projectDescriptionPrompt = ai.definePrompt({
   name: 'projectDescriptionPrompt',
   input: { schema: ProjectIdeaInputSchema },
   output: { schema: ProjectDescriptionOutputSchema },
-  prompt: `You are an expert project manager assistant. Your task is to expand a brief project idea or keywords into a detailed project description. The description should cover the project's purpose, key objectives, target audience, and expected outcomes. Ensure the description is comprehensive and suitable for initial project scoping.
+  prompt: `You are an expert project manager assistant. Your task is to expand a brief project idea or keywords into a detailed project description. 
+The description should cover the project's purpose, key objectives, target audience, and expected outcomes. 
+Ensure the description is professional, comprehensive, and suitable for initial project scoping.
 
 Project Idea: {{{projectIdea}}}`,
 });
@@ -43,6 +48,9 @@ const generateProjectDescriptionFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await projectDescriptionPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('AI failed to generate a project description.');
+    }
+    return output;
   }
 );

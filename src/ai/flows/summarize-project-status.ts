@@ -22,6 +22,9 @@ const SummarizeProjectStatusOutputSchema = z.object({
 });
 export type SummarizeProjectStatusOutput = z.infer<typeof SummarizeProjectStatusOutputSchema>;
 
+/**
+ * Server Action to summarize project status and health.
+ */
 export async function summarizeProjectStatus(input: SummarizeProjectStatusInput): Promise<SummarizeProjectStatusOutput> {
   return summarizeProjectStatusFlow(input);
 }
@@ -56,6 +59,9 @@ const summarizeProjectStatusFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await summarizeProjectStatusPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('AI failed to generate status summary.');
+    }
+    return output;
   }
 );
