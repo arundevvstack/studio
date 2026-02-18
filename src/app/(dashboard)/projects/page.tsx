@@ -50,6 +50,7 @@ export default function ProjectsPage() {
   const projectsQuery = useMemoFirebase(() => {
     if (!db || !user || isUserLoading) return null;
     
+    // Admins see all. Members only see assigned.
     if (isAdmin) {
       return query(
         collection(db, 'projects'), 
@@ -98,7 +99,7 @@ export default function ProjectsPage() {
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-black text-slate-900 tracking-tight">Sync Encountered a Blocker</h2>
           <p className="text-muted-foreground text-center max-w-md font-medium leading-relaxed">
-            The studio is unable to provision your production portfolio at this time. This may be due to missing composite indexes or temporary clearance issues.
+            The studio is unable to provision your production portfolio at this time. This may be due to clearance issues or required composite indexes.
           </p>
         </div>
         <div className="flex items-center gap-3">

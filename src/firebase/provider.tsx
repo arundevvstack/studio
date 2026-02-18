@@ -75,7 +75,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     const unsubscribe = onAuthStateChanged(
       auth,
       (firebaseUser) => {
-        // Calculate admin status based on hardcoded root credentials
+        // Root Admin Check
         const isAdmin = !!firebaseUser && (
           firebaseUser.email === ADMIN_EMAIL || 
           firebaseUser.uid === ADMIN_UID

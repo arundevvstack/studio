@@ -4,7 +4,7 @@ service cloud.firestore {
 
     /**
      * MEDIA PRODUCTION PROJECT MANAGEMENT
-     * Hardcoded administrative access for the primary studio owner.
+     * Global administrative access for the primary studio owner.
      */
 
     function isSignedIn() {
@@ -32,13 +32,15 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      // Unified listing and access logic
-      allow read: if isRootAdmin() || (isSignedIn() && request.auth.uid in resource.data.assignedTeamMemberIds);
+      // Split list and get to prevent rule-as-filter ambiguity
+      allow list: if isRootAdmin() || (isSignedIn() && request.auth.uid in resource.data.assignedTeamMemberIds);
+      allow get: if isRootAdmin() || (isSignedIn() && request.auth.uid in resource.data.assignedTeamMemberIds);
+      
       allow create: if isSignedIn() && (isRootAdmin() || request.auth.uid in request.resource.data.assignedTeamMemberIds);
       allow update: if isRootAdmin() || (isSignedIn() && request.auth.uid in resource.data.assignedTeamMemberIds);
       allow delete: if isRootAdmin();
 
-      // Nested sub-resources
+      // Nested sub-resources (notes, tasks, events)
       match /{allSubcollections=**} {
         allow read, write: if isRootAdmin() || (isSignedIn() && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTeamMemberIds);
       }

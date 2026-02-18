@@ -44,12 +44,11 @@ export default function PipelinePage() {
   const pipelineQuery = useMemoFirebase(() => {
     if (!db || !user || isUserLoading) return null;
     
-    // Admins can see the whole pipeline, members only see their assigned ones.
-    if (!isAdmin) {
+    // Admins see all pipeline. Members only assigned.
+    if (isAdmin) {
       return query(
         collection(db, 'projects'),
         where('stage', 'in', ['Pitch', 'Discussion']),
-        where('assignedTeamMemberIds', 'array-contains', user.uid),
         orderBy('createdAt', 'desc')
       );
     }
@@ -57,6 +56,7 @@ export default function PipelinePage() {
     return query(
       collection(db, 'projects'),
       where('stage', 'in', ['Pitch', 'Discussion']),
+      where('assignedTeamMemberIds', 'array-contains', user.uid),
       orderBy('createdAt', 'desc')
     );
   }, [db, user, isAdmin, isUserLoading]);
@@ -90,7 +90,7 @@ export default function PipelinePage() {
         </div>
         <h2 className="text-2xl font-black">Pipeline Restricted</h2>
         <p className="text-muted-foreground text-center max-w-md">
-          Access to early-stage pipeline data is restricted based on assignment clearance.
+          Access to early-stage pipeline data is restricted based on clearance.
         </p>
       </div>
     );
@@ -108,7 +108,7 @@ export default function PipelinePage() {
           </div>
           <p className="text-muted-foreground text-lg">Managing high-potential opportunities in Pitch & Discussion phases.</p>
         </div>
-        <Button className="rounded-2xl h-12 px-6 shadow-xl shadow-primary/20 font-bold bg-primary hover:scale-[1.02] transition-all" asChild>
+        <Button className="rounded-2xl h-12 px-6 shadow-xl shadow-primary/20 font-black bg-primary hover:scale-[1.02] transition-all" asChild>
           <Link href="/projects/new">
             <Workflow size={20} className="mr-2" strokeWidth={3} />
             Draft New Pitch

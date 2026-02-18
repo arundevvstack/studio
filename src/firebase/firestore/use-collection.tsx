@@ -74,7 +74,8 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (fireError: FirestoreError) => {
-        // Only wrap and emit permission errors
+        // ONLY wrap permission-denied errors.
+        // Other errors (like missing index) should be passed through normally.
         if (fireError.code === 'permission-denied') {
           const path: string =
             memoizedTargetRefOrQuery.type === 'collection'
@@ -89,7 +90,6 @@ export function useCollection<T = any>(
           setError(contextualError);
           errorEmitter.emit('permission-error', contextualError);
         } else {
-          // Pass through other errors (e.g., missing index)
           setError(fireError);
         }
         

@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   setDoc, 
@@ -18,36 +17,6 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 const PROJECTS_COLLECTION = 'projects';
-
-/**
- * Standard subscription for projects. 
- * Note: Use useCollection hook in components for better error handling.
- */
-export const subscribeToProjects = (db: Firestore, userId: string, isAdmin: boolean, callback: (projects: Project[]) => void) => {
-  let q = query(collection(db, PROJECTS_COLLECTION), orderBy('createdAt', 'desc'));
-  
-  if (!isAdmin) {
-    q = query(
-      collection(db, PROJECTS_COLLECTION), 
-      where('assignedTeamMemberIds', 'array-contains', userId),
-      orderBy('createdAt', 'desc')
-    );
-  }
-
-  return onSnapshot(q, (snapshot) => {
-    const projects = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Project[];
-    callback(projects);
-  }, (error) => {
-    const permissionError = new FirestorePermissionError({
-      path: PROJECTS_COLLECTION,
-      operation: 'list'
-    });
-    errorEmitter.emit('permission-error', permissionError);
-  });
-};
 
 export const createProject = async (db: Firestore, userId: string, data: Partial<Project>) => {
   const newProjectRef = doc(collection(db, PROJECTS_COLLECTION));
