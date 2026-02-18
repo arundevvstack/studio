@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { generateProjectDescription } from '@/ai/flows/generate-project-description';
 import { useFirestore, useUser } from '@/firebase';
+import { cn } from '@/lib/utils';
 
 export default function NewProjectPage() {
   const [formData, setFormData] = useState({

@@ -44,14 +44,15 @@ export function Sidebar() {
       </div>
 
       <div className="px-2 mb-10">
-        <Link href="/projects/new" className="block">
-          <Button 
-            className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary border-none"
-          >
+        <Button 
+          asChild
+          className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary border-none"
+        >
+          <Link href="/projects/new">
             <Plus size={22} strokeWidth={3} />
             Create Project
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       <div className="flex-1 space-y-2 px-2 overflow-y-auto scrollbar-hide">
