@@ -65,6 +65,15 @@ import { FirestorePermissionError } from '@/firebase/errors';
 const STAGES: ProjectStage[] = ['Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'];
 const PRIORITIES: ProjectPriority[] = ['Low', 'Medium', 'High'];
 
+// Maps each lifecycle stage to a suggested baseline progress percentage
+const STAGE_PROGRESS_MAP: Record<ProjectStage, number> = {
+  'Discussion': 15,
+  'Pre Production': 35,
+  'Production': 65,
+  'Post Production': 85,
+  'Released': 100
+};
+
 export default function ProjectDetailPage() {
   const { id } = useParams() as { id: string };
   const db = useFirestore();
@@ -142,8 +151,21 @@ export default function ProjectDetailPage() {
 
   const handleStageChange = (val: string) => {
     if (!project || !db) return;
-    updateProject(db, id, { stage: val as ProjectStage });
-    toast({ title: "Lifecycle Updated", description: `Production stage shifted to ${val}.` });
+    const nextStage = val as ProjectStage;
+    
+    // Auto-improve progress based on the selected phase/stage
+    const newProgress = STAGE_PROGRESS_MAP[nextStage] || project.progress;
+    
+    updateProject(db, id, { 
+      stage: nextStage,
+      progress: newProgress 
+    });
+    
+    setLocalProgress(newProgress);
+    toast({ 
+      title: "Lifecycle Updated", 
+      description: `Production phase shifted to ${nextStage}. Completion auto-adjusted to ${newProgress}%.` 
+    });
   };
 
   const handlePriorityChange = (val: string) => {
@@ -391,7 +413,7 @@ export default function ProjectDetailPage() {
              <CardContent className="space-y-8 px-8 pb-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Phase</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Current Phase</p>
                     <Select value={project.stage} onValueChange={handleStageChange}>
                       <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-lg text-slate-800 focus:ring-0 shadow-none ring-offset-0">
                         <SelectValue />
@@ -466,7 +488,7 @@ export default function ProjectDetailPage() {
           <Tabs defaultValue="phases" className="w-full">
             <TabsList className="bg-transparent h-auto p-0 gap-8 border-b rounded-none w-full justify-start mb-8">
               <TabsTrigger value="phases" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
-                <Layers size={16} className="mr-2" /> Phases
+                <Layers size={16} className="mr-2" /> Project Phases
               </TabsTrigger>
               <TabsTrigger value="timeline" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
                 <History size={16} className="mr-2" /> Timeline
