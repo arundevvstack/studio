@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   ChevronLeft, 
   Sparkles, 
@@ -49,7 +50,8 @@ import {
   ShieldAlert,
   Clock,
   Trash2,
-  Layers
+  Layers,
+  Settings2
 } from 'lucide-react';
 import { summarizeProjectStatus } from '@/ai/flows/summarize-project-status';
 import Link from 'next/link';
@@ -80,6 +82,16 @@ export default function ProjectDetailPage() {
   const [newPhaseName, setNewPhaseName] = useState('');
   const [isCreatingPhase, setIsCreatingPhase] = useState(false);
 
+  // Modify Scope State
+  const [isModifyScopeOpen, setIsModifyScopeOpen] = useState(false);
+  const [isUpdatingScope, setIsUpdatingScope] = useState(false);
+  const [scopeData, setScopeData] = useState({
+    projectName: '',
+    client: '',
+    budget: '',
+    description: '',
+  });
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -104,6 +116,18 @@ export default function ProjectDetailPage() {
       setLocalProgress(project.progress || 0);
     }
   }, [project, localProgress]);
+
+  // Sync scope data when project loads
+  useEffect(() => {
+    if (project) {
+      setScopeData({
+        projectName: project.projectName || '',
+        client: project.client || '',
+        budget: project.budget?.toString() || '',
+        description: project.description || '',
+      });
+    }
+  }, [project]);
 
   const handleSliderChange = (val: number[]) => {
     setLocalProgress(val[0]);
@@ -160,6 +184,27 @@ export default function ProjectDetailPage() {
         errorEmitter.emit('permission-error', permissionError);
       })
       .finally(() => setIsCreatingPhase(false));
+  };
+
+  const handleUpdateScope = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!db || !project) return;
+
+    setIsUpdatingScope(true);
+    try {
+      await updateProject(db, id, {
+        projectName: scopeData.projectName,
+        client: scopeData.client,
+        budget: Number(scopeData.budget),
+        description: scopeData.description,
+      });
+      toast({ title: "Scope Modified", description: "Project parameters updated successfully." });
+      setIsModifyScopeOpen(false);
+    } catch (err) {
+      toast({ title: "Update Failed", description: "Could not sync scope changes.", variant: "destructive" });
+    } finally {
+      setIsUpdatingScope(false);
+    }
   };
 
   const togglePhaseStatus = (phase: Task) => {
@@ -261,9 +306,63 @@ export default function ProjectDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-2xl font-bold border-slate-200 h-11 px-6 hover:bg-slate-50">
-            Modify Scope
-          </Button>
+          <Dialog open={isModifyScopeOpen} onOpenChange={setIsModifyScopeOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="rounded-2xl font-bold border-slate-200 h-11 px-6 hover:bg-slate-50 gap-2">
+                <Settings2 size={16} />
+                Modify Scope
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] border-none shadow-2xl premium-shadow max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight">Modify Production Scope</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleUpdateScope} className="space-y-6 pt-4">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Project Identifier</Label>
+                    <Input 
+                      value={scopeData.projectName}
+                      onChange={(e) => setScopeData({ ...scopeData, projectName: e.target.value })}
+                      className="rounded-2xl h-12 font-bold px-5 bg-slate-50 border-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Strategic Client</Label>
+                    <Input 
+                      value={scopeData.client}
+                      onChange={(e) => setScopeData({ ...scopeData, client: e.target.value })}
+                      className="rounded-2xl h-12 font-bold px-5 bg-slate-50 border-none"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Cap-Ex Budget ($)</Label>
+                  <Input 
+                    type="number"
+                    value={scopeData.budget}
+                    onChange={(e) => setScopeData({ ...scopeData, budget: e.target.value })}
+                    className="rounded-2xl h-12 font-bold px-5 bg-slate-50 border-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Executive Brief</Label>
+                  <Textarea 
+                    value={scopeData.description}
+                    onChange={(e) => setScopeData({ ...scopeData, description: e.target.value })}
+                    className="rounded-2xl min-h-[120px] font-medium p-5 bg-slate-50 border-none"
+                  />
+                </div>
+                <DialogFooter className="pt-4 gap-3">
+                  <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => setIsModifyScopeOpen(false)}>Discard</Button>
+                  <Button type="submit" className="rounded-xl font-black px-8 bg-primary shadow-lg shadow-primary/20" disabled={isUpdatingScope}>
+                    {isUpdatingScope ? 'Syncing...' : 'Update Parameters'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+          
           <Button className="rounded-2xl font-black shadow-xl shadow-primary/20 h-11 px-8 bg-primary hover:scale-[1.02] transition-all">
             Execute Release
           </Button>
