@@ -1,6 +1,7 @@
+
 "use client";
 
-import { Bell, Search, User as UserIcon, Command } from 'lucide-react';
+import { Bell, Search, User as UserIcon, Command, ShieldCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -14,9 +15,10 @@ import {
 import { useAuth } from '@/lib/firebase/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export function Topbar() {
-  const { user, logOut } = useAuth();
+  const { user, isAdmin, logOut } = useAuth();
 
   return (
     <header className="h-20 border-b bg-white/40 backdrop-blur-xl sticky top-0 z-30 flex items-center justify-between px-10">
@@ -33,6 +35,13 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-6">
+        {isAdmin && (
+          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200 border-none rounded-xl px-3 py-1 font-black text-[10px] uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+            <ShieldCheck size={14} />
+            Full Access Root
+          </Badge>
+        )}
+        
         <div className="hidden md:flex items-center gap-2 pr-4 border-r">
           <Badge variant="outline" className="rounded-xl px-3 py-1 bg-emerald-50 text-emerald-700 border-emerald-100 font-bold text-[10px] uppercase tracking-wider">
             Enterprise Cloud
@@ -47,7 +56,10 @@ export function Topbar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-11 w-11 rounded-2xl overflow-hidden group p-0">
-              <Avatar className="h-11 w-11 ring-2 ring-slate-100 group-hover:ring-primary/40 transition-all rounded-2xl">
+              <Avatar className={cn(
+                "h-11 w-11 ring-2 transition-all rounded-2xl",
+                isAdmin ? "ring-amber-400" : "ring-slate-100 group-hover:ring-primary/40"
+              )}>
                 <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} className="object-cover" />
                 <AvatarFallback className="bg-primary/10 text-primary font-black rounded-2xl">
                   {user?.displayName?.[0] || 'U'}
@@ -64,7 +76,7 @@ export function Topbar() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="my-2" />
             <DropdownMenuItem className="rounded-xl cursor-pointer font-bold py-2.5">Workspace Profile</DropdownMenuItem>
-            <DropdownMenuItem className="rounded-xl cursor-pointer font-bold py-2.5">Subscription Plan</DropdownMenuItem>
+            {isAdmin && <DropdownMenuItem className="rounded-xl cursor-pointer font-bold py-2.5 text-amber-600">Admin Console</DropdownMenuItem>}
             <DropdownMenuItem className="rounded-xl cursor-pointer font-bold py-2.5">Security Settings</DropdownMenuItem>
             <DropdownMenuSeparator className="my-2" />
             <DropdownMenuItem className="rounded-xl text-rose-500 focus:text-rose-600 focus:bg-rose-50 cursor-pointer font-bold py-2.5" onClick={() => logOut()}>

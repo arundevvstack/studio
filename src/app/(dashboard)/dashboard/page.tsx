@@ -1,5 +1,7 @@
+
 "use client";
 
+import { useState, useEffect } from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -22,27 +24,22 @@ import {
   AlertCircle,
   MoreHorizontal,
   ArrowUpRight,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/firebase/auth-context';
 
 const kpis = [
   { title: 'Total Projects', value: '24', icon: Layers, trend: '+3 this month', trendType: 'up', color: 'text-blue-600', bg: 'bg-blue-50' },
   { title: 'Active Studio', value: '18', icon: TrendingUp, trend: '85% active', trendType: 'up', color: 'text-indigo-600', bg: 'bg-indigo-50' },
   { title: 'At Risk', value: '2', icon: AlertCircle, trend: '-1 from last week', trendType: 'down', color: 'text-orange-600', bg: 'bg-orange-50' },
   { title: 'Monthly Delivery', value: '6', icon: CheckCircle2, trend: '+20% vs target', trendType: 'up', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-];
-
-const stageData = [
-  { name: 'Discussion', count: 4 },
-  { name: 'Pre-Prod', count: 6 },
-  { name: 'Production', count: 12 },
-  { name: 'Post-Prod', count: 8 },
-  { name: 'Released', count: 5 },
 ];
 
 const activityData = [
@@ -62,19 +59,35 @@ const recentActivity = [
 ];
 
 export default function DashboardPage() {
+  const { user, isAdmin } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 max-w-[1600px] mx-auto pb-12">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Workspace Overview</h1>
-          <p className="text-muted-foreground text-lg">Welcome back, Marcus. Your production pipeline is 82% optimized.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Workspace Overview</h1>
+            {isAdmin && (
+              <Badge className="bg-amber-100 text-amber-700 border-none rounded-lg px-2 py-0.5 font-bold text-[10px] uppercase">
+                Admin Mode
+              </Badge>
+            )}
+          </div>
+          <p className="text-muted-foreground text-lg">Welcome back, {user?.displayName?.split(' ')[0] || 'Marcus'}. Your production pipeline is 82% optimized.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-2xl h-11 px-5 border-slate-200 hover:bg-slate-50 font-semibold gap-2">
             <CalendarIcon size={18} />
-            Oct 2024
+            {new Date().toLocaleString('default', { month: 'short', year: 'numeric' })}
           </Button>
-          <Button className="rounded-2xl h-11 px-6 shadow-xl shadow-primary/20 font-bold">
+          <Button className="rounded-2xl h-11 px-6 shadow-xl shadow-primary/20 font-bold bg-primary hover:scale-[1.02] transition-transform">
             Share Report
           </Button>
         </div>
@@ -235,7 +248,7 @@ export default function DashboardPage() {
          <Card className="border-none shadow-sm premium-shadow rounded-[2.5rem] bg-white/70 backdrop-blur-md p-4">
             <CardHeader>
               <CardTitle className="text-2xl font-black text-slate-900">Critical Milestones</CardTitle>
-              <CardDescription className="font-medium">Due in the next 7 days.</CardDescription>
+              <CardDescription className="font-medium">Due soon in your workspace.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-5 mt-4">

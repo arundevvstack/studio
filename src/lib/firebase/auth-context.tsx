@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -14,8 +15,11 @@ import {
 import { auth } from './config';
 import { useToast } from '@/hooks/use-toast';
 
+const ADMIN_EMAIL = 'arundevv.com@gmail.com';
+
 interface AuthContextType {
   user: User | null;
+  isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string, name: string) => Promise<void>;
@@ -36,6 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     return () => unsubscribe();
   }, []);
+
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   const signIn = async (email: string, pass: string) => {
     try {
@@ -100,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, logOut }}>
+    <AuthContext.Provider value={{ user, isAdmin, loading, signIn, signUp, logOut }}>
       {children}
     </AuthContext.Provider>
   );
