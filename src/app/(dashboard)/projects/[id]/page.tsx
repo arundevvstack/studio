@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Project, Task } from '@/lib/types';
+import { Project, Task, ProjectStage, ProjectPriority } from '@/lib/types';
 import { updateProject } from '@/lib/firebase/firestore';
 import { 
   Tabs, 
@@ -28,6 +28,13 @@ import {
   DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
@@ -52,6 +59,9 @@ import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase
 import { doc, collection, query, orderBy, serverTimestamp, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+
+const STAGES: ProjectStage[] = ['Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'];
+const PRIORITIES: ProjectPriority[] = ['Low', 'Medium', 'High'];
 
 export default function ProjectDetailPage() {
   const { id } = useParams() as { id: string };
@@ -104,6 +114,18 @@ export default function ProjectDetailPage() {
     const newProgress = val[0];
     setLocalProgress(newProgress);
     updateProject(db, id, { progress: newProgress });
+  };
+
+  const handleStageChange = (val: string) => {
+    if (!project || !db) return;
+    updateProject(db, id, { stage: val as ProjectStage });
+    toast({ title: "Lifecycle Updated", description: `Production stage shifted to ${val}.` });
+  };
+
+  const handlePriorityChange = (val: string) => {
+    if (!project || !db) return;
+    updateProject(db, id, { priority: val as ProjectPriority });
+    toast({ title: "Priority Shifted", description: `Project criticality updated to ${val}.` });
   };
 
   const handleCreatePhase = async (e: React.FormEvent) => {
@@ -271,14 +293,32 @@ export default function ProjectDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Phase</p>
-                    <p className="text-lg font-black text-slate-800">{project.stage}</p>
+                    <Select value={project.stage} onValueChange={handleStageChange}>
+                      <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-lg text-slate-800 focus:ring-0 shadow-none ring-offset-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                        {STAGES.map(stage => (
+                          <SelectItem key={stage} value={stage} className="rounded-xl font-bold py-2.5">{stage}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Priority</p>
-                    <Badge className={cn(
-                      "rounded-xl px-3 py-1 font-black text-[10px] uppercase tracking-widest",
-                      project.priority === 'High' ? "bg-rose-50 text-rose-600 border-none" : "bg-indigo-50 text-indigo-600 border-none"
-                    )}>{project.priority} Matrix</Badge>
+                    <Select value={project.priority} onValueChange={handlePriorityChange}>
+                      <SelectTrigger className="border-none bg-transparent p-0 h-auto focus:ring-0 shadow-none ring-offset-0">
+                        <Badge className={cn(
+                          "rounded-xl px-3 py-1 font-black text-[10px] uppercase tracking-widest cursor-pointer",
+                          project.priority === 'High' ? "bg-rose-50 text-rose-600 border-none" : "bg-indigo-50 text-indigo-600 border-none"
+                        )}>{project.priority} Matrix</Badge>
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                        {PRIORITIES.map(priority => (
+                          <SelectItem key={priority} value={priority} className="rounded-xl font-bold py-2.5">{priority} Priority</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Cap-Ex Spend</p>
