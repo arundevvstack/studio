@@ -17,16 +17,21 @@ service cloud.firestore {
     }
 
     /** 
-     * Checks if the user has a global admin role.
-     * Hardcoded UID and Email for immediate Root access.
-     * We avoid calling exists() in a circular way.
+     * Checks if the user has hardcoded root access.
+     * This is used to break circular dependencies in the isAdmin check.
      */
-    function isAdmin() {
+    function isHardcodedAdmin() {
       return isSignedIn() && (
         request.auth.uid == "3EQSAs91zzVclLcZYk2dzQToMeC3" ||
-        request.auth.token.email == "arundevv.com@gmail.com" ||
-        exists(/databases/$(database)/documents/app_roles_admin/$(request.auth.uid))
+        request.auth.token.email == "arundevv.com@gmail.com"
       );
+    }
+
+    /** 
+     * Checks if the user has a global admin role.
+     */
+    function isAdmin() {
+      return isHardcodedAdmin() || (isSignedIn() && exists(/databases/$(database)/documents/app_roles_admin/$(request.auth.uid)));
     }
 
     /** Checks if the user is a member of a project based on the provided data map. */
@@ -50,14 +55,16 @@ service cloud.firestore {
     }
 
     match /app_roles_admin/{teamMemberId} {
-      // Allow the user to check their own role, or admins to list all.
-      allow read: if isSignedIn() && (request.auth.uid == teamMemberId || isAdmin());
+      // Allow the user to check their own role, or hardcoded admins to list all.
+      // We use isHardcodedAdmin here to avoid circularity with the exists() call in isAdmin().
+      allow read: if isSignedIn() && (request.auth.uid == teamMemberId || isHardcodedAdmin());
       allow write: if false; 
     }
 
     match /projects/{projectId} {
-      // Combined list rule to ensure Firestore rules engine evaluates OR correctly
-      allow list: if isAdmin() || (isSignedIn() && (request.auth.uid in resource.data.assignedTeamMemberIds));
+      // Allow list if admin (unfiltered) or if the query is filtered by membership.
+      allow list: if isAdmin();
+      allow list: if isSignedIn() && (request.auth.uid in resource.data.assignedTeamMemberIds);
       
       allow get: if isAdmin() || isProjectMember(resource.data);
       
