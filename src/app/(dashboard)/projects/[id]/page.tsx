@@ -61,6 +61,9 @@ export default function ProjectDetailPage() {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   
+  // Progress Slider State
+  const [localProgress, setLocalProgress] = useState<number | null>(null);
+
   // Task Creation State
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
@@ -84,9 +87,21 @@ export default function ProjectDetailPage() {
 
   const { data: tasks, isLoading: isTasksLoading } = useCollection<Task>(tasksQuery);
 
-  const handleUpdateProgress = (val: number[]) => {
+  // Sync local progress with project progress when not dragging
+  useEffect(() => {
+    if (project && localProgress === null) {
+      setLocalProgress(project.progress || 0);
+    }
+  }, [project, localProgress]);
+
+  const handleSliderChange = (val: number[]) => {
+    setLocalProgress(val[0]);
+  };
+
+  const handleUpdateProgressCommit = (val: number[]) => {
     if (!project || !db) return;
     const newProgress = val[0];
+    setLocalProgress(newProgress);
     updateProject(db, id, { progress: newProgress });
   };
 
@@ -276,14 +291,17 @@ export default function ProjectDetailPage() {
                       <h4 className="font-black text-slate-900">Optimization Progress</h4>
                       <p className="text-xs font-medium text-muted-foreground">Adjust production completion slider</p>
                     </div>
-                    <span className="text-4xl font-black text-primary tracking-tighter">{project.progress}%</span>
+                    <span className="text-4xl font-black text-primary tracking-tighter">
+                      {localProgress !== null ? localProgress : project.progress || 0}%
+                    </span>
                   </div>
                   <Slider 
-                    value={[project.progress || 0]} 
+                    value={[localProgress !== null ? localProgress : project.progress || 0]} 
                     max={100} 
                     step={1} 
-                    onValueChange={handleUpdateProgress}
-                    className="py-4"
+                    onValueChange={handleSliderChange}
+                    onValueCommit={handleUpdateProgressCommit}
+                    className="py-4 cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] font-black text-slate-400 px-1 uppercase tracking-widest">
                     <span>Kickoff</span>
