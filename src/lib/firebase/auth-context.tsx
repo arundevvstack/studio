@@ -37,15 +37,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { auth } = initializeFirebase();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
       setLoading(false);
     });
     return () => unsubscribe();
   }, [auth]);
 
   // Grant admin status to specific UID or Email
-  const isAdmin = !!user && (user.email === ADMIN_EMAIL || user.uid === ADMIN_UID);
+  const isAdmin = !!user && (
+    user.email === ADMIN_EMAIL || 
+    user.uid === ADMIN_UID
+  );
 
   const signIn = async (email: string, pass: string) => {
     try {
