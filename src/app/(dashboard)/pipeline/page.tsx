@@ -29,14 +29,12 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
-import { useAuth } from '@/lib/firebase/auth-context';
 
 export default function PipelinePage() {
   const [search, setSearch] = useState('');
   const [isMounted, setIsMounted] = useState(false);
   
-  const { user } = useUser();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, isUserLoading } = useUser();
   const db = useFirestore();
 
   useEffect(() => {
@@ -44,7 +42,7 @@ export default function PipelinePage() {
   }, []);
 
   const pipelineQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || isUserLoading) return null;
     
     // Admins can see the whole pipeline, members only see their assigned ones.
     if (!isAdmin) {
@@ -61,7 +59,7 @@ export default function PipelinePage() {
       where('stage', 'in', ['Pitch', 'Discussion']),
       orderBy('createdAt', 'desc')
     );
-  }, [db, user, isAdmin]);
+  }, [db, user, isAdmin, isUserLoading]);
 
   const { data: projects, isLoading, error } = useCollection<Project>(pipelineQuery);
 

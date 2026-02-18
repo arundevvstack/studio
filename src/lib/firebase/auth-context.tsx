@@ -2,8 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
-  onAuthStateChanged, 
-  User, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
@@ -11,14 +9,11 @@ import {
   browserLocalPersistence,
   updateProfile
 } from 'firebase/auth';
-import { initializeFirebase } from '@/firebase';
+import { useFirebase, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 
-const ADMIN_EMAIL = 'arundevv.com@gmail.com';
-const ADMIN_UID = '3EQSAs91zzVclLcZYk2dzQToMeC3';
-
 interface AuthContextType {
-  user: User | null;
+  user: any;
   isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
@@ -29,36 +24,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { auth } = useFirebase();
+  const { user, isAdmin, isUserLoading } = useUser();
   const { toast } = useToast();
-  
-  // Initialize standard services
-  const { auth } = initializeFirebase();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [auth]);
-
-  // Grant admin status to specific UID or Email
-  const isAdmin = !!user && (
-    user.email === ADMIN_EMAIL || 
-    user.uid === ADMIN_UID
-  );
+  const [internalLoading, setInternalLoading] = useState(false);
 
   const signIn = async (email: string, pass: string) => {
     try {
-      setLoading(true);
+      setInternalLoading(true);
       await setPersistence(auth, browserLocalPersistence);
       const result = await signInWithEmailAndPassword(auth, email, pass);
       if (result.user) {
         toast({
           title: "Session Initialized",
-          description: `Welcome back to the studio, ${result.user.displayName || 'Creator'}.`,
+          description: `Welcome back to the studio.`,
         });
       }
     } catch (error: any) {
@@ -69,20 +48,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       throw error;
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
   };
 
   const signUp = async (email: string, pass: string, name: string) => {
     try {
-      setLoading(true);
+      setInternalLoading(true);
       await setPersistence(auth, browserLocalPersistence);
       const result = await createUserWithEmailAndPassword(auth, email, pass);
       if (result.user) {
         await updateProfile(result.user, { displayName: name });
-        // Update local user state
-        const updatedUser = { ...result.user, displayName: name } as User;
-        setUser(updatedUser);
         toast({
           title: "Account Provisioned",
           description: `Your workspace has been successfully initialized, ${name}.`,
@@ -96,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       throw error;
     } finally {
-      setLoading(false);
+      setInternalLoading(false);
     }
   };
 
@@ -117,7 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading, signIn, signUp, logOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAdmin, 
+      loading: isUserLoading || internalLoading, 
+      signIn, 
+      signUp, 
+      logOut 
+    }}>
       {children}
     </AuthContext.Provider>
   );

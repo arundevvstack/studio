@@ -63,6 +63,7 @@ service cloud.firestore {
 
     match /projects/{projectId} {
       // Admin global access vs User-restricted access
+      // For list operations, the rules engine acts as a filter.
       allow list: if isAdmin() || (isSignedIn() && (request.auth.uid in resource.data.assignedTeamMemberIds));
       
       allow get: if isAdmin() || isProjectMember(resource.data);

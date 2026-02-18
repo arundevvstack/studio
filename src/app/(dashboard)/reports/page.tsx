@@ -43,14 +43,12 @@ import {
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, where } from 'firebase/firestore';
 import { Project } from '@/lib/types';
-import { useAuth } from '@/lib/firebase/auth-context';
 
 const COLORS = ['#A0D2EB', '#6366f1', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function ReportsPage() {
   const [isMounted, setIsMounted] = useState(false);
-  const { user } = useUser();
-  const { isAdmin } = useAuth();
+  const { user, isAdmin, isUserLoading } = useUser();
   const db = useFirestore();
 
   useEffect(() => {
@@ -58,7 +56,7 @@ export default function ReportsPage() {
   }, []);
 
   const projectsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    if (!db || !user || isUserLoading) return null;
     
     // Admins can see the whole studio, members only see their assigned ones.
     if (!isAdmin) {
@@ -70,7 +68,7 @@ export default function ReportsPage() {
     }
     
     return query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-  }, [db, user, isAdmin]);
+  }, [db, user, isAdmin, isUserLoading]);
 
   const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
 
