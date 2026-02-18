@@ -33,7 +33,7 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Project } from '@/lib/types';
 
 export default function DashboardPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const db = useFirestore();
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
@@ -44,16 +44,21 @@ export default function DashboardPage() {
   }, []);
 
   const projectsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    if (!isAdmin) {
+    if (!db || !user || authLoading) return null;
+    
+    if (isAdmin) {
       return query(
-        collection(db, 'projects'),
-        where('assignedTeamMemberIds', 'array-contains', user.uid),
+        collection(db, 'projects'), 
         orderBy('createdAt', 'desc')
       );
     }
-    return query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-  }, [db, user, isAdmin]);
+    
+    return query(
+      collection(db, 'projects'),
+      where('assignedTeamMemberIds', 'array-contains', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+  }, [db, user, isAdmin, authLoading]);
 
   const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
 
@@ -78,10 +83,8 @@ export default function DashboardPage() {
     { title: 'Monthly Delivery', value: stats.delivered.toString(), icon: CheckCircle2, trend: 'Released Assets', trendType: 'up', color: 'text-emerald-600', bg: 'bg-emerald-50' },
   ];
 
-  // Generate dynamic chart data based on project progress over time (simplified for MVP)
   const activityData = useMemo(() => {
     if (!projects) return [];
-    // Just a representational curve of the latest 7 projects' progress
     return projects.slice(0, 7).reverse().map((p, i) => ({
       name: `P${i + 1}`,
       value: p.progress || 0

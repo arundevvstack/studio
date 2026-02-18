@@ -48,29 +48,32 @@ export default function ProjectsPage() {
   const [isMounted, setIsMounted] = useState(false);
   
   const { user } = useUser();
-  const { isAdmin } = useAuth();
+  const { isAdmin, loading: authLoading } = useAuth();
   const db = useFirestore();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Memoize the query to satisfy security rules and avoid infinite loops
   const projectsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    // Wait for database, user, and initial auth state to be resolved
+    if (!db || !user || authLoading) return null;
     
-    // If not a hardcoded admin, we must filter by membership to satisfy rules list constraint
-    if (!isAdmin) {
+    // Admins can see everything
+    if (isAdmin) {
       return query(
-        collection(db, 'projects'),
-        where('assignedTeamMemberIds', 'array-contains', user.uid),
+        collection(db, 'projects'), 
         orderBy('createdAt', 'desc')
       );
     }
     
-    // Admins can see everything
-    return query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
-  }, [db, user, isAdmin]);
+    // Members must filter by assigned IDs to satisfy security rules
+    return query(
+      collection(db, 'projects'),
+      where('assignedTeamMemberIds', 'array-contains', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+  }, [db, user, isAdmin, authLoading]);
 
   const { data: projects, isLoading, error } = useCollection<Project>(projectsQuery);
 
@@ -105,8 +108,8 @@ export default function ProjectsPage() {
         </div>
         <h2 className="text-2xl font-black">Access Restricted</h2>
         <p className="text-muted-foreground text-center max-w-md">
-          You don't have the required permissions to view the project portfolio. 
-          Contact your administrator to be assigned to specific projects.
+          Authentication clearance is required to view the project portfolio. 
+          Please ensure your session is active.
         </p>
         <Button asChild variant="outline" className="rounded-xl">
           <Link href="/dashboard">Return to Dashboard</Link>
