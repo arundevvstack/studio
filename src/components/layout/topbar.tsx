@@ -2,7 +2,18 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Bell, Search, Command, ShieldCheck, Sun, Moon } from 'lucide-react';
+import { 
+  Bell, 
+  Search, 
+  Command, 
+  ShieldCheck, 
+  Sun, 
+  Moon, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle,
+  X
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -13,11 +24,54 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useAuth } from '@/lib/firebase/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useTheme } from "next-themes";
+
+// Mock notification data for tactical demonstration
+const MOCK_NOTIFICATIONS = [
+  {
+    id: '1',
+    title: 'Production Shift',
+    message: "Project 'Nike Summer 24' moved to Production phase.",
+    time: '2 minutes ago',
+    type: 'success',
+    isNew: true
+  },
+  {
+    id: '2',
+    title: 'Financial Sync',
+    message: 'Invoice #MRZL_2024_A9B2 has been marked as Paid.',
+    time: '45 minutes ago',
+    type: 'info',
+    isNew: true
+  },
+  {
+    id: '3',
+    title: 'Personnel Authorized',
+    message: 'Sarah Chen has been granted Director-level clearance.',
+    time: '2 hours ago',
+    type: 'auth',
+    isNew: false
+  },
+  {
+    id: '4',
+    title: 'Milestone Alert',
+    message: 'Deadline approaching for Adidas Global Campaign.',
+    time: '5 hours ago',
+    type: 'warning',
+    isNew: false
+  }
+];
 
 export function Topbar() {
   const { user, isAdmin, logOut } = useAuth();
@@ -55,7 +109,7 @@ export function Topbar() {
 
       <div className="flex items-center gap-4">
         {isAdmin && (
-          <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-400 border-none rounded-md px-3 py-1 font-black text-[9px] uppercase tracking-widest flex items-center gap-1.5">
+          <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-400 border-none rounded-[3px] px-3 py-1 font-black text-[9px] uppercase tracking-widest flex items-center gap-1.5">
             <ShieldCheck size={12} />
             Admin
           </Badge>
@@ -70,15 +124,68 @@ export function Topbar() {
           {theme === 'dark' ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-500" />}
         </Button>
         
-        <Button variant="ghost" size="icon" className="relative text-slate-500 glass-pill h-10 w-10 hover:bg-white/80 dark:hover:bg-slate-800 transition-all border-none">
-          <Bell size={18} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm"></span>
-        </Button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative text-slate-500 glass-pill h-10 w-10 hover:bg-white/80 dark:hover:bg-slate-800 transition-all border-none group">
+              <Bell size={18} />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-white dark:border-slate-900 shadow-sm group-hover:scale-110 transition-transform"></span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-80 p-0 border-l border-white/20 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl">
+            <SheetHeader className="p-6 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <SheetTitle className="text-xl font-black tracking-tight text-slate-700 dark:text-slate-100">Notifications</SheetTitle>
+                <Badge className="rounded-[3px] bg-primary/10 text-primary border-none text-[9px] font-black uppercase px-2 h-5">
+                  {MOCK_NOTIFICATIONS.filter(n => n.isNew).length} NEW
+                </Badge>
+              </div>
+            </SheetHeader>
+            <div className="overflow-y-auto h-[calc(100vh-100px)] scrollbar-hide">
+              <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                {MOCK_NOTIFICATIONS.map((n) => (
+                  <div key={n.id} className={cn(
+                    "p-5 transition-all hover:bg-white/40 dark:hover:bg-slate-800/40 cursor-pointer group relative overflow-hidden",
+                    n.isNew && "bg-primary/[0.02]"
+                  )}>
+                    {n.isNew && <div className="absolute left-0 top-0 w-1 h-full bg-primary" />}
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        "w-8 h-8 rounded-[3px] flex items-center justify-center shrink-0 shadow-sm",
+                        n.type === 'success' ? "bg-emerald-50 text-emerald-500" :
+                        n.type === 'info' ? "bg-blue-50 text-blue-500" :
+                        n.type === 'warning' ? "bg-amber-50 text-amber-500" :
+                        "bg-slate-50 text-slate-500"
+                      )}>
+                        {n.type === 'success' ? <CheckCircle2 size={14} /> : 
+                         n.type === 'warning' ? <AlertCircle size={14} /> :
+                         <Clock size={14} />}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{n.title}</h4>
+                          <span className="text-[8px] font-bold text-slate-300 dark:text-slate-600">{n.time}</span>
+                        </div>
+                        <p className="font-arial text-[12px] text-slate-700 dark:text-slate-300 leading-snug">
+                          {n.message}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="p-6 text-center">
+                <Button variant="ghost" className="w-full rounded-[3px] font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">
+                  View All Activity
+                </Button>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-lg overflow-hidden group p-0 shadow-sm border-white dark:border-slate-800 border">
-              <Avatar className="h-full w-full rounded-lg">
+            <Button variant="ghost" className="relative h-10 w-10 rounded-[3px] overflow-hidden group p-0 shadow-sm border-white dark:border-slate-800 border">
+              <Avatar className="h-full w-full rounded-[3px]">
                 <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} className="object-cover" />
                 <AvatarFallback className="bg-primary/10 text-primary font-black text-xs">
                   {user?.displayName?.[0] || 'U'}
@@ -94,10 +201,10 @@ export function Topbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="my-2 bg-slate-200/40 dark:bg-slate-700/40" />
-            <DropdownMenuItem className="rounded-md cursor-pointer font-bold py-2 text-xs">My Profile</DropdownMenuItem>
-            {isAdmin && <DropdownMenuItem className="rounded-md cursor-pointer font-bold py-2 text-xs text-amber-600">Admin Console</DropdownMenuItem>}
+            <DropdownMenuItem className="rounded-[3px] cursor-pointer font-bold py-2 text-xs">My Profile</DropdownMenuItem>
+            {isAdmin && <DropdownMenuItem className="rounded-[3px] cursor-pointer font-bold py-2 text-xs text-amber-600">Admin Console</DropdownMenuItem>}
             <DropdownMenuSeparator className="my-2 bg-slate-200/40 dark:bg-slate-700/40" />
-            <DropdownMenuItem className="rounded-md text-rose-500 focus:text-rose-600 cursor-pointer font-bold py-2 text-xs" onClick={() => logOut()}>
+            <DropdownMenuItem className="rounded-[3px] text-rose-500 focus:text-rose-600 cursor-pointer font-bold py-2 text-xs" onClick={() => logOut()}>
               Sign Out Securely
             </DropdownMenuItem>
           </DropdownMenuContent>
