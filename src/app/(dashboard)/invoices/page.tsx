@@ -11,7 +11,8 @@ import {
   Clock, 
   CheckCircle2, 
   AlertCircle,
-  ShieldAlert
+  ShieldAlert,
+  FileText
 } from 'lucide-react';
 import { 
   Table, 
@@ -129,8 +130,10 @@ export default function InvoicesPage() {
               filteredInvoices.map((invoice) => (
                 <TableRow key={invoice.id} className="hover:bg-white/40 transition-all border-b border-slate-200/20 last:border-0 h-24">
                   <TableCell className="pl-10">
-                    <div className="font-black text-slate-900 tracking-tighter">INV-{invoice.id.slice(0, 8).toUpperCase()}</div>
-                    <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Issued: {new Date(invoice.createdAt?.seconds * 1000).toLocaleDateString()}</div>
+                    <Link href={`/invoices/${invoice.id}`} className="group flex flex-col">
+                      <div className="font-black text-slate-900 tracking-tighter group-hover:text-primary transition-colors">INV-{invoice.id.slice(0, 8).toUpperCase()}</div>
+                      <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Issued: {invoice.createdAt?.seconds ? new Date(invoice.createdAt.seconds * 1000).toLocaleDateString() : '---'}</div>
+                    </Link>
                   </TableCell>
                   <TableCell>
                     <div className="font-bold text-slate-700">{invoice.clientName}</div>
@@ -150,8 +153,10 @@ export default function InvoicesPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right pr-10">
-                    <Button variant="ghost" size="icon" className="h-11 w-11 glass-pill hover:bg-white hover:text-primary transition-all ios-clickable">
-                      <ChevronRight size={22} />
+                    <Button variant="ghost" size="icon" className="h-11 w-11 glass-pill hover:bg-white hover:text-primary transition-all ios-clickable" asChild>
+                      <Link href={`/invoices/${invoice.id}`}>
+                        <FileText size={22} />
+                      </Link>
                     </Button>
                   </TableCell>
                 </TableRow>

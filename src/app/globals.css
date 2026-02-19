@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -54,13 +55,6 @@
   @apply glass-panel rounded-[2rem];
 }
 
-.glass-sidebar {
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
-}
-
 /* Tactile Micro-interactions */
 .ios-clickable {
   @apply transition-all duration-300 ease-in-out cursor-pointer active:scale-95 hover:brightness-105;
@@ -68,15 +62,6 @@
 
 .ios-card-hover {
   @apply transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/5;
-}
-
-/* Typography Hierarchy */
-.text-ios-heading {
-  @apply font-black tracking-tight text-slate-900 leading-[1.1];
-}
-
-.text-ios-body {
-  @apply font-medium text-slate-500 leading-relaxed;
 }
 
 /* Ambient Lighting */
@@ -94,15 +79,6 @@
 .blob-blue { background: #0A84FF; top: -10%; right: -10%; }
 .blob-indigo { background: #5E5CE6; bottom: -10%; left: -10%; }
 
-/* Scroll-based Blur Intensity */
-.scroll-header {
-  @apply sticky top-0 z-50 transition-all duration-500;
-}
-
-.scroll-header[data-scrolled="true"] {
-  @apply glass-panel border-b shadow-sm;
-}
-
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -114,4 +90,37 @@
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.1);
   border-radius: 20px;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+  }
+
+  .invoice-document-print {
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Fixed for dynamic layout */
+  .fixed, aside, header {
+    display: none !important;
+  }
+  
+  .flex-1 {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 }
