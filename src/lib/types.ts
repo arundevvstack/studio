@@ -24,13 +24,13 @@ export interface Project {
 export interface Task {
   id: string;
   projectId: string;
-  stage: ProjectStage; // Phase specific objective tracking
+  stage: ProjectStage;
   name: string;
   description: string;
   completed: boolean;
   priority: ProjectPriority;
   dueDate: any;
-  assignedTeamMemberIds: string[]; // Specific assignees for this objective
+  assignedTeamMemberIds: string[];
   projectAssignedTeamMemberIds: string[]; 
   createdAt: any;
   updatedAt: any;

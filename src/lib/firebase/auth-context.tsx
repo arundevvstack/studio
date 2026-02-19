@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -16,7 +15,7 @@ import {
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { useFirebase, useUser, useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { ensureTeamMember, updateTeamMemberPhoto } from './firestore';
+import { ensureTeamMember, updateTeamMemberProfile } from './firestore';
 import { TeamMember } from '../types';
 
 interface AuthContextType {
@@ -125,16 +124,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setInternalLoading(true);
       await updateProfile(auth.currentUser, { displayName: newName });
-      
-      // Update Firestore record to keep in sync
       if (db) {
         const memberRef = doc(db, 'teamMembers', auth.currentUser.uid);
         await updateDoc(memberRef, { name: newName });
       }
-      
-      // Force auth state refresh
       await auth.currentUser.reload();
-      
       toast({ title: "Identity Synchronized", description: "Your executive profile name has been updated." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Update Failed", description: error.message });
@@ -149,12 +143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setInternalLoading(true);
       await updateProfile(auth.currentUser, { photoURL: newUrl });
-      
-      // Update Firestore record
       if (db) {
-        updateTeamMemberPhoto(db, auth.currentUser.uid, newUrl);
+        await updateTeamMemberProfile(db, auth.currentUser.uid, { photoURL: newUrl });
       }
-      
       await auth.currentUser.reload();
       toast({ title: "Thumbnail Updated", description: "Your profile visual has been synchronized." });
     } catch (error: any) {

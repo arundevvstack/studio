@@ -1,22 +1,9 @@
-
 "use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  LayoutDashboard, 
-  FolderKanban, 
-  Trello, 
-  Calendar, 
-  BarChart3, 
-  Settings,
-  Plus,
-  LogOut,
-  ChevronRight,
-  Workflow,
-  ReceiptRussianRuble,
-  Users,
-  ShieldCheck
+  LayoutDashboard, FolderKanban, Trello, Calendar, BarChart3, Settings, Plus, LogOut, ChevronRight, Workflow, ReceiptRussianRuble, Users, ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -42,72 +29,19 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-4 top-4 bottom-4 w-64 glass-card z-50 flex flex-col p-5 overflow-hidden">
-      <div className="px-2 mb-8">
-        <Link href="/dashboard" className="flex justify-start group ios-clickable">
-          {logo && (
-            <div className="relative h-12 w-48">
-              <Image src={logo.imageUrl} alt={logo.description} fill className="object-contain object-left" data-ai-hint={logo.imageHint} priority />
-            </div>
-          )}
-        </Link>
-      </div>
-
-      <div className="mb-6">
-        <Button asChild className="w-full h-12 rounded-[5px] font-black text-xs gap-2 shadow-xl shadow-primary/20 bg-primary border-none ios-clickable">
-          <Link href="/projects/new">
-            <Plus size={16} strokeWidth={3} /> New Production
-          </Link>
-        </Button>
-      </div>
-
-      <div className="flex-1 space-y-1 overflow-y-auto scrollbar-hide px-1">
-        <p className="px-4 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 opacity-70">Workspace</p>
+      <div className="px-2 mb-8"><Link href="/dashboard" className="flex justify-start">{logo && <div className="relative h-12 w-48"><Image src={logo.imageUrl} alt="Logo" fill className="object-contain object-left" priority /></div>}</Link></div>
+      <div className="mb-6"><Button asChild className="w-full h-12 rounded-[5px] font-black text-xs bg-primary border-none"><Link href="/projects/new"><Plus size={16} strokeWidth={3} /> New Production</Link></Button></div>
+      <div className="flex-1 space-y-1 overflow-y-auto px-1">
+        <p className="px-4 text-[9px] font-black uppercase text-slate-400 mb-3 opacity-70">Workspace</p>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "group flex items-center justify-between px-4 py-3 text-xs font-bold rounded-[5px] transition-all duration-300 ios-clickable",
-                isActive ? "bg-white/80 text-primary shadow-sm" : "text-slate-500 hover:bg-white/40 hover:text-slate-900"
-              )}
-            >
-              <div className="flex items-center">
-                <item.icon className={cn("mr-3 h-4 w-4", isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-900")} strokeWidth={isActive ? 2.5 : 2} />
-                {item.name}
-              </div>
-              {isActive && <ChevronRight size={12} className="text-primary/40" />}
-            </Link>
-          );
+          return (<Link key={item.name} href={item.href} className={cn("group flex items-center justify-between px-4 py-3 text-xs font-bold rounded-[5px] transition-all", isActive ? "bg-white/80 text-primary shadow-sm" : "text-slate-500 hover:bg-white/40")}><div className="flex items-center"><item.icon className={cn("mr-3 h-4 w-4", isActive ? "text-primary" : "text-slate-400")} />{item.name}</div>{isActive && <ChevronRight size={12} className="text-primary/40" />}</Link>);
         })}
-
-        {isAdmin && (
-          <>
-            <p className="px-4 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mb-3 mt-8 opacity-70">Management</p>
-            <Link
-              href="/admin"
-              className={cn(
-                "group flex items-center justify-between px-4 py-3 text-xs font-bold rounded-[5px] transition-all duration-300 ios-clickable",
-                pathname === '/admin' ? "bg-white/80 text-amber-600 shadow-sm" : "text-slate-500 hover:bg-white/40 hover:text-slate-900"
-              )}
-            >
-              <div className="flex items-center">
-                <ShieldCheck className={cn("mr-3 h-4 w-4", pathname === '/admin' ? "text-amber-600" : "text-slate-400 group-hover:text-slate-900")} />
-                Admin Console
-              </div>
-            </Link>
-          </>
-        )}
+        {isAdmin && (<><p className="px-4 text-[9px] font-black uppercase text-slate-400 mb-3 mt-8 opacity-70">Management</p><Link href="/admin" className={cn("group flex items-center justify-between px-4 py-3 text-xs font-bold rounded-[5px] transition-all", pathname === '/admin' ? "bg-white/80 text-amber-600 shadow-sm" : "text-slate-500 hover:bg-white/40")}><div className="flex items-center"><ShieldCheck className={cn("mr-3 h-4 w-4", pathname === '/admin' ? "text-amber-600" : "text-slate-400")} />Admin Console</div></Link></>)}
       </div>
-
       <div className="pt-4 mt-4 border-t border-slate-200/40 space-y-1">
-        <Link href="/settings" className="flex items-center px-4 py-3 text-xs font-bold rounded-[5px] text-slate-500 hover:bg-white/40 hover:text-slate-900 transition-all ios-clickable">
-          <Settings className="mr-3 h-4 w-4 text-slate-400" /> Settings
-        </Link>
-        <button onClick={() => logOut()} className="w-full flex items-center px-4 py-3 text-xs font-bold rounded-[5px] text-rose-500 hover:bg-rose-50/50 transition-all ios-clickable">
-          <LogOut className="mr-3 h-4 w-4" /> Log out
-        </button>
+        <Link href="/settings" className="flex items-center px-4 py-3 text-xs font-bold rounded-[5px] text-slate-500 hover:bg-white/40"><Settings className="mr-3 h-4 w-4 text-slate-400" /> Settings</Link>
+        <button onClick={() => logOut()} className="w-full flex items-center px-4 py-3 text-xs font-bold rounded-[5px] text-rose-500 hover:bg-rose-50/50"><LogOut className="mr-3 h-4 w-4" /> Log out</button>
       </div>
     </aside>
   );

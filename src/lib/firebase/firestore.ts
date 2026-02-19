@@ -6,7 +6,6 @@ import {
   doc, 
   query, 
   orderBy, 
-  onSnapshot,
   serverTimestamp,
   getDoc,
   getDocs,
@@ -45,12 +44,11 @@ export const createProject = (db: Firestore, userId: string, data: Partial<Proje
 
   setDoc(newProjectRef, projectData)
     .catch((error) => {
-      const permissionError = new FirestorePermissionError({
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: newProjectRef.path,
         operation: 'create',
         requestResourceData: projectData
-      });
-      errorEmitter.emit('permission-error', permissionError);
+      }));
     });
 
   return newProjectRef.id;
@@ -65,70 +63,19 @@ export const updateProject = (db: Firestore, id: string, data: Partial<Project>)
   
   updateDoc(projectRef, updateData)
     .catch((error) => {
-      const permissionError = new FirestorePermissionError({
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: projectRef.path,
         operation: 'update',
         requestResourceData: updateData
-      });
-      errorEmitter.emit('permission-error', permissionError);
+      }));
     });
 };
 
-export const createInvoice = (db: Firestore, userId: string, data: Partial<Invoice>) => {
-  const newInvoiceRef = doc(collection(db, INVOICES_COLLECTION));
-  const invoiceData = {
-    ...data,
-    id: newInvoiceRef.id,
-    creatorId: userId,
-    createdAt: serverTimestamp(),
-    status: data.status || 'Draft',
-  };
-
-  setDoc(newInvoiceRef, invoiceData)
-    .catch((error) => {
-      const permissionError = new FirestorePermissionError({
-        path: newInvoiceRef.path,
-        operation: 'create',
-        requestResourceData: invoiceData
-      });
-      errorEmitter.emit('permission-error', permissionError);
-    });
-
-  return newInvoiceRef.id;
-};
-
-export const updateInvoice = (db: Firestore, id: string, data: Partial<Invoice>) => {
-  const invoiceRef = doc(db, INVOICES_COLLECTION, id);
-  updateDoc(invoiceRef, data)
-    .catch((error) => {
-      const permissionError = new FirestorePermissionError({
-        path: invoiceRef.path,
-        operation: 'update',
-        requestResourceData: data
-      });
-      errorEmitter.emit('permission-error', permissionError);
-    });
-};
-
-export const deleteInvoice = (db: Firestore, id: string) => {
-  const invoiceRef = doc(db, INVOICES_COLLECTION, id);
-  deleteDoc(invoiceRef)
-    .catch((error) => {
-      const permissionError = new FirestorePermissionError({
-        path: invoiceRef.path,
-        operation: 'delete'
-      });
-      errorEmitter.emit('permission-error', permissionError);
-    });
-};
-
-// Team Management
 export const ensureTeamMember = async (db: Firestore, user: any) => {
   const memberRef = doc(db, TEAM_COLLECTION, user.uid);
   const snap = await getDoc(memberRef);
   
   if (!snap.exists()) {
-    // Check for pre-existing invitation
     const invQuery = query(collection(db, INVITATIONS_COLLECTION), where('email', '==', user.email));
     const invSnap = await getDocs(invQuery);
     
@@ -161,6 +108,17 @@ export const ensureTeamMember = async (db: Firestore, user: any) => {
   }
 };
 
+export const updateTeamMemberProfile = (db: Firestore, userId: string, data: Partial<TeamMember>) => {
+  const memberRef = doc(db, TEAM_COLLECTION, userId);
+  return updateDoc(memberRef, data).catch((error) => {
+    errorEmitter.emit('permission-error', new FirestorePermissionError({
+      path: memberRef.path,
+      operation: 'update',
+      requestResourceData: data
+    }));
+  });
+};
+
 export const createInvitation = (db: Firestore, adminUid: string, email: string, role: TeamRole) => {
   const invRef = doc(collection(db, INVITATIONS_COLLECTION));
   const invData: Invitation = {
@@ -171,55 +129,5 @@ export const createInvitation = (db: Firestore, adminUid: string, email: string,
     createdAt: serverTimestamp()
   };
 
-  return setDoc(invRef, invData).catch((error) => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: invRef.path,
-      operation: 'create',
-      requestResourceData: invData
-    }));
-  });
-};
-
-export const updateTeamMemberStatus = (db: Firestore, userId: string, status: TeamStatus) => {
-  const memberRef = doc(db, TEAM_COLLECTION, userId);
-  updateDoc(memberRef, { status }).catch((error) => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: memberRef.path,
-      operation: 'update',
-      requestResourceData: { status }
-    }));
-  });
-};
-
-export const updateTeamMemberRole = (db: Firestore, userId: string, role: TeamRole) => {
-  const memberRef = doc(db, TEAM_COLLECTION, userId);
-  updateDoc(memberRef, { role }).catch((error) => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: memberRef.path,
-      operation: 'update',
-      requestResourceData: { role }
-    }));
-  });
-};
-
-export const updateTeamMemberPhoto = (db: Firestore, userId: string, photoURL: string) => {
-  const memberRef = doc(db, TEAM_COLLECTION, userId);
-  updateDoc(memberRef, { photoURL }).catch((error) => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: memberRef.path,
-      operation: 'update',
-      requestResourceData: { photoURL }
-    }));
-  });
-};
-
-export const updateTeamMemberProfile = (db: Firestore, userId: string, data: Partial<TeamMember>) => {
-  const memberRef = doc(db, TEAM_COLLECTION, userId);
-  updateDoc(memberRef, data).catch((error) => {
-    errorEmitter.emit('permission-error', new FirestorePermissionError({
-      path: memberRef.path,
-      operation: 'update',
-      requestResourceData: data
-    }));
-  });
+  return setDoc(invRef, invData);
 };
