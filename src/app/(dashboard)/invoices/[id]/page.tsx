@@ -199,8 +199,9 @@ export default function InvoiceDetailPage() {
                 <div className="space-y-4">
                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Details</h5>
                    <div className="space-y-1.5">
-                      <p className="text-sm font-black text-slate-900">Axis Bank</p>
-                      <div className="grid grid-cols-[100px_1fr] text-[11px] font-bold">
+                      <p className="text-sm font-black text-slate-900">Marzelz Lifestyle Private Limited.</p>
+                      <p className="text-xs font-bold text-slate-600">Axis Bank - Sasthamangalam</p>
+                      <div className="grid grid-cols-[100px_1fr] text-[11px] font-bold mt-2">
                         <span className="text-slate-400">Acc no:</span>
                         <span className="text-slate-900">: 922020014850667</span>
                       </div>
@@ -209,8 +210,16 @@ export default function InvoiceDetailPage() {
                         <span className="text-slate-900">: UTIB0003042</span>
                       </div>
                       <div className="grid grid-cols-[100px_1fr] text-[11px] font-bold">
+                        <span className="text-slate-400">Phone:</span>
+                        <span className="text-slate-900">: 9947109143</span>
+                      </div>
+                      <div className="grid grid-cols-[100px_1fr] text-[11px] font-bold">
                         <span className="text-slate-400">PAN:</span>
                         <span className="text-slate-900">: AAQCM8450P</span>
+                      </div>
+                      <div className="grid grid-cols-[100px_1fr] text-[11px] font-bold">
+                        <span className="text-slate-400">GST:</span>
+                        <span className="text-slate-900">: 32AAQCM8450P1ZQ</span>
                       </div>
                    </div>
                 </div>
