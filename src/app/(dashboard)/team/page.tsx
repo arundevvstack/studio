@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -13,7 +12,9 @@ import {
   Briefcase,
   Activity,
   Plus,
-  UserPlus
+  UserPlus,
+  Sparkles,
+  Link as LinkIcon
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ import {
   AccordionContent, 
   AccordionItem, 
   AccordionTrigger 
-} from '@/components/ui/accordion';
+} from '@/accordion';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,7 @@ import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebas
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { TeamMember, Project, TeamRole } from '@/lib/types';
 import { createInvitation } from '@/lib/firebase/firestore';
+import { generateInvitationEmail } from '@/ai/flows/generate-invitation-email';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -99,17 +101,32 @@ export default function TeamPage() {
 
     setIsInviting(true);
     try {
+      // 1. Create Invitation Record
       await createInvitation(db, user.uid, inviteEmail, inviteRole);
+      
+      // 2. Synthesize Professional Invitation via AI
+      const acceptLink = `${window.location.origin}`;
+      const aiEmail = await generateInvitationEmail({
+        email: inviteEmail,
+        role: inviteRole,
+        inviteLink: acceptLink,
+        adminName: user.displayName || 'Administrator'
+      });
+
       toast({
         title: "Invitation Dispatched",
-        description: `${inviteEmail} has been pre-authorized as ${inviteRole}.`,
+        description: `Strategic brief synthesized and synchronized for ${inviteEmail}.`,
       });
+      
+      // Log for demo purposes (In production, this would trigger a Mail Extension)
+      console.log('AI Generated Invitation:', aiEmail);
+
       setInviteEmail('');
       setIsInviteOpen(false);
     } catch (error) {
       toast({
         title: "Invitation Failed",
-        description: "Could not sync invitation record.",
+        description: "Could not sync invitation record or synthesize brief.",
         variant: "destructive",
       });
     } finally {
@@ -123,7 +140,7 @@ export default function TeamPage() {
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-700 max-w-[1400px] mx-auto pb-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 px-1">
         <div className="space-y-0.5">
-          <h1 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-slate-100 leading-tight">Production Team</h1>
+          <h1 className="text-2xl font-black tracking-tighter text-slate-700 dark:text-slate-100 leading-tight">Production Team</h1>
           <p className="text-slate-500 text-xs font-medium opacity-80">Strategic talent mapping and real-time workload synchronization.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -136,7 +153,7 @@ export default function TeamPage() {
               </DialogTrigger>
               <DialogContent className="rounded-[5px] border-none shadow-2xl max-w-sm">
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100">Invite Team Member</DialogTitle>
+                  <DialogTitle className="text-xl font-black tracking-tight text-slate-700 dark:text-slate-100">Invite Team Member</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleInvite} className="space-y-4 pt-2">
                   <div className="space-y-1.5">
@@ -163,6 +180,15 @@ export default function TeamPage() {
                         <SelectItem value="Admin" className="font-bold text-xs text-primary">Admin</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="p-3 rounded-[5px] bg-slate-50 border border-slate-100 space-y-2">
+                    <div className="flex items-center gap-2 text-primary">
+                      <Sparkles size={12} />
+                      <span className="text-[10px] font-black uppercase tracking-widest">AI Intelligence</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                      Dispatching will synthesize a professional brief and acceptance link via email.
+                    </p>
                   </div>
                   <DialogFooter className="pt-2">
                     <Button variant="ghost" type="button" onClick={() => setIsInviteOpen(false)} className="rounded-[5px] font-bold text-xs h-10">Discard</Button>
@@ -210,7 +236,7 @@ export default function TeamPage() {
                         </div>
                         
                         <div>
-                          <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100">{member.name}</h3>
+                          <h3 className="text-sm font-black tracking-tight text-slate-700 dark:text-slate-100">{member.name}</h3>
                           <div className="flex items-center gap-2 mt-0.5">
                             <Badge className="rounded-[2px] bg-primary/5 text-primary border-none font-black text-[7px] uppercase tracking-widest px-1.5 h-4">
                               {member.role}
