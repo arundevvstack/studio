@@ -42,7 +42,7 @@ export default function Home() {
         await signUp(email, password, name);
       }
     } catch (err) {
-      // Toast handles error display in AuthContext
+      // Error is handled in AuthContext
     } finally {
       setAuthLoading(false);
     }
