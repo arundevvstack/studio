@@ -1,4 +1,3 @@
-
 export type ProjectStage = 'Pitch' | 'Discussion' | 'Pre Production' | 'Production' | 'Post Production' | 'Released';
 export type ProjectPriority = 'Low' | 'Medium' | 'High';
 
@@ -66,6 +65,9 @@ export interface TeamMember {
   photoURL: string;
   role: TeamRole;
   status: TeamStatus;
+  bio?: string;
+  location?: string;
+  portfolioUrl?: string;
   createdAt: any;
 }
 

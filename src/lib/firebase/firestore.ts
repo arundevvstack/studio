@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   setDoc, 
@@ -209,6 +208,17 @@ export const updateTeamMemberPhoto = (db: Firestore, userId: string, photoURL: s
       path: memberRef.path,
       operation: 'update',
       requestResourceData: { photoURL }
+    }));
+  });
+};
+
+export const updateTeamMemberProfile = (db: Firestore, userId: string, data: Partial<TeamMember>) => {
+  const memberRef = doc(db, TEAM_COLLECTION, userId);
+  updateDoc(memberRef, data).catch((error) => {
+    errorEmitter.emit('permission-error', new FirestorePermissionError({
+      path: memberRef.path,
+      operation: 'update',
+      requestResourceData: data
     }));
   });
 };

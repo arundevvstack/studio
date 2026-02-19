@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { 
   Bell, 
   Search, 
@@ -11,7 +12,10 @@ import {
   CheckCircle2, 
   Clock, 
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  User as UserIcon,
+  Settings,
+  LogOut
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -189,11 +193,24 @@ export function Topbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="my-2 bg-slate-200/40 dark:bg-slate-700/40" />
-            <DropdownMenuItem className="rounded-[3px] cursor-pointer font-bold py-2 text-xs">My Profile</DropdownMenuItem>
-            {isAdmin && <DropdownMenuItem className="rounded-[3px] cursor-pointer font-bold py-2 text-xs text-amber-600">Admin Console</DropdownMenuItem>}
+            <DropdownMenuItem asChild className="rounded-[3px] cursor-pointer font-bold py-2 text-xs">
+              <Link href="/profile" className="flex items-center gap-2">
+                <UserIcon size={14} /> My Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild className="rounded-[3px] cursor-pointer font-bold py-2 text-xs">
+              <Link href="/settings" className="flex items-center gap-2">
+                <Settings size={14} /> System Settings
+              </Link>
+            </DropdownMenuItem>
+            {isAdmin && <DropdownMenuItem asChild className="rounded-[3px] cursor-pointer font-bold py-2 text-xs text-amber-600">
+              <Link href="/admin" className="flex items-center gap-2">
+                <ShieldCheck size={14} /> Admin Console
+              </Link>
+            </DropdownMenuItem>}
             <DropdownMenuSeparator className="my-2 bg-slate-200/40 dark:bg-slate-700/40" />
             <DropdownMenuItem className="rounded-[3px] text-rose-500 focus:text-rose-600 cursor-pointer font-bold py-2 text-xs" onClick={() => logOut()}>
-              Sign Out Securely
+              <LogOut size={14} className="mr-2" /> Sign Out Securely
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
