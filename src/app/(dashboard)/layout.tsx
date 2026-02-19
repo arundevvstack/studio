@@ -24,7 +24,7 @@ export default function DashboardLayout({
   if (loading || !user) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-[#F5F5F7]">
-        <div className="w-10 h-10 rounded-2xl border-4 border-primary/20 border-t-primary animate-spin" />
+        <div className="w-10 h-10 rounded-lg border-4 border-primary/20 border-t-primary animate-spin" />
       </div>
     );
   }
@@ -36,9 +36,9 @@ export default function DashboardLayout({
       
       <Sidebar />
       
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative z-10 ml-80 mr-6">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative z-10 ml-72 mr-4">
         <Topbar />
-        <main className="flex-1 overflow-y-auto p-8 pt-4 scroll-smooth scrollbar-hide">
+        <main className="flex-1 overflow-y-auto p-6 pt-2 scroll-smooth scrollbar-hide">
           {children}
         </main>
       </div>
