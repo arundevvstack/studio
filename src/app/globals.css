@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,7 +16,7 @@
     --secondary: 240 10% 96%;
     --secondary-foreground: 0 0% 0%;
     --muted: 240 10% 96%;
-    --muted-foreground: 240 5% 35%;
+    --muted-foreground: 0 0% 15%; /* Darker muted text for black font style */
     --accent: 356 89% 60%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
@@ -37,21 +38,27 @@
   }
 }
 
-/* Apple iOS 26.3 Glassmorphism */
+/* Apple iOS 26.3 Glassmorphism with 5px radius */
 .glass-panel {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
 }
 
 .glass-pill {
-  @apply glass-panel rounded-full;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
 }
 
 .glass-card {
-  @apply glass-panel rounded-[5px];
+  @apply glass-panel;
 }
 
 /* Tactile Micro-interactions */
@@ -60,7 +67,7 @@
 }
 
 .ios-card-hover {
-  @apply transition-all duration-300 ease-in-out hover:scale-[1.01] hover:shadow-xl hover:shadow-black/5;
+  @apply transition-all duration-300 ease-in-out hover:shadow-xl hover:shadow-black/5;
 }
 
 /* Ambient Lighting */
@@ -88,7 +95,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.08);
-  border-radius: 20px;
+  border-radius: 5px;
 }
 
 @media print {
@@ -106,6 +113,7 @@
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    border-radius: 0 !important;
   }
 
   main {
