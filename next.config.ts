@@ -8,6 +8,13 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    // Authorize workstation origins to resolve cross-origin resource warnings in the dev environment.
+    allowedDevOrigins: [
+      '9000-firebase-studio-1771404633459.cluster-m7dwy2bmizezqukxkuxd55k5ka.cloudworkstations.dev',
+      '*.cloudworkstations.dev',
+    ],
+  },
   images: {
     remotePatterns: [
       {
