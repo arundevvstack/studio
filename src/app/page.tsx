@@ -56,12 +56,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {logo && (
-              <div className="relative h-12 w-40">
+              <div className="relative h-12 w-48">
                 <Image 
                   src={logo.imageUrl} 
                   alt={logo.description} 
                   fill 
-                  className="object-contain"
+                  className="object-contain object-left"
                   data-ai-hint={logo.imageHint}
                 />
               </div>
@@ -104,9 +104,9 @@ export default function Home() {
                 <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">
                   {isLogin ? 'Welcome Back' : 'Get Started'}
                 </CardTitle>
-                <CardDescription className="text-base font-medium">
+                <CardTitle className="text-base font-medium opacity-60">
                   {isLogin ? 'Enter your credentials to access your workspace.' : 'Join the elite community of media producers.'}
-                </CardDescription>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAuth} className="space-y-6">

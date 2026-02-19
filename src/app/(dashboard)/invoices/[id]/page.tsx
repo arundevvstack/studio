@@ -110,7 +110,7 @@ export default function InvoiceDetailPage() {
                     src={logo.imageUrl} 
                     alt={logo.description} 
                     fill 
-                    className="object-contain"
+                    className="object-contain object-left"
                     data-ai-hint={logo.imageHint}
                   />
                 </div>

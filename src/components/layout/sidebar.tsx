@@ -40,14 +40,14 @@ export function Sidebar() {
   return (
     <aside className="fixed left-4 top-4 bottom-4 w-64 glass-card z-50 flex flex-col p-5 overflow-hidden">
       <div className="px-2 mb-8">
-        <Link href="/dashboard" className="flex justify-center group ios-clickable">
+        <Link href="/dashboard" className="flex justify-start group ios-clickable">
           {logo && (
-            <div className="relative h-12 w-full">
+            <div className="relative h-12 w-48">
               <Image 
                 src={logo.imageUrl} 
                 alt={logo.description} 
                 fill 
-                className="object-contain"
+                className="object-contain object-left"
                 data-ai-hint={logo.imageHint}
                 priority
               />
