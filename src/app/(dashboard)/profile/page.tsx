@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   User, 
   Mail, 
@@ -16,7 +16,9 @@ import {
   Layers,
   ArrowUpRight,
   TrendingUp,
-  Clock
+  Clock,
+  Camera,
+  Upload
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,9 +38,10 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function ProfilePage() {
-  const { user, teamMember, isAdmin } = useAuth();
+  const { user, teamMember, isAdmin, updatePhotoURL } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSubmitting] = useState(false);
@@ -46,6 +49,7 @@ export default function ProfilePage() {
     bio: '',
     location: '',
     portfolioUrl: '',
+    photoURL: '',
   });
 
   useEffect(() => {
@@ -54,6 +58,7 @@ export default function ProfilePage() {
         bio: teamMember.bio || '',
         location: teamMember.location || '',
         portfolioUrl: teamMember.portfolioUrl || '',
+        photoURL: teamMember.photoURL || '',
       });
     }
   }, [teamMember]);
@@ -84,7 +89,17 @@ export default function ProfilePage() {
 
     setIsSubmitting(true);
     try {
-      updateTeamMemberProfile(db, user.uid, formData);
+      // Synchronize Photo URL if changed via upload
+      if (formData.photoURL !== teamMember?.photoURL) {
+        await updatePhotoURL(formData.photoURL);
+      }
+
+      await updateTeamMemberProfile(db, user.uid, {
+        bio: formData.bio,
+        location: formData.location,
+        portfolioUrl: formData.portfolioUrl
+      });
+      
       toast({ title: "Profile Synchronized", description: "Your professional metadata has been updated." });
       setIsEditing(false);
     } catch (err) {
@@ -92,6 +107,23 @@ export default function ProfilePage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Asset Size Exceeded", description: "Portrait must be under 2MB.", variant: "destructive" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, photoURL: reader.result as string }));
+      toast({ title: "Visual Captured", description: "New portrait selected. Save profile to deploy changes." });
+    };
+    reader.readAsDataURL(file);
   };
 
   const getStageColor = (stage: string) => {
@@ -118,14 +150,26 @@ export default function ProfilePage() {
           <div className="flex items-center gap-6">
             <div className="relative">
               <Avatar className="w-24 h-24 md:w-32 md:h-32 rounded-[5px] border-4 border-white dark:border-slate-900 shadow-2xl ring-1 ring-slate-200">
-                <AvatarImage src={user?.photoURL || ''} className="object-cover" />
+                <AvatarImage src={isEditing ? formData.photoURL : (teamMember?.photoURL || '')} className="object-cover" />
                 <AvatarFallback className="bg-slate-100 text-slate-400 font-black text-4xl uppercase">
                   {user?.displayName?.[0] || 'U'}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-full border-2 border-white shadow-lg">
-                <ShieldCheck size={16} />
-              </div>
+              {isEditing && (
+                <div 
+                  className="absolute inset-0 bg-black/40 rounded-[5px] flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-black/60"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Camera className="text-white w-8 h-8 mb-1" />
+                  <span className="text-[10px] text-white font-black uppercase tracking-widest">Replace</span>
+                </div>
+              )}
+              {!isEditing && (
+                <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-full border-2 border-white shadow-lg">
+                  <ShieldCheck size={16} />
+                </div>
+              )}
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
             <div className="space-y-1 pb-2">
               <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white">{user?.displayName}</h1>
@@ -135,7 +179,7 @@ export default function ProfilePage() {
                 </Badge>
                 <div className="flex items-center gap-1.5 text-white/60 text-[10px] font-black uppercase tracking-widest">
                   <MapPin size={12} className="text-primary" />
-                  {teamMember?.location || 'Trivandrum Node'}
+                  {formData.location || 'Trivandrum Node'}
                 </div>
               </div>
             </div>
@@ -294,8 +338,12 @@ export default function ProfilePage() {
                     <Link key={project.id} href={`/projects/${project.id}`} className="block group">
                       <div className="p-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-all flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1">
-                          <div className="w-10 h-10 rounded-[3px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
-                            <Layers size={18} />
+                          <div className="w-10 h-10 rounded-[3px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-inner overflow-hidden">
+                            {project.thumbnailUrl ? (
+                              <img src={project.thumbnailUrl} className="w-full h-full object-cover" />
+                            ) : (
+                              <Layers size={18} />
+                            )}
                           </div>
                           <div className="space-y-1">
                             <h4 className="text-[13px] font-arial font-black text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors tracking-tight">{project.projectName}</h4>

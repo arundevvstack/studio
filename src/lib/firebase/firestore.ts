@@ -40,6 +40,7 @@ export const createProject = (db: Firestore, userId: string, data: Partial<Proje
     description: data.description || '',
     isRecurring: data.isRecurring || false,
     recurringDay: data.recurringDay || null,
+    thumbnailUrl: data.thumbnailUrl || null,
   };
 
   setDoc(newProjectRef, projectData)

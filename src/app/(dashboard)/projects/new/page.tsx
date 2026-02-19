@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProject } from '@/lib/firebase/firestore';
 import { ProjectStage, ProjectPriority } from '@/lib/types';
@@ -17,7 +17,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Wand2, Rocket, RefreshCcw } from 'lucide-react';
+import { ChevronLeft, Wand2, Rocket, RefreshCcw, Image as ImageIcon, Upload, X } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { generateProjectDescription } from '@/ai/flows/generate-project-description';
@@ -34,9 +34,11 @@ export default function NewProjectPage() {
     description: '',
     isRecurring: false,
     recurringDay: 1,
+    thumbnailUrl: '',
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
   const db = useFirestore();
@@ -49,6 +51,23 @@ export default function NewProjectPage() {
   const handleStageChange = (val: string) => setFormData({ ...formData, stage: val as ProjectStage });
   const handlePriorityChange = (val: string) => setFormData({ ...formData, priority: val as ProjectPriority });
   const toggleRecurring = (checked: boolean) => setFormData({ ...formData, isRecurring: checked });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      toast({ title: "Asset Oversized", description: "Campaign visuals must be under 3MB.", variant: "destructive" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, thumbnailUrl: reader.result as string }));
+      toast({ title: "Visual Initialized", description: "Campaign thumbnail successfully ingested." });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleGenerateDescription = async () => {
     if (!formData.projectName) {
@@ -176,6 +195,51 @@ export default function NewProjectPage() {
                   className="rounded-2xl border-slate-200 bg-white/50 focus:bg-white h-14 text-lg font-bold px-6 transition-all"
                 />
               </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Project Visuals</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div 
+                  className={cn(
+                    "relative h-40 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer transition-all hover:border-primary/40 hover:bg-slate-50 overflow-hidden",
+                    formData.thumbnailUrl && "border-none"
+                  )}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {formData.thumbnailUrl ? (
+                    <>
+                      <img src={formData.thumbnailUrl} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <Upload className="text-white w-8 h-8" />
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute top-2 right-2 h-8 w-8 rounded-full bg-white/80 hover:bg-white text-rose-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFormData(prev => ({ ...prev, thumbnailUrl: '' }));
+                        }}
+                      >
+                        <X size={16} />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="text-slate-300 w-10 h-10 mb-2" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ingest Campaign Asset</p>
+                    </>
+                  )}
+                </div>
+                <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col justify-center gap-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">Strategic Guidance</p>
+                  <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                    Upload a tactical thumbnail to identify this project across the board. High-resolution stills or mood-board assets are recommended.
+                  </p>
+                </div>
+              </div>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
             </div>
 
             <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-between">

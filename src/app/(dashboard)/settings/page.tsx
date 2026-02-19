@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   User, 
   Palette, 
@@ -18,7 +17,8 @@ import {
   Moon,
   Laptop,
   Image as ImageIcon,
-  Camera
+  Camera,
+  Upload
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   useEffect(() => {
     setMounted(true);
@@ -85,6 +86,25 @@ export default function SettingsPage() {
     } catch (err) {
       // Errors handled in AuthContext
     }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Tactical validation
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Asset Oversized", description: "Profile visuals must be under 2MB for optimal sync.", variant: "destructive" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setProfileData(prev => ({ ...prev, photoURL: base64String }));
+      toast({ title: "Thumbnail Synced", description: "Your portrait is ready for deployment. Click 'Save Changes' to synchronize." });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePasswordReset = async () => {
@@ -155,23 +175,43 @@ export default function SettingsPage() {
                         {profileData.name?.[0] || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="absolute inset-0 bg-black/40 rounded-[5px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                      <Camera className="text-white w-6 h-6" />
+                    <div 
+                      className="absolute inset-0 bg-black/40 rounded-[5px] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Camera className="text-white w-6 h-6 mb-1" />
+                      <span className="text-[8px] text-white font-black uppercase tracking-widest">Upload</span>
                     </div>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleFileChange}
+                    />
                   </div>
                   <div className="flex-1 space-y-4 w-full">
                     <div className="space-y-1.5">
-                      <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Thumbnail URL</Label>
-                      <div className="relative">
-                        <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input 
-                          placeholder="https://image-service.com/photo.jpg"
-                          value={profileData.photoURL}
-                          onChange={(e) => setProfileData({...profileData, photoURL: e.target.value})}
-                          className="pl-10 rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-50/50 dark:bg-slate-800/50 text-sm"
-                        />
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Thumbnail Source</Label>
+                      <div className="flex gap-3">
+                        <div className="relative flex-1">
+                          <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <Input 
+                            placeholder="Direct URL or Upload..."
+                            value={profileData.photoURL.startsWith('data:') ? 'Local Asset Selected' : profileData.photoURL}
+                            onChange={(e) => setProfileData({...profileData, photoURL: e.target.value})}
+                            className="pl-10 rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-50/50 dark:bg-slate-800/50 text-sm"
+                          />
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          className="rounded-[5px] h-11 px-4 font-black text-[9px] uppercase gap-2 border-slate-200 dark:border-slate-800"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          <Upload size={14} /> Upload
+                        </Button>
                       </div>
-                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-1 px-1">Provide a direct link to your professional portrait.</p>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-1 px-1">Upload a high-resolution portrait or provide a strategic URL.</p>
                     </div>
                   </div>
                 </div>

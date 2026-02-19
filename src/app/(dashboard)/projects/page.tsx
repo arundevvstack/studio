@@ -13,7 +13,8 @@ import {
   RotateCcw,
   RefreshCcw,
   User as UserIcon,
-  ArrowUpDown
+  ArrowUpDown,
+  Layers
 } from 'lucide-react';
 import { 
   Table, 
@@ -262,13 +263,19 @@ export default function ProjectsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {clientProjects.map((project) => (
                     <Card key={project.id} className="glass-card group border-none ios-card-hover overflow-hidden">
-                      <div className="h-40 bg-slate-200 relative overflow-hidden">
-                        <img 
-                          src={`https://picsum.photos/seed/${project.id}/600/400`} 
-                          alt="Production Still" 
-                          className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-1000" 
-                          data-ai-hint="production still"
-                        />
+                      <div className="h-40 bg-slate-200 relative overflow-hidden flex items-center justify-center">
+                        {project.thumbnailUrl ? (
+                          <img 
+                            src={project.thumbnailUrl} 
+                            alt={project.projectName} 
+                            className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-1000" 
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 opacity-20">
+                            <Layers size={40} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Asset Pending</span>
+                          </div>
+                        )}
                         <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
                           <Badge className={cn("rounded-full border-none font-black text-[8px] uppercase tracking-widest shadow-lg px-2.5 py-0.5", getStageColor(project.stage))}>
                             {project.stage}

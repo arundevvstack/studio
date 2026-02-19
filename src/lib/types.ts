@@ -16,6 +16,7 @@ export interface Project {
   tags: string[];
   isRecurring: boolean;
   recurringDay?: number;
+  thumbnailUrl?: string; // Strategic visual asset
   createdAt: any;
   updatedAt: any;
 }
