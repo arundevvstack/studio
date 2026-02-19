@@ -1,8 +1,9 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Project, Task, ProjectStage, ProjectPriority } from '@/lib/types';
+import { Project, Task, ProjectStage, ProjectPriority, TeamMember } from '@/lib/types';
 import { updateProject } from '@/lib/firebase/firestore';
 import { 
   Tabs, 
@@ -38,6 +39,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   ChevronLeft, 
   Sparkles, 
@@ -51,21 +53,21 @@ import {
   Clock,
   Trash2,
   Layers,
-  Settings2
+  Settings2,
+  User as UserIcon
 } from 'lucide-react';
 import { summarizeProjectStatus } from '@/ai/flows/summarize-project-status';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useFirestore, useDoc, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection, query, orderBy, serverTimestamp, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, setDoc, updateDoc, deleteDoc, where } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 const STAGES: ProjectStage[] = ['Pitch', 'Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'];
 const PRIORITIES: ProjectPriority[] = ['Low', 'Medium', 'High'];
 
-// Maps each lifecycle stage to a suggested baseline progress percentage
 const STAGE_PROGRESS_MAP: Record<ProjectStage, number> = {
   'Pitch': 5,
   'Discussion': 15,
@@ -84,12 +86,13 @@ export default function ProjectDetailPage() {
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   
-  // Progress Slider State
   const [localProgress, setLocalProgress] = useState<number | null>(null);
 
-  // Phase (formerly Task) Creation State
+  // Objective Creation State
   const [isPhaseDialogOpen, setIsPhaseDialogOpen] = useState(false);
   const [newPhaseName, setNewPhaseName] = useState('');
+  const [newPhaseDueDate, setNewPhaseDueDate] = useState('');
+  const [selectedPhaseTeamMembers, setSelectedPhaseTeamMembers] = useState<string[]>([]);
   const [isCreatingPhase, setIsCreatingPhase] = useState(false);
 
   // Modify Scope State
@@ -120,14 +123,19 @@ export default function ProjectDetailPage() {
 
   const { data: phases, isLoading: isPhasesLoading } = useCollection<Task>(phasesQuery);
 
-  // Sync local progress with project progress when not dragging
+  const teamQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, 'teamMembers'), where('status', '==', 'Authorized'), orderBy('name', 'asc'));
+  }, [db]);
+
+  const { data: allTeamMembers } = useCollection<TeamMember>(teamQuery);
+
   useEffect(() => {
     if (project && localProgress === null) {
       setLocalProgress(project.progress || 0);
     }
   }, [project, localProgress]);
 
-  // Sync scope data when project loads
   useEffect(() => {
     if (project) {
       setScopeData({
@@ -153,26 +161,16 @@ export default function ProjectDetailPage() {
   const handleStageChange = (val: string) => {
     if (!project || !db) return;
     const nextStage = val as ProjectStage;
-    
-    // Auto-improve progress based on the selected phase/stage
     const newProgress = STAGE_PROGRESS_MAP[nextStage] || project.progress;
-    
-    updateProject(db, id, { 
-      stage: nextStage,
-      progress: newProgress 
-    });
-    
+    updateProject(db, id, { stage: nextStage, progress: newProgress });
     setLocalProgress(newProgress);
-    toast({ 
-      title: "Lifecycle Updated", 
-      description: `Production phase shifted to ${nextStage}. Completion auto-adjusted to ${newProgress}%.` 
-    });
+    toast({ title: "Lifecycle Updated", description: `Production phase shifted to ${nextStage}.` });
   };
 
   const handlePriorityChange = (val: string) => {
     if (!project || !db) return;
     updateProject(db, id, { priority: val as ProjectPriority });
-    toast({ title: "Priority Shifted", description: `Project criticality updated to ${val}.` });
+    toast({ title: "Priority Shifted", description: `Criticality updated to ${val}.` });
   };
 
   const handleCreatePhase = async (e: React.FormEvent) => {
@@ -187,6 +185,8 @@ export default function ProjectDetailPage() {
       name: newPhaseName,
       completed: false,
       priority: 'Medium',
+      dueDate: newPhaseDueDate ? new Date(newPhaseDueDate).toISOString() : null,
+      assignedTeamMemberIds: selectedPhaseTeamMembers,
       projectAssignedTeamMemberIds: project.assignedTeamMemberIds || [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -194,8 +194,10 @@ export default function ProjectDetailPage() {
 
     setDoc(newPhaseRef, phaseData)
       .then(() => {
-        toast({ title: "Phase Deployed", description: "New production phase added to pipeline." });
+        toast({ title: "Objective Deployed", description: "Strategic objective added to pipeline." });
         setNewPhaseName('');
+        setNewPhaseDueDate('');
+        setSelectedPhaseTeamMembers([]);
         setIsPhaseDialogOpen(false);
       })
       .catch((error) => {
@@ -212,7 +214,6 @@ export default function ProjectDetailPage() {
   const handleUpdateScope = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!db || !project) return;
-
     setIsUpdatingScope(true);
     try {
       await updateProject(db, id, {
@@ -233,27 +234,13 @@ export default function ProjectDetailPage() {
   const togglePhaseStatus = (phase: Task) => {
     if (!db) return;
     const phaseRef = doc(db, 'projects', id, 'tasks', phase.id);
-    updateDoc(phaseRef, { 
-      completed: !phase.completed,
-      updatedAt: serverTimestamp()
-    }).catch(error => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: phaseRef.path,
-        operation: 'update',
-        requestResourceData: { completed: !phase.completed }
-      }));
-    });
+    updateDoc(phaseRef, { completed: !phase.completed, updatedAt: serverTimestamp() });
   };
 
   const deletePhase = (phaseId: string) => {
     if (!db) return;
     const phaseRef = doc(db, 'projects', id, 'tasks', phaseId);
-    deleteDoc(phaseRef).catch(error => {
-      errorEmitter.emit('permission-error', new FirestorePermissionError({
-        path: phaseRef.path,
-        operation: 'delete'
-      }));
-    });
+    deleteDoc(phaseRef);
   };
 
   const handleGenerateSummary = async () => {
@@ -266,7 +253,7 @@ export default function ProjectDetailPage() {
         notes: ['Project assets reviewed', 'Initial pipeline established']
       });
       setAiSummary(result.summary);
-      toast({ title: "AI Sync", description: "Project intelligence updated." });
+      toast({ title: "AI Sync", description: "Intelligence report generated." });
     } catch (err) {
       toast({ title: "Error", description: "Could not generate AI summary", variant: "destructive" });
     } finally {
@@ -276,15 +263,21 @@ export default function ProjectDetailPage() {
 
   const formatDeadline = (deadline: any) => {
     if (!isMounted || !deadline) return 'TBD';
-    if (deadline?.seconds) return new Date(deadline.seconds * 1000).toLocaleDateString();
-    return new Date(deadline).toLocaleDateString();
+    const date = deadline.seconds ? new Date(deadline.seconds * 1000) : new Date(deadline);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const handleToggleMember = (uid: string) => {
+    setSelectedPhaseTeamMembers(prev => 
+      prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]
+    );
   };
 
   if (isProjectLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <div className="w-12 h-12 rounded-2xl border-4 border-primary/20 border-t-primary animate-spin" />
-        <p className="text-muted-foreground font-bold animate-pulse uppercase tracking-widest text-xs">Accessing Production Data...</p>
+        <div className="w-12 h-12 rounded-[5px] border-4 border-primary/20 border-t-primary animate-spin" />
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Accessing Production Assets...</p>
       </div>
     );
   }
@@ -292,169 +285,105 @@ export default function ProjectDetailPage() {
   if (projectError || (!project && !isProjectLoading)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="p-4 rounded-full bg-destructive/10 text-destructive">
-          <ShieldAlert size={48} />
-        </div>
-        <h2 className="text-2xl font-black">Production Not Found</h2>
-        <p className="text-muted-foreground text-center max-w-md">
-          This project identifier does not exist or you lack sufficient clearance to access its assets.
-        </p>
-        <Button asChild variant="outline" className="rounded-xl">
-          <Link href="/projects">Return to Projects</Link>
+        <ShieldAlert size={48} className="text-rose-500" />
+        <h2 className="text-2xl font-black text-slate-900">Entity Not Found</h2>
+        <Button asChild variant="outline" className="rounded-[5px]">
+          <Link href="/projects">Return to Pipeline</Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl border hover:bg-white shadow-sm h-12 w-12 transition-all">
-            <Link href="/projects"><ChevronLeft size={24} /></Link>
+          <Button variant="ghost" size="icon" asChild className="rounded-[5px] border bg-white h-10 w-10">
+            <Link href="/projects"><ChevronLeft size={20} /></Link>
           </Button>
           <div>
-            <div className="flex items-center gap-3 mb-1">
-               <h1 className="text-3xl font-black tracking-tighter text-slate-900">{project.projectName}</h1>
-               <Badge className="rounded-lg bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-widest px-2.5">
-                 Entity #{id.slice(0, 8)}
+            <div className="flex items-center gap-2.5">
+               <h1 className="text-2xl font-black tracking-tight text-slate-900">{project.projectName}</h1>
+               <Badge className="rounded-[3px] bg-primary/5 text-primary border-none text-[9px] font-black uppercase tracking-widest px-2 h-5">
+                 MISSION #{id.slice(0, 6)}
                </Badge>
             </div>
-            <p className="text-muted-foreground text-sm font-bold flex items-center gap-2">
-              <span className="text-primary font-black">{project.client}</span>
-              <span className="text-slate-300">•</span>
-              <Calendar size={14} className="text-slate-400" /> 
-              <span>Target Delivery: {formatDeadline(project.deadline)}</span>
+            <p className="text-slate-500 text-xs font-bold flex items-center gap-2 mt-0.5">
+              <span className="text-primary">{project.client}</span>
+              <span className="text-slate-200">•</span>
+              <Clock size={12} className="text-slate-400" /> 
+              <span>Target: {formatDeadline(project.deadline)}</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Dialog open={isModifyScopeOpen} onOpenChange={setIsModifyScopeOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="rounded-2xl font-bold border-slate-200 h-11 px-6 hover:bg-slate-50 gap-2">
-                <Settings2 size={16} />
-                Modify Scope
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[2.5rem] border-none shadow-2xl premium-shadow max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight">Modify Production Scope</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleUpdateScope} className="space-y-6 pt-4">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Project Identifier</Label>
-                    <Input 
-                      value={scopeData.projectName}
-                      onChange={(e) => setScopeData({ ...scopeData, projectName: e.target.value })}
-                      className="rounded-2xl h-12 font-bold px-5 bg-slate-50 border-none"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Strategic Client</Label>
-                    <Input 
-                      value={scopeData.client}
-                      onChange={(e) => setScopeData({ ...scopeData, client: e.target.value })}
-                      className="rounded-2xl h-12 font-bold px-5 bg-slate-50 border-none"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Cap-Ex Budget ($)</Label>
-                  <Input 
-                    type="number"
-                    value={scopeData.budget}
-                    onChange={(e) => setScopeData({ ...scopeData, budget: e.target.value })}
-                    className="rounded-2xl h-12 font-bold px-5 bg-slate-50 border-none"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Executive Brief</Label>
-                  <Textarea 
-                    value={scopeData.description}
-                    onChange={(e) => setScopeData({ ...scopeData, description: e.target.value })}
-                    className="rounded-2xl min-h-[120px] font-medium p-5 bg-slate-50 border-none"
-                  />
-                </div>
-                <DialogFooter className="pt-4 gap-3">
-                  <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => setIsModifyScopeOpen(false)}>Discard</Button>
-                  <Button type="submit" className="rounded-xl font-black px-8 bg-primary shadow-lg shadow-primary/20" disabled={isUpdatingScope}>
-                    {isUpdatingScope ? 'Syncing...' : 'Update Parameters'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-          
-          <Button className="rounded-2xl font-black shadow-xl shadow-primary/20 h-11 px-8 bg-primary hover:scale-[1.02] transition-all">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="rounded-[5px] font-black text-[10px] uppercase h-9 px-4 gap-2" onClick={() => setIsModifyScopeOpen(true)}>
+            <Settings2 size={14} /> Modify Scope
+          </Button>
+          <Button size="sm" className="rounded-[5px] font-black text-[10px] uppercase h-9 px-5 bg-primary shadow-lg shadow-primary/10">
             Execute Release
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 space-y-8">
-          <Card className="border-none shadow-sm premium-shadow rounded-[2.5rem] bg-white/70 backdrop-blur-xl overflow-hidden p-2">
-             <CardHeader className="flex flex-row items-center justify-between pb-6 pt-6 px-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3 space-y-6">
+          <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl overflow-hidden">
+             <CardHeader className="flex flex-row items-center justify-between py-4 px-6 border-b border-slate-50">
                 <div>
-                  <CardTitle className="text-xl font-black text-slate-900">Production Intelligence</CardTitle>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Real-time throughput metrics</p>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-900">Throughput Analysis</CardTitle>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="rounded-2xl text-primary bg-primary/5 hover:bg-primary/10 gap-2 border-none font-bold px-4 h-10"
+                  className="rounded-[5px] text-primary bg-primary/5 text-[9px] font-black uppercase tracking-widest px-3 h-8 gap-2"
                   onClick={handleGenerateSummary}
                   disabled={isSummarizing}
                 >
-                  <Sparkles size={16} className={cn(isSummarizing && "animate-spin")} />
-                  {isSummarizing ? 'Synthesizing...' : 'AI Summary'}
+                  <Sparkles size={12} className={cn(isSummarizing && "animate-spin")} />
+                  {isSummarizing ? 'Syncing...' : 'AI Intel'}
                 </Button>
              </CardHeader>
-             <CardContent className="space-y-8 px-8 pb-8">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Current Phase</p>
+             <CardContent className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-[5px] bg-slate-50 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Lifecycle Phase</p>
                     <Select value={project.stage} onValueChange={handleStageChange}>
-                      <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-lg text-slate-800 focus:ring-0 shadow-none ring-offset-0">
+                      <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-base text-slate-900 focus:ring-0 shadow-none">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectContent className="rounded-[5px] border-none shadow-2xl">
                         {STAGES.map(stage => (
-                          <SelectItem key={stage} value={stage} className="rounded-xl font-bold py-2.5">{stage}</SelectItem>
+                          <SelectItem key={stage} value={stage} className="font-bold text-xs">{stage}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Priority</p>
+                  <div className="p-4 rounded-[5px] bg-slate-50 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Criticality</p>
                     <Select value={project.priority} onValueChange={handlePriorityChange}>
-                      <SelectTrigger className="border-none bg-transparent p-0 h-auto focus:ring-0 shadow-none ring-offset-0">
-                        <Badge className={cn(
-                          "rounded-xl px-3 py-1 font-black text-[10px] uppercase tracking-widest cursor-pointer",
-                          project.priority === 'High' ? "bg-rose-50 text-rose-600 border-none" : "bg-indigo-50 text-indigo-600 border-none"
-                        )}>{project.priority} Matrix</Badge>
+                      <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-base text-slate-900 focus:ring-0 shadow-none">
+                        <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-none shadow-2xl">
+                      <SelectContent className="rounded-[5px] border-none shadow-2xl">
                         {PRIORITIES.map(priority => (
-                          <SelectItem key={priority} value={priority} className="rounded-xl font-bold py-2.5">{priority} Priority</SelectItem>
+                          <SelectItem key={priority} value={priority} className="font-bold text-xs">{priority} Priority</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="p-5 rounded-3xl bg-slate-50 border border-white/50 group hover:bg-white transition-all">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Cap-Ex Spend</p>
-                    <p className="text-lg font-black text-slate-800">${(project.budget || 0).toLocaleString()}</p>
+                  <div className="p-4 rounded-[5px] bg-slate-50 border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Cap-Ex Budget</p>
+                    <p className="text-base font-black text-slate-900">${(project.budget || 0).toLocaleString()}</p>
                   </div>
                 </div>
 
-                <div className="space-y-5 pt-4">
-                  <div className="flex items-end justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-end justify-between px-1">
                     <div>
-                      <h4 className="font-black text-slate-900">Optimization Progress</h4>
-                      <p className="text-xs font-medium text-muted-foreground">Adjust production completion slider</p>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Optimization Progress</h4>
                     </div>
-                    <span className="text-4xl font-black text-primary tracking-tighter">
+                    <span className="text-3xl font-black text-primary tracking-tighter">
                       {localProgress !== null ? localProgress : project.progress || 0}%
                     </span>
                   </div>
@@ -464,79 +393,79 @@ export default function ProjectDetailPage() {
                     step={1} 
                     onValueChange={handleSliderChange}
                     onValueCommit={handleUpdateProgressCommit}
-                    className="py-4 cursor-pointer"
+                    className="cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] font-black text-slate-400 px-1 uppercase tracking-widest">
-                    <span>Kickoff</span>
-                    <span>Midpoint</span>
-                    <span>Market Ready</span>
-                  </div>
                 </div>
 
                 {aiSummary && (
-                   <div className="mt-8 p-8 rounded-[2rem] bg-slate-900 text-white border border-white/10 animate-in zoom-in-95 duration-500 shadow-2xl relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[80px] rounded-full"></div>
-                      <div className="flex items-center gap-3 mb-4 relative z-10">
-                        <Sparkles size={20} className="text-primary" />
-                        <h4 className="text-xs font-black uppercase tracking-[0.3em] text-primary">Executive Intelligence Report</h4>
+                   <div className="mt-4 p-5 rounded-[5px] bg-slate-900 text-white relative overflow-hidden animate-in zoom-in-95 duration-500">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 blur-[40px] rounded-full"></div>
+                      <div className="flex items-center gap-2 mb-3 relative z-10">
+                        <Sparkles size={14} className="text-primary" />
+                        <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-primary">Executive Summary</h4>
                       </div>
-                      <p className="text-base leading-relaxed text-slate-300 italic relative z-10 font-medium font-serif">"{aiSummary}"</p>
+                      <p className="text-sm leading-relaxed text-slate-300 italic font-medium">"{aiSummary}"</p>
                    </div>
                 )}
              </CardContent>
           </Card>
 
-          <Tabs defaultValue="phases" className="w-full">
-            <TabsList className="bg-transparent h-auto p-0 gap-8 border-b rounded-none w-full justify-start mb-8">
-              <TabsTrigger value="phases" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
-                <Layers size={16} className="mr-2" /> Project Phases
+          <Tabs defaultValue="objectives" className="w-full">
+            <TabsList className="bg-transparent h-auto p-0 gap-6 border-b rounded-none w-full justify-start mb-6">
+              <TabsTrigger value="objectives" className="rounded-none pb-3 px-0 font-black text-[10px] uppercase tracking-widest text-slate-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-slate-900 transition-all">
+                <Layers size={14} className="mr-2" /> Mission Objectives
               </TabsTrigger>
-              <TabsTrigger value="timeline" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
-                <History size={16} className="mr-2" /> Timeline
-              </TabsTrigger>
-              <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
-                <MessageSquare size={16} className="mr-2" /> Notes
-              </TabsTrigger>
-              <TabsTrigger value="files" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-5 px-0 font-black text-xs uppercase tracking-[0.2em] text-muted-foreground data-[state=active]:text-slate-900 transition-all">
-                <FileText size={16} className="mr-2" /> Digital Assets
+              <TabsTrigger value="history" className="rounded-none pb-3 px-0 font-black text-[10px] uppercase tracking-widest text-slate-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-slate-900 transition-all">
+                <History size={14} className="mr-2" /> Log History
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="phases" className="mt-0 focus-visible:ring-0">
-               <Card className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-xl">
-                 <CardContent className="p-4">
-                    <div className="divide-y divide-slate-100">
+            <TabsContent value="objectives" className="mt-0 focus-visible:ring-0">
+               <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl">
+                 <CardContent className="p-0">
+                    <div className="divide-y divide-slate-50">
                       {isPhasesLoading ? (
-                        <div className="p-10 text-center text-muted-foreground animate-pulse font-bold text-xs uppercase tracking-widest">
-                          Synchronizing Production Phases...
-                        </div>
+                        <div className="p-8 text-center animate-pulse font-black text-[10px] uppercase tracking-widest text-slate-400">Syncing Objectives...</div>
                       ) : !phases || phases.length === 0 ? (
-                        <div className="p-10 text-center text-muted-foreground font-medium italic">
-                          No phases have been deployed for this mission.
-                        </div>
+                        <div className="p-8 text-center text-slate-400 font-bold text-xs italic">No mission objectives defined.</div>
                       ) : (
                         phases.map((phase) => (
-                          <div key={phase.id} className="flex items-center justify-between p-5 hover:bg-slate-50/80 transition-all rounded-2xl group cursor-pointer">
-                             <div className="flex items-center gap-5" onClick={() => togglePhaseStatus(phase)}>
+                          <div key={phase.id} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition-all group">
+                             <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => togglePhaseStatus(phase)}>
                                 <div className={cn(
-                                  "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300",
-                                  phase.completed ? "bg-primary border-primary text-white shadow-lg shadow-primary/30" : "border-slate-200 group-hover:border-primary/50"
+                                  "w-5 h-5 rounded-[3px] border-2 flex items-center justify-center transition-all",
+                                  phase.completed ? "bg-primary border-primary text-white" : "border-slate-200 group-hover:border-primary/50"
                                 )}>
-                                  {phase.completed && <CheckSquare size={14} strokeWidth={3} />}
+                                  {phase.completed && <CheckSquare size={12} strokeWidth={3} />}
                                 </div>
-                                <div>
-                                  <p className={cn("text-base font-bold text-slate-900 transition-all", phase.completed && "line-through text-slate-400")}>{phase.name}</p>
-                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
-                                    <Clock size={10} /> {formatDeadline(phase.createdAt)}
-                                  </p>
+                                <div className="space-y-0.5">
+                                  <p className={cn("text-sm font-black text-slate-900", phase.completed && "line-through text-slate-400 opacity-60")}>{phase.name}</p>
+                                  <div className="flex items-center gap-3">
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                      <Clock size={10} /> Target: {phase.dueDate ? formatDeadline(phase.dueDate) : 'No Deadline'}
+                                    </p>
+                                    <div className="flex items-center -space-x-1.5">
+                                      {phase.assignedTeamMemberIds?.map(uid => {
+                                        const member = allTeamMembers?.find(m => m.id === uid);
+                                        return (
+                                          <div key={uid} className="w-5 h-5 rounded-full border border-white bg-slate-100 overflow-hidden" title={member?.name}>
+                                            <img src={member?.photoURL || `https://picsum.photos/seed/${uid}/50/50`} className="w-full h-full object-cover" />
+                                          </div>
+                                        );
+                                      })}
+                                      {(!phase.assignedTeamMemberIds || phase.assignedTeamMemberIds.length === 0) && (
+                                        <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest ml-1">Unassigned</span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                              </div>
-                             <div className="flex items-center gap-3">
-                               <Badge variant="outline" className={cn(
-                                 "rounded-lg text-[10px] font-black uppercase tracking-widest px-3 py-1 border-none",
-                                 phase.completed ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-600"
-                               )}>{phase.completed ? 'Completed' : 'Pending'}</Badge>
-                               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-rose-500 rounded-lg" onClick={() => deletePhase(phase.id)}>
+                             <div className="flex items-center gap-2">
+                               <Badge className={cn(
+                                 "rounded-[3px] text-[8px] font-black uppercase tracking-widest px-2 h-5 border-none",
+                                 phase.completed ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
+                               )}>{phase.completed ? 'Success' : 'Active'}</Badge>
+                               <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-rose-500" onClick={() => deletePhase(phase.id)}>
                                  <Trash2 size={14} />
                                </Button>
                              </div>
@@ -544,32 +473,79 @@ export default function ProjectDetailPage() {
                         ))
                       )}
                     </div>
-                    <div className="p-6 border-t border-slate-50 flex justify-center">
+                    <div className="p-4 border-t border-slate-50 flex justify-center">
                        <Dialog open={isPhaseDialogOpen} onOpenChange={setIsPhaseDialogOpen}>
                          <DialogTrigger asChild>
-                           <Button variant="ghost" className="text-primary text-xs font-black uppercase tracking-[0.2em] gap-2 hover:bg-primary/5 rounded-xl h-12 px-8">
-                             <Plus className="h-4 w-4" strokeWidth={3} /> Add Production Phase
+                           <Button variant="ghost" className="text-primary text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-primary/5 rounded-[5px] h-9 px-6">
+                             <Plus className="h-3 w-3" strokeWidth={3} /> Define Objective
                            </Button>
                          </DialogTrigger>
-                         <DialogContent className="rounded-[2rem] border-none shadow-2xl premium-shadow">
+                         <DialogContent className="rounded-[5px] border-none shadow-2xl premium-shadow max-w-md">
                            <DialogHeader>
-                             <DialogTitle className="text-2xl font-black text-slate-900 tracking-tight">Deploy New Phase</DialogTitle>
+                             <DialogTitle className="text-xl font-black text-slate-900 tracking-tight">Deploy Strategic Objective</DialogTitle>
                            </DialogHeader>
-                           <form onSubmit={handleCreatePhase} className="space-y-6 pt-4">
-                             <div className="space-y-2">
-                               <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Phase Name</Label>
+                           <form onSubmit={handleCreatePhase} className="space-y-5 pt-2">
+                             <div className="space-y-1.5">
+                               <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Objective Title</Label>
                                <Input 
-                                 placeholder="e.g. Master Color Grading" 
+                                 placeholder="e.g. Master Grade Assembly" 
                                  value={newPhaseName}
                                  onChange={(e) => setNewPhaseName(e.target.value)}
-                                 className="rounded-2xl h-14 font-bold px-6 bg-slate-50 border-none focus-visible:ring-2 focus-visible:ring-primary"
+                                 className="rounded-[5px] h-11 font-bold px-4 bg-slate-50 border-none text-sm"
                                  autoFocus
                                />
                              </div>
-                             <DialogFooter className="pt-4 gap-3">
-                               <Button type="button" variant="ghost" className="rounded-xl font-bold" onClick={() => setIsPhaseDialogOpen(false)}>Abort</Button>
-                               <Button type="submit" className="rounded-xl font-black px-8 bg-primary shadow-lg shadow-primary/20" disabled={isCreatingPhase || !newPhaseName.trim()}>
-                                 {isCreatingPhase ? 'Deploying...' : 'Confirm Phase'}
+                             
+                             <div className="grid grid-cols-2 gap-4">
+                               <div className="space-y-1.5">
+                                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Objective Deadline</Label>
+                                 <Input 
+                                   type="date"
+                                   value={newPhaseDueDate}
+                                   onChange={(e) => setNewPhaseDueDate(e.target.value)}
+                                   className="rounded-[5px] h-11 font-bold px-4 bg-slate-50 border-none text-xs"
+                                 />
+                               </div>
+                               <div className="space-y-1.5">
+                                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Priority Level</Label>
+                                 <Select defaultValue="Medium">
+                                   <SelectTrigger className="rounded-[5px] h-11 font-bold px-4 bg-slate-50 border-none text-xs">
+                                     <SelectValue />
+                                   </SelectTrigger>
+                                   <SelectContent className="rounded-[5px] border-none shadow-xl">
+                                      <SelectItem value="Low" className="font-bold text-xs">Low</SelectItem>
+                                      <SelectItem value="Medium" className="font-bold text-xs">Medium</SelectItem>
+                                      <SelectItem value="High" className="font-bold text-xs">High</SelectItem>
+                                   </SelectContent>
+                                 </Select>
+                               </div>
+                             </div>
+
+                             <div className="space-y-2">
+                               <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Strategic Assignees</Label>
+                               <div className="max-h-40 overflow-y-auto space-y-1 pr-2 scrollbar-hide bg-slate-50/50 p-2 rounded-[5px]">
+                                 {allTeamMembers?.map(member => (
+                                   <div key={member.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-[3px] transition-colors">
+                                      <Checkbox 
+                                        checked={selectedPhaseTeamMembers.includes(member.id)}
+                                        onCheckedChange={() => handleToggleMember(member.id)}
+                                        className="rounded-[3px] border-slate-300"
+                                      />
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full overflow-hidden bg-slate-200">
+                                          <img src={member.photoURL || `https://picsum.photos/seed/${member.id}/50/50`} className="w-full h-full object-cover" />
+                                        </div>
+                                        <span className="text-[11px] font-bold text-slate-700">{member.name}</span>
+                                      </div>
+                                   </div>
+                                 ))}
+                               </div>
+                             </div>
+
+                             <DialogFooter className="pt-2 gap-2">
+                               <Button type="button" variant="ghost" className="rounded-[5px] font-bold text-xs" onClick={() => setIsPhaseDialogOpen(false)}>Abort</Button>
+                               <Button type="submit" className="rounded-[5px] font-black text-xs px-6 bg-primary shadow-lg shadow-primary/10" disabled={isCreatingPhase || !newPhaseName.trim()}>
+                                 {isCreatingPhase ? 'Deploying...' : 'Confirm objective'}
                                </Button>
                              </DialogFooter>
                            </form>
@@ -582,55 +558,102 @@ export default function ProjectDetailPage() {
           </Tabs>
         </div>
 
-        <div className="space-y-8">
-           <Card className="border-none shadow-sm premium-shadow rounded-[2.5rem] bg-white/70 backdrop-blur-xl p-2">
-              <CardHeader className="pt-6 px-6">
-                <CardTitle className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Assigned Talent</CardTitle>
+        <div className="space-y-6">
+           <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl">
+              <CardHeader className="py-4 px-5 border-b border-slate-50">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-slate-400">Strategic Talent</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-5 px-6 pb-6">
-                 {[
-                   { name: 'Marcus Jordan', role: 'Executive Director', avatar: 'https://picsum.photos/seed/m1/100/100' },
-                   { name: 'Sarah Lyons', role: 'Creative Lead', avatar: 'https://picsum.photos/seed/s2/100/100' },
-                   { name: 'James Wilson', role: 'Strategic Producer', avatar: 'https://picsum.photos/seed/j3/100/100' },
-                 ].map((member, i) => (
-                   <div key={i} className="flex items-center gap-4 group cursor-pointer">
-                      <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-sm ring-2 ring-slate-100 group-hover:ring-primary/20 transition-all">
-                        <img src={member.avatar} alt={member.name} className="object-cover w-full h-full" />
+              <CardContent className="p-5 space-y-4">
+                 {allTeamMembers?.filter(m => project.assignedTeamMemberIds?.includes(m.id)).map((member) => (
+                   <div key={member.id} className="flex items-center gap-3 group">
+                      <div className="w-10 h-10 rounded-[5px] overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-primary/20 transition-all">
+                        <img src={member.photoURL || `https://picsum.photos/seed/${member.id}/100/100`} alt={member.name} className="object-cover w-full h-full" />
                       </div>
                       <div>
-                        <p className="text-sm font-black text-slate-900 group-hover:text-primary transition-colors">{member.name}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-0.5">{member.role}</p>
+                        <p className="text-[11px] font-black text-slate-900 group-hover:text-primary transition-colors leading-tight">{member.name}</p>
+                        <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-0.5">{member.role}</p>
                       </div>
                    </div>
                  ))}
-                 <Button variant="outline" className="w-full rounded-2xl h-12 mt-4 text-xs font-black uppercase tracking-widest border-dashed border-2 hover:border-solid hover:bg-slate-50 transition-all">Manage Personnel</Button>
+                 <Button variant="outline" className="w-full rounded-[5px] h-9 mt-2 text-[9px] font-black uppercase tracking-widest border-dashed border-2 hover:border-solid hover:bg-slate-50 transition-all">Manage Personnel</Button>
               </CardContent>
            </Card>
 
-           <Card className="border-none shadow-2xl premium-shadow rounded-[2.5rem] bg-slate-900 text-white overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-primary shadow-[0_0_20px_rgba(var(--primary),0.5)]"></div>
-              <CardHeader className="pt-8 px-8">
-                <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Financial Overview</CardTitle>
+           <Card className="border-none shadow-lg rounded-[5px] bg-slate-900 text-white overflow-hidden relative group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary shadow-[0_0_10px_rgba(244,63,74,0.5)]"></div>
+              <CardHeader className="py-4 px-5">
+                <CardTitle className="text-[9px] font-black uppercase tracking-widest text-slate-500">Financial Ledger</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-8 px-8 pb-10">
+              <CardContent className="px-5 pb-6 space-y-6">
                  <div>
-                    <p className="text-4xl font-black tracking-tighter text-white">${(project.budget || 0).toLocaleString()}</p>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mt-1">Authorized Deployment</p>
+                    <p className="text-3xl font-black tracking-tighter text-white">${(project.budget || 0).toLocaleString()}</p>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mt-0.5">Deployment Limit</p>
                  </div>
-                 <div className="space-y-3">
-                    <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest">
-                       <span className="text-slate-500">Resource Consumption</span>
+                 <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest">
+                       <span className="text-slate-500">Allocation</span>
                        <span className="text-primary">45%</span>
                     </div>
-                    <Progress value={45} className="h-2.5 bg-slate-800 rounded-full" />
+                    <Progress value={45} className="h-1 bg-slate-800 rounded-full" />
                  </div>
-                 <Button className="w-full rounded-2xl h-14 text-xs font-black uppercase tracking-[0.2em] bg-white/10 hover:bg-white hover:text-slate-900 border-none transition-all shadow-xl">
+                 <Button className="w-full rounded-[5px] h-10 text-[9px] font-black uppercase tracking-widest bg-white/5 hover:bg-white hover:text-slate-900 border-none transition-all shadow-xl">
                     Generate Financials
                  </Button>
               </CardContent>
            </Card>
         </div>
       </div>
+
+      <Dialog open={isModifyScopeOpen} onOpenChange={setIsModifyScopeOpen}>
+        <DialogContent className="rounded-[5px] border-none shadow-2xl premium-shadow max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-slate-900 tracking-tight">Modify Production Parameters</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateScope} className="space-y-5 pt-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Identifier</Label>
+                <Input 
+                  value={scopeData.projectName}
+                  onChange={(e) => setScopeData({ ...scopeData, projectName: e.target.value })}
+                  className="rounded-[5px] h-11 font-bold px-4 bg-slate-50 border-none text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Strategic Client</Label>
+                <Input 
+                  value={scopeData.client}
+                  onChange={(e) => setScopeData({ ...scopeData, client: e.target.value })}
+                  className="rounded-[5px] h-11 font-bold px-4 bg-slate-50 border-none text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Cap-Ex Budget ($)</Label>
+              <Input 
+                type="number"
+                value={scopeData.budget}
+                onChange={(e) => setScopeData({ ...scopeData, budget: e.target.value })}
+                className="rounded-[5px] h-11 font-bold px-4 bg-slate-50 border-none text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Briefing</Label>
+              <Textarea 
+                value={scopeData.description}
+                onChange={(e) => setScopeData({ ...scopeData, description: e.target.value })}
+                className="rounded-[5px] min-h-[100px] font-medium p-4 bg-slate-50 border-none text-sm"
+              />
+            </div>
+            <DialogFooter className="pt-2 gap-2">
+              <Button type="button" variant="ghost" className="rounded-[5px] font-bold text-xs" onClick={() => setIsModifyScopeOpen(false)}>Discard</Button>
+              <Button type="submit" className="rounded-[5px] font-black text-xs px-6 bg-primary" disabled={isUpdatingScope}>
+                {isUpdatingScope ? 'Syncing...' : 'Update Parameters'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

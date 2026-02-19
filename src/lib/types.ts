@@ -29,6 +29,7 @@ export interface Task {
   completed: boolean;
   priority: ProjectPriority;
   dueDate: any;
+  assignedTeamMemberIds: string[]; // Specific assignees for this objective
   projectAssignedTeamMemberIds: string[]; 
   createdAt: any;
   updatedAt: any;
