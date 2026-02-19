@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -12,7 +11,7 @@ import {
   CheckCircle2, 
   Clock, 
   AlertCircle,
-  X
+  ChevronRight
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -24,13 +23,6 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { useAuth } from '@/lib/firebase/auth-context';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -124,63 +116,59 @@ export function Topbar() {
           {theme === 'dark' ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-slate-500" />}
         </Button>
         
-        <Sheet>
-          <SheetTrigger asChild>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative text-slate-500 glass-pill h-10 w-10 hover:bg-white/80 dark:hover:bg-slate-800 transition-all border-none group">
               <Bell size={18} />
               <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full border-2 border-white dark:border-slate-900 shadow-sm group-hover:scale-110 transition-transform"></span>
             </Button>
-          </SheetTrigger>
-          <SheetContent className="w-80 p-0 border-l border-white/20 dark:border-white/5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl">
-            <SheetHeader className="p-6 border-b border-slate-100 dark:border-slate-800">
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-80 glass-card p-0 mt-2 shadow-2xl border-none overflow-hidden" align="end">
+            <DropdownMenuLabel className="p-5 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <SheetTitle className="text-xl font-black tracking-tight text-slate-700 dark:text-slate-100">Notifications</SheetTitle>
-                <Badge className="rounded-[3px] bg-primary/10 text-primary border-none text-[9px] font-black uppercase px-2 h-5">
+                <h3 className="text-sm font-black tracking-tight text-slate-700 dark:text-slate-100">Intelligence Notifications</h3>
+                <Badge className="rounded-[3px] bg-primary/10 text-primary border-none text-[8px] font-black uppercase px-1.5 h-4">
                   {MOCK_NOTIFICATIONS.filter(n => n.isNew).length} NEW
                 </Badge>
               </div>
-            </SheetHeader>
-            <div className="overflow-y-auto h-[calc(100vh-100px)] scrollbar-hide">
-              <div className="divide-y divide-slate-50 dark:divide-slate-800">
-                {MOCK_NOTIFICATIONS.map((n) => (
-                  <div key={n.id} className={cn(
-                    "p-5 transition-all hover:bg-white/40 dark:hover:bg-slate-800/40 cursor-pointer group relative overflow-hidden",
-                    n.isNew && "bg-primary/[0.02]"
-                  )}>
-                    {n.isNew && <div className="absolute left-0 top-0 w-1 h-full bg-primary" />}
-                    <div className="flex items-start gap-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-[3px] flex items-center justify-center shrink-0 shadow-sm",
-                        n.type === 'success' ? "bg-emerald-50 text-emerald-500" :
-                        n.type === 'info' ? "bg-blue-50 text-blue-500" :
-                        n.type === 'warning' ? "bg-amber-50 text-amber-500" :
-                        "bg-slate-50 text-slate-500"
-                      )}>
-                        {n.type === 'success' ? <CheckCircle2 size={14} /> : 
-                         n.type === 'warning' ? <AlertCircle size={14} /> :
-                         <Clock size={14} />}
+            </DropdownMenuLabel>
+            <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
+              {MOCK_NOTIFICATIONS.map((n) => (
+                <DropdownMenuItem key={n.id} className="p-4 focus:bg-slate-50 dark:focus:bg-slate-800/50 cursor-pointer border-b border-slate-50 dark:border-slate-800 last:border-0 rounded-none relative">
+                  {n.isNew && <div className="absolute left-0 top-0 w-1 h-full bg-primary" />}
+                  <div className="flex items-start gap-3 w-full">
+                    <div className={cn(
+                      "w-8 h-8 rounded-[3px] flex items-center justify-center shrink-0 shadow-sm",
+                      n.type === 'success' ? "bg-emerald-50 text-emerald-500" :
+                      n.type === 'info' ? "bg-blue-50 text-blue-500" :
+                      n.type === 'warning' ? "bg-amber-50 text-amber-500" :
+                      "bg-slate-50 text-slate-500"
+                    )}>
+                      {n.type === 'success' ? <CheckCircle2 size={14} /> : 
+                       n.type === 'warning' ? <AlertCircle size={14} /> :
+                       <Clock size={14} />}
+                    </div>
+                    <div className="space-y-1 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{n.title}</h4>
+                        <span className="text-[8px] font-bold text-slate-300 dark:text-slate-600">{n.time}</span>
                       </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{n.title}</h4>
-                          <span className="text-[8px] font-bold text-slate-300 dark:text-slate-600">{n.time}</span>
-                        </div>
-                        <p className="font-arial text-[12px] text-slate-700 dark:text-slate-300 leading-snug">
-                          {n.message}
-                        </p>
-                      </div>
+                      <p className="font-arial text-[12px] text-slate-700 dark:text-slate-300 leading-snug">
+                        {n.message}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-              <div className="p-6 text-center">
-                <Button variant="ghost" className="w-full rounded-[3px] font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">
-                  View All Activity
-                </Button>
-              </div>
+                </DropdownMenuItem>
+              ))}
             </div>
-          </SheetContent>
-        </Sheet>
+            <DropdownMenuSeparator className="m-0 bg-slate-100 dark:border-slate-800" />
+            <div className="p-3 text-center">
+              <Button variant="ghost" className="w-full h-8 rounded-[3px] font-black text-[9px] uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">
+                View All Intelligence
+              </Button>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
