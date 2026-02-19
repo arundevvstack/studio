@@ -24,6 +24,7 @@ export interface Project {
 export interface Task {
   id: string;
   projectId: string;
+  stage: ProjectStage; // Phase specific objective tracking
   name: string;
   description: string;
   completed: boolean;

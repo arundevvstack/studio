@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { Project, Task, ProjectStage, ProjectPriority, TeamMember } from '@/lib/types';
 import { updateProject } from '@/lib/firebase/firestore';
@@ -129,7 +129,7 @@ export default function ProjectDetailPage() {
 
   const phasesQuery = useMemoFirebase(() => {
     if (!db || !id) return null;
-    return query(collection(db, 'projects', id, 'tasks'), orderBy('createdAt', 'desc'));
+    return query(collection(db, 'projects', id, 'tasks'), orderBy('createdAt', 'asc'));
   }, [db, id]);
 
   const { data: phases, isLoading: isPhasesLoading } = useCollection<Task>(phasesQuery);
@@ -140,6 +140,12 @@ export default function ProjectDetailPage() {
   }, [db]);
 
   const { data: allTeamMembers } = useCollection<TeamMember>(teamQuery);
+
+  // Filter objectives based on the current stage of the project
+  const currentStagePhases = useMemo(() => {
+    if (!phases || !project) return [];
+    return phases.filter(p => p.stage === project.stage);
+  }, [phases, project?.stage]);
 
   useEffect(() => {
     if (project && localProgress === null) {
@@ -158,7 +164,7 @@ export default function ProjectDetailPage() {
     }
   }, [project]);
 
-  const allPhasesCompleted = phases && phases.length > 0 && phases.every(p => p.completed);
+  const allPhasesCompleted = currentStagePhases.length > 0 && currentStagePhases.every(p => p.completed);
   const currentStageIndex = project ? STAGES.indexOf(project.stage) : -1;
   const nextStage = (project && currentStageIndex < STAGES.length - 1) ? STAGES[currentStageIndex + 1] : null;
 
@@ -207,6 +213,7 @@ export default function ProjectDetailPage() {
     const phaseData: Partial<Task> = {
       id: newPhaseRef.id,
       projectId: id,
+      stage: project.stage, // Associate task with current project stage
       name: newPhaseName,
       completed: false,
       priority: 'Medium',
@@ -219,7 +226,7 @@ export default function ProjectDetailPage() {
 
     setDoc(newPhaseRef, phaseData)
       .then(() => {
-        toast({ title: "Objective Deployed", description: "Strategic objective added to pipeline." });
+        toast({ title: "Objective Deployed", description: `Objective added to ${project.stage} pipeline.` });
         setNewPhaseName('');
         setNewPhaseDueDate('');
         setSelectedPhaseTeamMembers([]);
@@ -294,7 +301,7 @@ export default function ProjectDetailPage() {
     try {
       const result = await summarizeProjectStatus({
         description: project.description || 'No description provided',
-        tasks: (phases || []).map(t => t.name),
+        tasks: (currentStagePhases || []).map(t => t.name),
         notes: ['Project assets reviewed', 'Initial pipeline established']
       });
       setAiSummary(result.summary);
@@ -493,17 +500,17 @@ export default function ProjectDetailPage() {
                        <h4 className="text-sm font-black text-slate-900">{project.stage} Objectives</h4>
                     </div>
                     <Badge className="bg-primary/5 text-primary border-none rounded-[3px] text-[9px] font-black uppercase px-2 py-0.5">
-                       {phases?.filter(p => p.completed).length || 0} / {phases?.length || 0} SYNCED
+                       {currentStagePhases?.filter(p => p.completed).length || 0} / {currentStagePhases?.length || 0} SYNCED
                     </Badge>
                  </CardHeader>
                  <CardContent className="p-0">
                     <div className="divide-y divide-slate-50">
                       {isPhasesLoading ? (
                         <div className="p-8 text-center animate-pulse font-black text-[10px] uppercase tracking-widest text-slate-400">Syncing Objectives...</div>
-                      ) : !phases || phases.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 font-bold text-xs italic">No mission objectives defined for this phase.</div>
+                      ) : !currentStagePhases || currentStagePhases.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 font-bold text-xs italic">No mission objectives defined for the {project.stage} phase.</div>
                       ) : (
-                        phases.map((phase) => (
+                        currentStagePhases.map((phase) => (
                           <div key={phase.id} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition-all group">
                              <div className="flex items-center gap-4 flex-1">
                                 <div 
