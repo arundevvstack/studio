@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -101,10 +102,11 @@ export default function TeamPage() {
 
     setIsInviting(true);
     try {
-      // 1. Create Invitation Record
-      await createInvitation(db, user.uid, inviteEmail, inviteRole);
+      // 1. Create Invitation Record (Non-blocking)
+      // Initiate the write operation asynchronously following studio guidelines
+      createInvitation(db, user.uid, inviteEmail, inviteRole);
       
-      // 2. Synthesize Professional Invitation via AI
+      // 2. Synthesize Professional Invitation via AI (Server Action)
       const acceptLink = `${window.location.origin}`;
       const aiEmail = await generateInvitationEmail({
         email: inviteEmail,
@@ -115,18 +117,18 @@ export default function TeamPage() {
 
       toast({
         title: "Invitation Dispatched",
-        description: `Strategic brief synthesized and synchronized for ${inviteEmail}.`,
+        description: `Strategic brief synthesized for ${inviteEmail}.`,
       });
       
-      // Log for demo purposes (In production, this would trigger a Mail Extension)
+      // Intelligence logging for deployment verification
       console.log('AI Generated Invitation:', aiEmail);
 
       setInviteEmail('');
       setIsInviteOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Invitation Failed",
-        description: "Could not sync invitation record or synthesize brief.",
+        title: "Synthesis Error",
+        description: error.message || "The AI engine failed to synthesize the invitation brief.",
         variant: "destructive",
       });
     } finally {
