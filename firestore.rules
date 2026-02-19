@@ -19,7 +19,8 @@ service cloud.firestore {
 
     match /teamMembers/{teamMemberId} {
       allow get: if isSignedIn() && (request.auth.uid == teamMemberId || isRootAdmin());
-      allow list: if isAuthorized() || isRootAdmin();
+      // PROTOTYPE BYPASS: Allow all signed-in users to list team members for coordination
+      allow list: if isSignedIn();
       allow create: if isSignedIn() && request.auth.uid == teamMemberId;
       allow update: if isRootAdmin();
       allow delete: if isRootAdmin();
