@@ -13,12 +13,13 @@ import {
   Firestore,
   where
 } from 'firebase/firestore';
-import { Project, Invoice } from '../types';
+import { Project, Invoice, TeamMember, TeamStatus, TeamRole } from '../types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 const PROJECTS_COLLECTION = 'projects';
 const INVOICES_COLLECTION = 'invoices';
+const TEAM_COLLECTION = 'teamMembers';
 
 export const createProject = (db: Firestore, userId: string, data: Partial<Project>) => {
   const newProjectRef = doc(collection(db, PROJECTS_COLLECTION));
@@ -117,4 +118,52 @@ export const deleteInvoice = (db: Firestore, id: string) => {
       });
       errorEmitter.emit('permission-error', permissionError);
     });
+};
+
+// Team Management
+export const ensureTeamMember = async (db: Firestore, user: any) => {
+  const memberRef = doc(db, TEAM_COLLECTION, user.uid);
+  const snap = await getDoc(memberRef);
+  
+  if (!snap.exists()) {
+    const memberData: TeamMember = {
+      id: user.uid,
+      name: user.displayName || 'New Member',
+      email: user.email || '',
+      photoURL: user.photoURL || '',
+      role: 'Editor',
+      status: 'Pending',
+      createdAt: serverTimestamp()
+    };
+    
+    setDoc(memberRef, memberData).catch((error) => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: memberRef.path,
+        operation: 'create',
+        requestResourceData: memberData
+      }));
+    });
+  }
+};
+
+export const updateTeamMemberStatus = (db: Firestore, userId: string, status: TeamStatus) => {
+  const memberRef = doc(db, TEAM_COLLECTION, userId);
+  updateDoc(memberRef, { status }).catch((error) => {
+    errorEmitter.emit('permission-error', new FirestorePermissionError({
+      path: memberRef.path,
+      operation: 'update',
+      requestResourceData: { status }
+    }));
+  });
+};
+
+export const updateTeamMemberRole = (db: Firestore, userId: string, role: TeamRole) => {
+  const memberRef = doc(db, TEAM_COLLECTION, userId);
+  updateDoc(memberRef, { role }).catch((error) => {
+    errorEmitter.emit('permission-error', new FirestorePermissionError({
+      path: memberRef.path,
+      operation: 'update',
+      requestResourceData: { role }
+    }));
+  });
 };

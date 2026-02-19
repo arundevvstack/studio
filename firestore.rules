@@ -12,23 +12,27 @@ service cloud.firestore {
         request.auth.token.email == "arundevv.com@gmail.com"
       );
     }
+    
+    function isAuthorized() {
+      return isRootAdmin() || (isSignedIn() && get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.status == "Authorized");
+    }
 
     match /teamMembers/{teamMemberId} {
       allow get: if isSignedIn() && (request.auth.uid == teamMemberId || isRootAdmin());
       allow list: if isRootAdmin();
       allow create: if isSignedIn() && request.auth.uid == teamMemberId;
-      allow update: if isSignedIn() && (request.auth.uid == teamMemberId || isRootAdmin());
+      allow update: if isRootAdmin();
       allow delete: if isRootAdmin();
     }
 
     match /projects/{projectId} {
-      allow read: if isRootAdmin() || (isSignedIn() && request.auth.uid in resource.data.assignedTeamMemberIds);
-      allow create: if isSignedIn();
-      allow update: if isRootAdmin() || (isSignedIn() && request.auth.uid in resource.data.assignedTeamMemberIds);
+      allow read: if isRootAdmin() || (isAuthorized() && request.auth.uid in resource.data.assignedTeamMemberIds);
+      allow create: if isAuthorized();
+      allow update: if isRootAdmin() || (isAuthorized() && request.auth.uid in resource.data.assignedTeamMemberIds);
       allow delete: if isRootAdmin();
       
       match /{allSubcollections=**} {
-        allow read, write: if isRootAdmin() || (isSignedIn() && request.auth.uid in resource.data.projectAssignedTeamMemberIds);
+        allow read, write: if isRootAdmin() || (isAuthorized() && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTeamMemberIds);
       }
     }
 
@@ -38,7 +42,7 @@ service cloud.firestore {
     }
 
     match /tags/{tagId} {
-      allow read: if isSignedIn();
+      allow read: if isAuthorized();
       allow write: if isRootAdmin();
     }
   }

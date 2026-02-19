@@ -118,11 +118,27 @@
         }
       },
       "required": ["id", "clientName", "status", "totalAmount", "dueDate", "createdAt"]
+    },
+    "TeamMember": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TeamMember",
+      "type": "object",
+      "description": "Represents a user in the production system with their authorization status.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["Producer", "Editor", "Director", "Admin"] },
+        "status": { "type": "string", "enum": ["Pending", "Authorized", "Suspended"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
     "providers": [
       "password",
+      "google",
       "anonymous"
     ]
   },
@@ -146,6 +162,16 @@
             "$ref": "#/backend/entities/Invoice"
           },
           "description": "Billing and financial records."
+        }
+      },
+      {
+        "path": "/teamMembers/{userId}",
+        "definition": {
+          "entityName": "TeamMember",
+          "schema": {
+            "$ref": "#/backend/entities/TeamMember"
+          },
+          "description": "Team member authorization and role records."
         }
       }
     ]

@@ -53,3 +53,16 @@ export interface Invoice {
   createdAt: any;
   creatorId: string;
 }
+
+export type TeamRole = 'Producer' | 'Editor' | 'Director' | 'Admin';
+export type TeamStatus = 'Pending' | 'Authorized' | 'Suspended';
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  photoURL: string;
+  role: TeamRole;
+  status: TeamStatus;
+  createdAt: any;
+}
