@@ -6,14 +6,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { 
   ChevronLeft, 
   Printer, 
-  Download, 
   Mail, 
   ShieldCheck,
   Building2,
-  CreditCard,
-  MapPin,
-  Globe,
-  Phone
+  Phone,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -108,7 +105,7 @@ export default function InvoiceDetailPage() {
           <div className="flex flex-col md:flex-row justify-between items-start gap-8">
             <div className="space-y-4">
               {logo && (
-                <div className="relative h-20 w-56">
+                <div className="relative h-24 w-64">
                   <Image 
                     src={logo.imageUrl} 
                     alt={logo.description} 
