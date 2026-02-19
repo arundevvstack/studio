@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -9,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Zap, ArrowRight, Sparkles, Mail, Lock, User as UserIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function Home() {
   const { user, loading, signIn, signUp } = useAuth();
@@ -18,6 +21,8 @@ export default function Home() {
   const [name, setName] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const router = useRouter();
+
+  const logo = PlaceHolderImages.find(img => img.id === 'marzelz-logo');
 
   useEffect(() => {
     if (!loading && user) {
@@ -49,16 +54,18 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-[#F8FAFC] selection:bg-primary/20 hero-gradient">
       <header className="fixed top-0 w-full z-50 bg-white/60 backdrop-blur-2xl border-b border-slate-200/50">
         <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 group">
-            <div className="flex flex-col items-center">
-              <svg viewBox="0 0 100 80" className="w-10 h-8 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 70 C 10 10, 50 10, 50 45 C 50 10, 90 10, 90 70" />
-              </svg>
-              <div className="flex flex-col items-center -mt-1">
-                <span className="text-xl font-medium tracking-[0.1em] text-slate-700 leading-none">MARZELZ</span>
-                <span className="text-[9px] font-bold tracking-[0.4em] text-slate-400 mt-1">LIFESTYLE</span>
+          <div className="flex items-center gap-3">
+            {logo && (
+              <div className="relative h-12 w-40">
+                <Image 
+                  src={logo.imageUrl} 
+                  alt={logo.description} 
+                  fill 
+                  className="object-contain"
+                  data-ai-hint={logo.imageHint}
+                />
               </div>
-            </div>
+            )}
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" className="rounded-2xl font-bold px-6 h-11" onClick={() => setIsLogin(!isLogin)}>
@@ -82,7 +89,7 @@ export default function Home() {
             <div className="space-y-8">
               <h1 className="text-6xl md:text-7xl font-black tracking-tight text-slate-900 leading-[1.05]">
                 Production OS for <br />
-                the <span className="bg-gradient-to-r from-[#EF4444] to-primary bg-clip-text text-transparent">Creative Elite.</span>
+                the <span className="bg-gradient-to-r from-primary/80 to-primary bg-clip-text text-transparent">Creative Elite.</span>
               </h1>
               <p className="text-xl text-slate-500 max-w-xl font-medium leading-relaxed">
                 The refined workflow automation engine designed specifically for Marzelz Lifestyle and high-growth media studios.
@@ -92,7 +99,7 @@ export default function Home() {
 
           <div className="relative animate-in fade-in slide-in-from-right-4 duration-1000 delay-200">
             <Card className="border-none shadow-2xl premium-shadow rounded-[2.5rem] bg-white/80 backdrop-blur-xl p-4 relative z-10 overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#EF4444] to-primary"></div>
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-primary"></div>
               <CardHeader className="pt-10 pb-6 text-center">
                 <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">
                   {isLogin ? 'Welcome Back' : 'Get Started'}

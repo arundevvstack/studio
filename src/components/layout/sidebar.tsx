@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -18,6 +19,8 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/firebase/auth-context';
+import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -32,18 +35,23 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { logOut } = useAuth();
+  const logo = PlaceHolderImages.find(img => img.id === 'marzelz-logo');
 
   return (
     <aside className="fixed left-6 top-6 bottom-6 w-72 glass-card z-50 flex flex-col p-6 overflow-hidden">
       <div className="px-2 mb-10">
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 group ios-clickable">
-          <svg viewBox="0 0 100 80" className="w-12 h-10 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M10 70 C 10 10, 50 10, 50 45 C 50 10, 90 10, 90 70" />
-          </svg>
-          <div className="flex flex-col items-center -mt-1">
-            <span className="text-xl font-medium tracking-[0.1em] text-slate-700 leading-none">MARZELZ</span>
-            <span className="text-[9px] font-bold tracking-[0.4em] text-slate-400 mt-1">LIFESTYLE</span>
-          </div>
+        <Link href="/dashboard" className="flex justify-center group ios-clickable">
+          {logo && (
+            <div className="relative h-16 w-full">
+              <Image 
+                src={logo.imageUrl} 
+                alt={logo.description} 
+                fill 
+                className="object-contain"
+                data-ai-hint={logo.imageHint}
+              />
+            </div>
+          )}
         </Link>
       </div>
 

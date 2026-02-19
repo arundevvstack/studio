@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -22,12 +23,15 @@ import { doc } from 'firebase/firestore';
 import { Invoice } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 export default function InvoiceDetailPage() {
   const { id } = useParams() as { id: string };
   const db = useFirestore();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+
+  const logo = PlaceHolderImages.find(img => img.id === 'marzelz-logo');
 
   useEffect(() => {
     setIsMounted(true);
@@ -76,7 +80,6 @@ export default function InvoiceDetailPage() {
 
   return (
     <div className="max-w-[1000px] mx-auto space-y-8 animate-in fade-in duration-700 pb-20">
-      {/* Action Bar (Hidden on Print) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4 no-print">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => router.back()} className="rounded-2xl border bg-white h-12 w-12 shadow-sm">
@@ -99,24 +102,22 @@ export default function InvoiceDetailPage() {
         </div>
       </div>
 
-      {/* The Professional Invoice Document */}
       <Card className="border-none shadow-2xl rounded-none md:rounded-[2.5rem] overflow-hidden bg-white invoice-document-print">
         <CardContent className="p-8 md:p-16 space-y-12">
           
-          {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-start gap-8">
             <div className="space-y-4">
-              <div className="flex flex-col items-center">
-                 <div className="w-20 h-16 relative flex items-center justify-center">
-                    <svg viewBox="0 0 100 80" className="w-full h-full text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M10 70 C 10 10, 50 10, 50 45 C 50 10, 90 10, 90 70" />
-                    </svg>
-                 </div>
-                 <div className="flex flex-col items-center mt-1">
-                    <h2 className="text-3xl font-medium text-slate-700 tracking-[0.1em] leading-none">MARZELZ</h2>
-                    <p className="text-[10px] font-bold text-slate-400 tracking-[0.4em] uppercase mt-2">LIFESTYLE</p>
-                 </div>
-              </div>
+              {logo && (
+                <div className="relative h-20 w-56">
+                  <Image 
+                    src={logo.imageUrl} 
+                    alt={logo.description} 
+                    fill 
+                    className="object-contain"
+                    data-ai-hint={logo.imageHint}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="text-right space-y-1">
@@ -129,7 +130,6 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
 
-          {/* Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-8">
             <div className="space-y-3">
                <div className="grid grid-cols-[120px_1fr] gap-2 items-center">
@@ -155,7 +155,7 @@ export default function InvoiceDetailPage() {
             </div>
 
             <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-               <p className="text-[10px] font-black text-[#EF4444] uppercase tracking-widest mb-3">BILL TO</p>
+               <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-3">BILL TO</p>
                <h4 className="text-base font-black text-slate-900 leading-tight">{invoice.clientName}</h4>
                <p className="text-sm font-medium text-slate-500 mt-2 max-w-[250px] leading-relaxed">
                  Strategic Production Partner<br />
@@ -166,11 +166,10 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
 
-          {/* Items Table */}
           <div className="overflow-hidden border border-slate-100 rounded-3xl">
              <table className="w-full text-left border-collapse">
                 <thead>
-                   <tr className="bg-[#EF4444] text-white">
+                   <tr className="bg-primary text-white">
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">SL No</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Description</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right">Unit Price</th>
@@ -195,7 +194,6 @@ export default function InvoiceDetailPage() {
              </table>
           </div>
 
-          {/* Totals and Stamp */}
           <div className="flex flex-col md:flex-row justify-between items-start gap-12 pt-8 relative">
              <div className="flex-1 space-y-8">
                 <div className="space-y-4">
@@ -234,7 +232,6 @@ export default function InvoiceDetailPage() {
                    </div>
                 </div>
 
-                {/* Branded Official Stamp */}
                 <div className="absolute -left-12 bottom-0 w-48 h-48 opacity-80 pointer-events-none select-none print:opacity-100">
                   <div className="relative w-full h-full flex items-center justify-center">
                     <svg viewBox="0 0 200 200" className="w-full h-full text-[#1A365D] -rotate-12">
@@ -259,7 +256,6 @@ export default function InvoiceDetailPage() {
              </div>
           </div>
 
-          {/* Footer Address */}
           <div className="pt-24 border-t border-slate-100 flex flex-col md:flex-row justify-between gap-8 text-slate-400">
              <div className="space-y-4 max-w-sm">
                 <h5 className="text-xs font-black text-slate-900 uppercase tracking-widest">MARZELZ LIFESTYLE PRIVATE LIMITED</h5>

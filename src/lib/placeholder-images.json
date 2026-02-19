@@ -11,6 +11,12 @@
       "description": "User profile avatar",
       "imageUrl": "https://images.unsplash.com/photo-1702478629992-bd590033779d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cHJvZmlsZSUyMGF2YXRhcnxlbnwwfHx8fDE3NzEzMTIwMzF8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "profile avatar"
+    },
+    {
+      "id": "marzelz-logo",
+      "description": "Official Marzelz Lifestyle Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1769952948855-da716b176109?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjb3Jwb3JhdGUlMjBsb2dvfGVufDB8fHx8MTc3MTM4MDkzN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "corporate logo"
     }
   ]
 }
