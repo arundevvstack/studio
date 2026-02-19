@@ -35,7 +35,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from "next-themes";
 
 export default function SettingsPage() {
-  const { user, isAdmin, resetPassword } = useAuth();
+  const { user, isAdmin, resetPassword, updateDisplayName, loading } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -57,29 +57,34 @@ export default function SettingsPage() {
     security: true,
   });
 
-  const [isSyncing, setIsSyncing] = useState(false);
+  // Keep local state in sync if user object changes
+  useEffect(() => {
+    if (user) {
+      setProfileData(prev => ({
+        ...prev,
+        name: user.displayName || prev.name,
+        email: user.email || prev.email
+      }));
+    }
+  }, [user]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      toast({
-        title: "Profile Synchronized",
-        description: "Your executive identity has been updated across the network.",
-      });
-    }, 1000);
+    if (profileData.name === user?.displayName) return;
+    
+    try {
+      await updateDisplayName(profileData.name);
+    } catch (err) {
+      // Error handled in updateDisplayName
+    }
   };
 
   const handlePasswordReset = async () => {
     if (!user?.email) return;
-    setIsSyncing(true);
     try {
       await resetPassword(user.email);
     } catch (err) {
       // Error handled in AuthContext
-    } finally {
-      setIsSyncing(false);
     }
   };
 
@@ -97,9 +102,9 @@ export default function SettingsPage() {
             <RotateCcw size={16} />
             Reset Defaults
           </Button>
-          <Button className="rounded-[5px] h-10 px-6 shadow-md shadow-primary/10 font-black bg-primary text-white text-xs" onClick={handleSaveProfile} disabled={isSyncing}>
+          <Button className="rounded-[5px] h-10 px-6 shadow-md shadow-primary/10 font-black bg-primary text-white text-xs" onClick={handleSaveProfile} disabled={loading || profileData.name === user?.displayName}>
             <Save size={16} className="mr-2" />
-            {isSyncing ? 'Syncing...' : 'Save Changes'}
+            {loading ? 'Syncing...' : 'Save Changes'}
           </Button>
         </div>
       </div>
@@ -181,9 +186,9 @@ export default function SettingsPage() {
                   variant="outline" 
                   className="w-full rounded-[5px] h-11 text-[10px] font-black uppercase tracking-widest border-white/10 hover:bg-white/10 hover:text-white transition-all"
                   onClick={handlePasswordReset}
-                  disabled={isSyncing}
+                  disabled={loading}
                 >
-                  {isSyncing ? 'Syncing...' : 'Request Password Reset'}
+                  {loading ? 'Syncing...' : 'Request Password Reset'}
                 </Button>
               </CardContent>
             </Card>

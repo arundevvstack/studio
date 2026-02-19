@@ -13,7 +13,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { useFirebase, useUser, useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { ensureTeamMember } from './firestore';
@@ -30,6 +30,7 @@ interface AuthContextType {
   signUp: (email: string, pass: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updateDisplayName: (newName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -118,6 +119,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateDisplayName = async (newName: string) => {
+    if (!auth.currentUser) return;
+    try {
+      setInternalLoading(true);
+      await updateProfile(auth.currentUser, { displayName: newName });
+      
+      // Update Firestore record to keep in sync
+      if (db) {
+        const memberRef = doc(db, 'teamMembers', auth.currentUser.uid);
+        await updateDoc(memberRef, { name: newName });
+      }
+      
+      // Force auth state refresh
+      await auth.currentUser.reload();
+      
+      toast({ title: "Identity Synchronized", description: "Your executive profile name has been updated." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Update Failed", description: error.message });
+      throw error;
+    } finally {
+      setInternalLoading(false);
+    }
+  };
+
   const isAuthorized = isAdmin || (!!teamMember && teamMember.status === 'Authorized');
 
   return (
@@ -131,7 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signInWithGoogle,
       signUp, 
       logOut,
-      resetPassword
+      resetPassword,
+      updateDisplayName
     }}>
       {children}
     </AuthContext.Provider>
