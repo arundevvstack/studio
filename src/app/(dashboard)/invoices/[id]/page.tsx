@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -107,15 +106,15 @@ export default function InvoiceDetailPage() {
           {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-start gap-8">
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                 <div className="w-16 h-16 relative flex items-center justify-center">
-                    <svg viewBox="0 0 100 100" className="w-full h-full text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M15 85 V35 C15 15 50 15 50 45 C50 15 85 15 85 35 V85" />
+              <div className="flex flex-col items-center">
+                 <div className="w-20 h-16 relative flex items-center justify-center">
+                    <svg viewBox="0 0 100 80" className="w-full h-full text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10 70 C 10 10, 50 10, 50 45 C 50 10, 90 10, 90 70" />
                     </svg>
                  </div>
-                 <div>
-                    <h2 className="text-3xl font-light text-[#EF4444] tracking-tight leading-none">MARZELZ</h2>
-                    <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase mt-1">LIFESTYLE</p>
+                 <div className="flex flex-col items-center mt-1">
+                    <h2 className="text-3xl font-medium text-slate-700 tracking-[0.1em] leading-none">MARZELZ</h2>
+                    <p className="text-[10px] font-bold text-slate-400 tracking-[0.4em] uppercase mt-2">LIFESTYLE</p>
                  </div>
               </div>
             </div>
@@ -235,18 +234,15 @@ export default function InvoiceDetailPage() {
                    </div>
                 </div>
 
-                {/* Branded Official Stamp - Positioned exactly near the total area */}
+                {/* Branded Official Stamp */}
                 <div className="absolute -left-12 bottom-0 w-48 h-48 opacity-80 pointer-events-none select-none print:opacity-100">
                   <div className="relative w-full h-full flex items-center justify-center">
-                    {/* The Circular Stamp SVG */}
                     <svg viewBox="0 0 200 200" className="w-full h-full text-[#1A365D] -rotate-12">
                       <circle cx="100" cy="100" r="85" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="5,2" />
                       <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="1.5" />
                       
-                      {/* Marzelz Logo in Stamp */}
-                      <path d="M75 125 V95 C75 80 100 80 100 100 C100 80 125 80 125 95 V125" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M70 120 C 70 80, 100 80, 100 100 C 100 80, 130 80, 130 120" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                       
-                      {/* Text on path */}
                       <defs>
                         <path id="stampTextPath" d="M 100, 100 m -65, 0 a 65,65 0 1,1 130,0 a 65,65 0 1,1 -130,0" />
                       </defs>
@@ -254,12 +250,9 @@ export default function InvoiceDetailPage() {
                         <textPath href="#stampTextPath" startOffset="0%">MARZELZ LIFESTYLE PVT. LTD. ★ TRIVANDRUM ★ 695003 ★</textPath>
                       </text>
                       
-                      {/* Center labels */}
                       <text x="100" y="145" textAnchor="middle" className="text-[9px] font-black fill-current uppercase tracking-wider">Authorised Signatory</text>
                       
-                      {/* Simulated Blue Signature Line */}
                       <path d="M40 110 Q 70 80, 100 105 T 160 90" fill="none" stroke="#2563EB" strokeWidth="2" className="opacity-70" />
-                      <path d="M45 115 Q 75 85, 105 110 T 165 95" fill="none" stroke="#1E40AF" strokeWidth="1" className="opacity-50" />
                     </svg>
                   </div>
                 </div>

@@ -36,13 +36,13 @@ export function Sidebar() {
   return (
     <aside className="fixed left-6 top-6 bottom-6 w-72 glass-card z-50 flex flex-col p-6 overflow-hidden">
       <div className="px-2 mb-10">
-        <Link href="/dashboard" className="flex items-center gap-3 group ios-clickable">
-          <svg viewBox="0 0 100 100" className="w-10 h-10 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 85 V35 C15 15 50 15 50 45 C50 15 85 15 85 35 V85" />
+        <Link href="/dashboard" className="flex flex-col items-center gap-1 group ios-clickable">
+          <svg viewBox="0 0 100 80" className="w-12 h-10 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 70 C 10 10, 50 10, 50 45 C 50 10, 90 10, 90 70" />
           </svg>
-          <div className="flex flex-col -space-y-1">
-            <span className="text-xl font-light tracking-[0.2em] text-slate-700 leading-none">MARZELZ</span>
-            <span className="text-[10px] font-bold tracking-[0.3em] text-slate-400">LIFESTYLE</span>
+          <div className="flex flex-col items-center -mt-1">
+            <span className="text-xl font-medium tracking-[0.1em] text-slate-700 leading-none">MARZELZ</span>
+            <span className="text-[9px] font-bold tracking-[0.4em] text-slate-400 mt-1">LIFESTYLE</span>
           </div>
         </Link>
       </div>

@@ -50,12 +50,14 @@ export default function Home() {
       <header className="fixed top-0 w-full z-50 bg-white/60 backdrop-blur-2xl border-b border-slate-200/50">
         <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 group">
-            <svg viewBox="0 0 100 100" className="w-10 h-10 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M15 85 V35 C15 15 50 15 50 45 C50 15 85 15 85 35 V85" />
-            </svg>
-            <div className="flex flex-col -space-y-1">
-              <span className="text-xl font-light tracking-[0.2em] text-slate-700">MARZELZ</span>
-              <span className="text-[10px] font-bold tracking-[0.4em] text-slate-400">LIFESTYLE</span>
+            <div className="flex flex-col items-center">
+              <svg viewBox="0 0 100 80" className="w-10 h-8 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 70 C 10 10, 50 10, 50 45 C 50 10, 90 10, 90 70" />
+              </svg>
+              <div className="flex flex-col items-center -mt-1">
+                <span className="text-xl font-medium tracking-[0.1em] text-slate-700 leading-none">MARZELZ</span>
+                <span className="text-[9px] font-bold tracking-[0.4em] text-slate-400 mt-1">LIFESTYLE</span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -70,10 +72,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div className="space-y-12 text-left animate-in fade-in slide-in-from-left-4 duration-1000">
             <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white border border-slate-200 shadow-sm">
-              <Badge className="bg-primary/10 text-primary hover:bg-primary/15 border-none px-2.5 font-bold">VC Funded</Badge>
+              <Badge className="bg-primary/10 text-primary hover:bg-primary/15 border-none px-2.5 font-bold">Premium OS</Badge>
               <span className="text-xs font-bold text-slate-600 flex items-center gap-2">
                 <Sparkles size={14} className="text-amber-500" />
-                Empowering the Creative Elite
+                Empowering Creative Production
               </span>
             </div>
 
@@ -83,7 +85,7 @@ export default function Home() {
                 the <span className="bg-gradient-to-r from-[#EF4444] to-primary bg-clip-text text-transparent">Creative Elite.</span>
               </h1>
               <p className="text-xl text-slate-500 max-w-xl font-medium leading-relaxed">
-                The world's first intelligent workflow automation engine designed specifically for Marzelz Lifestyle and high-growth media studios.
+                The refined workflow automation engine designed specifically for Marzelz Lifestyle and high-growth media studios.
               </p>
             </div>
           </div>
