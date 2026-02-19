@@ -9,7 +9,8 @@ import {
   Clock,
   ShieldAlert,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 import { 
   Table, 
@@ -23,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Project } from '@/lib/types';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -45,7 +46,8 @@ export default function PipelinePage() {
     if (!db || !user || isUserLoading) return null;
     
     const baseRef = collection(db, 'projects');
-    // Admins see all pipeline. Members only assigned.
+    
+    // For Admins, we query all early stage projects
     if (isAdmin) {
       return query(
         baseRef,
@@ -54,6 +56,7 @@ export default function PipelinePage() {
       );
     }
 
+    // For standard users, we filter by their assigned ID
     return query(
       baseRef,
       where('stage', 'in', ['Pitch', 'Discussion']),
@@ -85,14 +88,21 @@ export default function PipelinePage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-        <div className="p-4 rounded-full bg-destructive/10 text-destructive">
-          <ShieldAlert size={48} />
+      <div className="flex flex-col items-center justify-center min-h-[500px] space-y-6">
+        <div className="p-6 rounded-[2.5rem] bg-destructive/10 text-destructive">
+          <AlertCircle size={48} />
         </div>
-        <h2 className="text-2xl font-black">Pipeline Restricted</h2>
-        <p className="text-muted-foreground text-center max-w-md">
-          Access to early-stage pipeline data is restricted based on clearance.
-        </p>
+        <div className="text-center space-y-2">
+          <h2 className="text-3xl font-black text-slate-900">Pipeline Access Restricted</h2>
+          <p className="text-muted-foreground text-center max-w-md font-medium">
+            {error.message.includes('permission') 
+              ? "Your current clearance level does not allow access to the strategic pipeline."
+              : `System error: ${error.message}`}
+          </p>
+        </div>
+        <Button onClick={() => window.location.reload()} className="rounded-2xl px-8 h-12 font-black">
+          Retry Clearance Check
+        </Button>
       </div>
     );
   }
@@ -137,13 +147,13 @@ export default function PipelinePage() {
         <Card className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-md">
           <CardContent className="pt-8">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Pitch Volume</p>
-            <div className="text-4xl font-black text-slate-900">{(projects || []).filter(p => p.stage === 'Pitch').length}</div>
+            <div className="text-4xl font-black text-slate-900">{isLoading ? '...' : (projects || []).filter(p => p.stage === 'Pitch').length}</div>
           </CardContent>
         </Card>
         <Card className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-md">
           <CardContent className="pt-8">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Discussion Active</p>
-            <div className="text-4xl font-black text-slate-900">{(projects || []).filter(p => p.stage === 'Discussion').length}</div>
+            <div className="text-4xl font-black text-slate-900">{isLoading ? '...' : (projects || []).filter(p => p.stage === 'Discussion').length}</div>
           </CardContent>
         </Card>
       </div>
@@ -161,16 +171,16 @@ export default function PipelinePage() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="h-64 text-center animate-pulse">Syncing Pipeline...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="h-64 text-center animate-pulse font-bold text-slate-400 uppercase tracking-widest text-xs">Syncing Pipeline Intelligence...</TableCell></TableRow>
             ) : filteredProjects.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-64 text-center text-slate-400 italic">No projects currently in the early-stage pipeline.</TableCell>
+                <TableCell colSpan={5} className="h-64 text-center text-slate-400 italic font-medium">No projects currently in the early-stage pipeline.</TableCell>
               </TableRow>
             ) : (
               filteredProjects.map((project) => (
                 <TableRow key={project.id} className="hover:bg-white/40 transition-all border-b border-slate-50 last:border-0 group h-24">
                   <TableCell className="pl-10">
-                    <Link href={`/projects/${project.id}`} className="block group">
+                    <Link href={`/projects/${project.id}`} className="block group ios-interactive">
                       <div className="font-black text-slate-900 group-hover:text-primary transition-colors text-lg tracking-tight">{project.projectName}</div>
                       <div className="text-sm text-slate-500 font-bold uppercase tracking-wider mt-0.5">{project.client}</div>
                     </Link>
@@ -195,7 +205,7 @@ export default function PipelinePage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right pr-10">
-                    <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl hover:bg-white hover:text-primary transition-all" asChild>
+                    <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl hover:bg-white hover:text-primary transition-all ios-interactive" asChild>
                       <Link href={`/projects/${project.id}`}><ChevronRight size={20} /></Link>
                     </Button>
                   </TableCell>

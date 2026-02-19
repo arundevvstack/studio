@@ -66,13 +66,9 @@
   @apply bg-slate-300/50 rounded-full hover:bg-slate-400/50 transition-colors;
 }
 
-/* iOS-style tactile interactions - Avoid scaling links directly to prevent click propagation issues */
+/* iOS-style tactile interactions */
 .ios-interactive {
-  @apply transition-all duration-200 cursor-pointer;
-}
-
-.ios-interactive:active {
-  @apply opacity-70;
+  @apply transition-all duration-200 cursor-pointer active:scale-95 active:opacity-80;
 }
 
 /* Ensure links are always above background blurs */

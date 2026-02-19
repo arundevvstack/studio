@@ -46,7 +46,7 @@ export function Sidebar() {
       <div className="px-2 mb-10">
         <Button 
           asChild
-          className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary border-none"
+          className="w-full h-16 rounded-[1.5rem] font-black text-base gap-3 shadow-2xl shadow-primary/25 transition-all bg-primary border-none ios-interactive"
         >
           <Link href="/projects/new">
             <Plus size={22} strokeWidth={3} />
@@ -70,11 +70,11 @@ export function Sidebar() {
                   : "text-slate-500 hover:bg-white/60 hover:text-slate-900"
               )}
             >
-              <div className="flex items-center">
+              <div className="flex items-center pointer-events-none">
                 <item.icon className={cn("mr-4 h-6 w-6", isActive ? "text-primary" : "text-slate-400 group-hover:text-slate-900")} strokeWidth={isActive ? 2.5 : 2} />
                 {item.name}
               </div>
-              {isActive && <ChevronRight size={16} className="text-primary/50" />}
+              {isActive && <ChevronRight size={16} className="text-primary/50 pointer-events-none" />}
             </Link>
           );
         })}
@@ -85,14 +85,14 @@ export function Sidebar() {
           href="/settings"
           className="flex items-center px-5 py-4 text-[15px] font-bold rounded-[1.5rem] text-slate-500 hover:bg-white/60 hover:text-slate-900 transition-all duration-300 ios-interactive"
         >
-          <Settings className="mr-4 h-6 w-6 text-slate-400" />
+          <Settings className="mr-4 h-6 w-6 text-slate-400 pointer-events-none" />
           Settings
         </Link>
         <button
           onClick={() => logOut()}
           className="w-full flex items-center px-5 py-4 text-[15px] font-bold rounded-[1.5rem] text-rose-500 hover:bg-rose-50 transition-all duration-300 ios-interactive"
         >
-          <LogOut className="mr-4 h-6 w-6" />
+          <LogOut className="mr-4 h-6 w-6 pointer-events-none" />
           Log out
         </button>
       </div>
