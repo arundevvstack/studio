@@ -3,16 +3,15 @@
 
 import { useState, useMemo } from 'react';
 import { 
-  ReceiptRussianRuble, 
   Plus, 
   Search, 
   Filter, 
   ChevronRight, 
   Clock, 
-  CheckCircle2, 
-  AlertCircle,
   ShieldAlert,
-  FileText
+  FileText,
+  Trash2,
+  Edit2
 } from 'lucide-react';
 import { 
   Table, 
@@ -31,11 +30,25 @@ import { collection, query, orderBy } from 'firebase/firestore';
 import { Invoice } from '@/lib/types';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { deleteInvoice } from '@/lib/firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function InvoicesPage() {
   const [search, setSearch] = useState('');
   const { user, isAdmin } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
 
   const invoicesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -58,6 +71,15 @@ export default function InvoicesPage() {
       case 'Overdue': return 'bg-rose-50 text-rose-600';
       default: return 'bg-slate-50 text-slate-600';
     }
+  };
+
+  const handleDelete = (id: string) => {
+    if (!db) return;
+    deleteInvoice(db, id);
+    toast({
+      title: "Invoice Deleted",
+      description: "Financial record has been removed from the system.",
+    });
   };
 
   if (!isAdmin) {
@@ -116,7 +138,7 @@ export default function InvoicesPage() {
               <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400">Total Amount</TableHead>
               <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400">Status</TableHead>
               <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400">Due Date</TableHead>
-              <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400 text-right pr-10">Details</TableHead>
+              <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400 text-right pr-10">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -139,7 +161,7 @@ export default function InvoicesPage() {
                     <div className="font-bold text-slate-700">{invoice.clientName}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-lg font-black text-slate-900 tracking-tight">${invoice.totalAmount.toLocaleString()}</div>
+                    <div className="text-lg font-black text-slate-900 tracking-tight">₹{invoice.totalAmount.toLocaleString()}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className={cn("rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border-none", getStatusColor(invoice.status))}>
@@ -153,11 +175,39 @@ export default function InvoicesPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right pr-10">
-                    <Button variant="ghost" size="icon" className="h-11 w-11 glass-pill hover:bg-white hover:text-primary transition-all ios-clickable" asChild>
-                      <Link href={`/invoices/${invoice.id}`}>
-                        <FileText size={22} />
-                      </Link>
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button variant="ghost" size="icon" className="h-10 w-10 glass-pill hover:bg-white hover:text-primary transition-all ios-clickable" asChild title="Edit Record">
+                        <Link href={`/invoices/edit/${invoice.id}`}>
+                          <Edit2 size={18} />
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-10 w-10 glass-pill hover:bg-white hover:text-primary transition-all ios-clickable" asChild title="View Details">
+                        <Link href={`/invoices/${invoice.id}`}>
+                          <FileText size={18} />
+                        </Link>
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-10 w-10 glass-pill hover:bg-rose-50 hover:text-rose-500 transition-all ios-clickable" title="Delete Record">
+                            <Trash2 size={18} />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl premium-shadow">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-2xl font-black text-slate-900 tracking-tight">Revoke Record?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-500 font-medium">
+                              This will permanently delete the financial record for <span className="text-slate-900 font-bold">{invoice.clientName}</span>. This action cannot be reversed.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="pt-4">
+                            <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+                            <AlertDialogAction className="rounded-xl font-black bg-rose-500 hover:bg-rose-600" onClick={() => handleDelete(invoice.id)}>
+                              Confirm Deletion
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

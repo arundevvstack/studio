@@ -106,3 +106,15 @@ export const updateInvoice = (db: Firestore, id: string, data: Partial<Invoice>)
       errorEmitter.emit('permission-error', permissionError);
     });
 };
+
+export const deleteInvoice = (db: Firestore, id: string) => {
+  const invoiceRef = doc(db, INVOICES_COLLECTION, id);
+  deleteDoc(invoiceRef)
+    .catch((error) => {
+      const permissionError = new FirestorePermissionError({
+        path: invoiceRef.path,
+        operation: 'delete'
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
+};
