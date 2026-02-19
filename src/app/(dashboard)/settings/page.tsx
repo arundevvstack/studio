@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   User, 
   Palette, 
@@ -12,7 +13,10 @@ import {
   Sparkles,
   Mail,
   Building2,
-  CheckCircle2
+  CheckCircle2,
+  Sun,
+  Moon,
+  Laptop
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,11 +32,18 @@ import {
 import { useAuth } from '@/lib/firebase/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useTheme } from "next-themes";
 
 export default function SettingsPage() {
   const { user, isAdmin, resetPassword } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [profileData, setProfileData] = useState({
     name: user?.displayName || '',
     email: user?.email || '',
@@ -72,22 +83,17 @@ export default function SettingsPage() {
     }
   };
 
-  const handleColorChange = (color: string) => {
-    toast({
-      title: "UI Logic Updated",
-      description: `Highlight spectrum shifted to ${color}. Global variables synchronized.`,
-    });
-  };
+  if (!mounted) return null;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700 max-w-5xl mx-auto pb-10">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 px-1">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">System Settings</h1>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">System Settings</h1>
           <p className="text-slate-500 text-base font-medium opacity-80">Manage workspace parameters and strategic preferences.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-[5px] h-10 px-5 border-slate-200 font-bold gap-2 bg-white text-xs">
+          <Button variant="outline" className="rounded-[5px] h-10 px-5 border-slate-200 dark:border-slate-800 font-bold gap-2 bg-white dark:bg-slate-900 text-xs">
             <RotateCcw size={16} />
             Reset Defaults
           </Button>
@@ -99,24 +105,24 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="bg-white/40 backdrop-blur-md p-1 rounded-[5px] border border-white/60 mb-6 h-11">
-          <TabsTrigger value="profile" className="rounded-[3px] px-5 font-bold text-[10px] uppercase tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary">
+        <TabsList className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1 rounded-[5px] border border-white/60 dark:border-white/5 mb-6 h-11">
+          <TabsTrigger value="profile" className="rounded-[3px] px-5 font-bold text-[10px] uppercase tracking-widest gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary">
             <User size={12} /> Profile
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="rounded-[3px] px-5 font-bold text-[10px] uppercase tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary">
+          <TabsTrigger value="appearance" className="rounded-[3px] px-5 font-bold text-[10px] uppercase tracking-widest gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary">
             <Palette size={12} /> Appearance
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="rounded-[3px] px-5 font-bold text-[10px] uppercase tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary">
+          <TabsTrigger value="notifications" className="rounded-[3px] px-5 font-bold text-[10px] uppercase tracking-widest gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary">
             <Bell size={12} /> Notifications
           </TabsTrigger>
-          <TabsTrigger value="workspace" className="rounded-[3px] px-5 font-bold text-[10px] uppercase tracking-widest gap-2 data-[state=active]:bg-white data-[state=active]:text-primary">
+          <TabsTrigger value="workspace" className="rounded-[3px] px-5 font-bold text-[10px] uppercase tracking-widest gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary">
             <Globe size={12} /> Workspace
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="animate-in fade-in slide-in-from-top-1 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2 border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl overflow-hidden">
+            <Card className="lg:col-span-2 border-none shadow-sm rounded-[5px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl overflow-hidden">
               <CardHeader className="pt-6 px-6 pb-4">
                 <CardTitle className="text-lg font-black">Executive Identity</CardTitle>
                 <CardDescription className="text-xs font-medium">Update public presence in the production network.</CardDescription>
@@ -130,7 +136,7 @@ export default function SettingsPage() {
                       <Input 
                         value={profileData.name}
                         onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-                        className="pl-10 rounded-[5px] border-slate-200 h-11 font-bold bg-slate-50/50 text-sm"
+                        className="pl-10 rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-50/50 dark:bg-slate-800/50 text-sm"
                       />
                     </div>
                   </div>
@@ -141,7 +147,7 @@ export default function SettingsPage() {
                       <Input 
                         value={profileData.email}
                         disabled
-                        className="pl-10 rounded-[5px] border-slate-200 h-11 font-bold bg-slate-100/50 text-slate-400 cursor-not-allowed text-sm"
+                        className="pl-10 rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-100/50 dark:bg-slate-900/50 text-slate-400 cursor-not-allowed text-sm"
                       />
                     </div>
                   </div>
@@ -150,7 +156,7 @@ export default function SettingsPage() {
                   <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Short Bio / Status</Label>
                   <Input 
                     placeholder="e.g. Lead Producer at Marzelz Lifestyle"
-                    className="rounded-[5px] border-slate-200 h-11 font-bold bg-slate-50/50 text-sm"
+                    className="rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-50/50 dark:bg-slate-800/50 text-sm"
                   />
                 </div>
               </CardContent>
@@ -185,13 +191,40 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="appearance" className="animate-in fade-in slide-in-from-top-1 duration-500">
-          <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl">
+          <Card className="border-none shadow-sm rounded-[5px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
             <CardHeader className="pt-6 px-6 pb-4">
               <CardTitle className="text-lg font-black">UI Optimization</CardTitle>
               <CardDescription className="text-xs font-medium">Fine-tune the visual experience of your production OS.</CardDescription>
             </CardHeader>
-            <CardContent className="p-6 space-y-8">
+            <CardContent className="p-6 space-y-10">
               <div className="space-y-4">
+                <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Interface Theme</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { id: 'light', name: 'Studio Light', icon: Sun },
+                    { id: 'dark', name: 'Production Dark', icon: Moon },
+                    { id: 'system', name: 'System Sync', icon: Laptop },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTheme(t.id)}
+                      className={cn(
+                        "flex flex-col items-center gap-3 p-6 rounded-[5px] border transition-all",
+                        theme === t.id 
+                          ? "border-primary bg-primary/5 ring-1 ring-primary" 
+                          : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-200 dark:hover:border-slate-700"
+                      )}
+                    >
+                      <t.icon size={24} className={theme === t.id ? "text-primary" : "text-slate-400"} />
+                      <span className={cn("text-[10px] font-black uppercase tracking-widest", theme === t.id ? "text-primary" : "text-slate-500")}>
+                        {t.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
                 <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Highlight Spectrum</Label>
                 <div className="flex flex-wrap gap-3">
                   {[
@@ -201,39 +234,21 @@ export default function SettingsPage() {
                     { name: 'Amber Pitch', hex: '#f59e0b' },
                     { name: 'Deep Slate', hex: '#1e293b' },
                   ].map((color) => (
-                    <button
+                    <div
                       key={color.hex}
-                      onClick={() => handleColorChange(color.hex)}
                       className={cn(
-                        "group relative flex items-center gap-2.5 p-2 pr-4 rounded-[5px] border transition-all hover:scale-105",
-                        color.hex === '#f43f4a' ? "border-primary bg-primary/5" : "border-slate-100 bg-white"
+                        "group relative flex items-center gap-2.5 p-2 pr-4 rounded-[5px] border transition-all",
+                        color.hex === '#f43f4a' ? "border-primary bg-primary/5" : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900"
                       )}
                     >
                       <div className="w-7 h-7 rounded-[3px] shadow-inner" style={{ backgroundColor: color.hex }} />
                       <div className="text-left">
-                        <p className="text-[10px] font-black text-slate-900">{color.name}</p>
+                        <p className="text-[10px] font-black text-slate-900 dark:text-slate-100">{color.name}</p>
                         <p className="text-[8px] font-bold text-slate-400">{color.hex}</p>
                       </div>
-                      {color.hex === '#f43f4a' && <CheckCircle2 size={14} className="text-primary absolute -top-1.5 -right-1.5 bg-white rounded-full shadow-sm" />}
-                    </button>
+                      {color.hex === '#f43f4a' && <CheckCircle2 size={14} className="text-primary absolute -top-1.5 -right-1.5 bg-white dark:bg-slate-900 rounded-full shadow-sm" />}
+                    </div>
                   ))}
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-center justify-between p-4 rounded-[5px] bg-slate-50 border border-slate-100">
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-black">Compact Mode</p>
-                    <p className="text-[10px] font-medium text-slate-500">Tighter layout for data density.</p>
-                  </div>
-                  <Switch checked />
-                </div>
-                <div className="flex items-center justify-between p-4 rounded-[5px] bg-slate-50 border border-slate-100">
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-black">Glassmorphism</p>
-                    <p className="text-[10px] font-medium text-slate-500">Backdrop blur effects enabled.</p>
-                  </div>
-                  <Switch checked />
                 </div>
               </div>
             </CardContent>
@@ -241,7 +256,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="notifications" className="animate-in fade-in slide-in-from-top-1 duration-500">
-          <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl">
+          <Card className="border-none shadow-sm rounded-[5px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
             <CardHeader className="pt-6 px-6 pb-4">
               <CardTitle className="text-lg font-black">Communication Center</CardTitle>
               <CardDescription className="text-xs font-medium">Configure real-time production alerts.</CardDescription>
@@ -253,13 +268,13 @@ export default function SettingsPage() {
                 { id: 'team', title: 'Collaborative Activity', desc: 'Alerts for personnel assignment.', icon: User },
                 { id: 'security', title: 'Security Intelligence', desc: 'Critical alerts for access health.', icon: ShieldCheck },
               ].map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3.5 rounded-[5px] hover:bg-slate-50 transition-all group">
+                <div key={item.id} className="flex items-center justify-between p-3.5 rounded-[5px] hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-[5px] bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-primary transition-all">
+                    <div className="w-10 h-10 rounded-[5px] bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center text-slate-400 group-hover:text-primary transition-all">
                       <item.icon size={18} />
                     </div>
                     <div>
-                      <p className="text-xs font-black text-slate-900">{item.title}</p>
+                      <p className="text-xs font-black text-slate-900 dark:text-slate-100">{item.title}</p>
                       <p className="text-[10px] font-medium text-slate-500">{item.desc}</p>
                     </div>
                   </div>
@@ -274,7 +289,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="workspace" className="animate-in fade-in slide-in-from-top-1 duration-500">
-          <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl">
+          <Card className="border-none shadow-sm rounded-[5px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
             <CardHeader className="pt-6 px-6 pb-4">
               <CardTitle className="text-lg font-black">Workspace Parameters</CardTitle>
               <CardDescription className="text-xs font-medium">Strategic configuration for Marzelz Lifestyle assets.</CardDescription>
@@ -286,7 +301,7 @@ export default function SettingsPage() {
                   <Input 
                     value={profileData.studioName}
                     onChange={(e) => setProfileData({...profileData, studioName: e.target.value})}
-                    className="rounded-[5px] border-slate-200 h-11 font-bold bg-slate-50/50 text-sm"
+                    className="rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-50/50 dark:bg-slate-800/50 text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -294,17 +309,17 @@ export default function SettingsPage() {
                   <Input 
                     value="INR (₹)"
                     disabled
-                    className="rounded-[5px] border-slate-200 h-11 font-bold bg-slate-100/50 text-slate-400 text-sm"
+                    className="rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-100/50 dark:bg-slate-900/50 text-slate-400 text-sm"
                   />
                 </div>
               </div>
-              <div className="p-4 rounded-[5px] bg-amber-50 border border-amber-100 flex items-start gap-3.5">
-                 <div className="w-9 h-9 rounded-[5px] bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+              <div className="p-4 rounded-[5px] bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 flex items-start gap-3.5">
+                 <div className="w-9 h-9 rounded-[5px] bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
                     <Sparkles size={16} />
                  </div>
                  <div>
-                    <p className="text-xs font-black text-amber-900">Strategic Tip</p>
-                    <p className="text-[10px] font-medium text-amber-700 leading-relaxed">
+                    <p className="text-xs font-black text-amber-900 dark:text-amber-100">Strategic Tip</p>
+                    <p className="text-[10px] font-medium text-amber-700 dark:text-amber-400 leading-relaxed">
                       Your Studio Identifier is used to generate official project codes and billing documents. Changes to this name will synchronize across all future assets.
                     </p>
                  </div>

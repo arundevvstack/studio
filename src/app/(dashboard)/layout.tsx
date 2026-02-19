@@ -25,14 +25,14 @@ export default function DashboardLayout({
 
   if (loading || !user || !isAuthorized) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#F5F5F7]">
+      <div className="h-screen w-screen flex items-center justify-center bg-background">
         <div className="w-10 h-10 rounded-lg border-4 border-primary/20 border-t-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-[#F5F5F7] overflow-hidden selection:bg-primary/20">
+    <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20 transition-colors duration-500">
       <div className="ambient-blob blob-primary"></div>
       <div className="ambient-blob blob-indigo"></div>
       
