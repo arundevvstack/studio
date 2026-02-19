@@ -33,7 +33,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#F5F5F7] text-foreground antialiased selection:bg-primary/30;
+    @apply bg-[#F5F5F7] text-foreground antialiased selection:bg-primary/30 text-sm;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
@@ -83,7 +83,7 @@
 .blob-indigo { background: #5E5CE6; bottom: -10%; left: -10%; }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 ::-webkit-scrollbar-track {
