@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from 'next/link';
@@ -13,7 +12,6 @@ import {
   Plus,
   LogOut,
   ChevronRight,
-  Zap,
   Workflow,
   ReceiptRussianRuble
 } from 'lucide-react';
@@ -39,10 +37,13 @@ export function Sidebar() {
     <aside className="fixed left-6 top-6 bottom-6 w-72 glass-card z-50 flex flex-col p-6 overflow-hidden">
       <div className="px-2 mb-10">
         <Link href="/dashboard" className="flex items-center gap-3 group ios-clickable">
-          <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/25">
-            <Zap size={22} fill="currentColor" />
+          <svg viewBox="0 0 100 100" className="w-10 h-10 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 85 V35 C15 15 50 15 50 45 C50 15 85 15 85 35 V85" />
+          </svg>
+          <div className="flex flex-col -space-y-1">
+            <span className="text-xl font-light tracking-[0.2em] text-slate-700 leading-none">MARZELZ</span>
+            <span className="text-[10px] font-bold tracking-[0.3em] text-slate-400">LIFESTYLE</span>
           </div>
-          <span className="font-black text-2xl tracking-tighter text-slate-900">MediaFlow</span>
         </Link>
       </div>
 

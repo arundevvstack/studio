@@ -49,11 +49,14 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-[#F8FAFC] selection:bg-primary/20 hero-gradient">
       <header className="fixed top-0 w-full z-50 bg-white/60 backdrop-blur-2xl border-b border-slate-200/50">
         <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 font-black text-2xl tracking-tighter text-slate-900">
-            <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
-              <Zap size={22} fill="currentColor" />
+          <div className="flex items-center gap-3 group">
+            <svg viewBox="0 0 100 100" className="w-10 h-10 text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 85 V35 C15 15 50 15 50 45 C50 15 85 15 85 35 V85" />
+            </svg>
+            <div className="flex flex-col -space-y-1">
+              <span className="text-xl font-light tracking-[0.2em] text-slate-700">MARZELZ</span>
+              <span className="text-[10px] font-bold tracking-[0.4em] text-slate-400">LIFESTYLE</span>
             </div>
-            <span>MediaFlow</span>
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" className="rounded-2xl font-bold px-6 h-11" onClick={() => setIsLogin(!isLogin)}>
@@ -77,17 +80,17 @@ export default function Home() {
             <div className="space-y-8">
               <h1 className="text-6xl md:text-7xl font-black tracking-tight text-slate-900 leading-[1.05]">
                 Production OS for <br />
-                the <span className="bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">Creative Elite.</span>
+                the <span className="bg-gradient-to-r from-[#EF4444] to-primary bg-clip-text text-transparent">Creative Elite.</span>
               </h1>
               <p className="text-xl text-slate-500 max-w-xl font-medium leading-relaxed">
-                The world's first intelligent workflow automation engine designed specifically for high-growth media studios.
+                The world's first intelligent workflow automation engine designed specifically for Marzelz Lifestyle and high-growth media studios.
               </p>
             </div>
           </div>
 
           <div className="relative animate-in fade-in slide-in-from-right-4 duration-1000 delay-200">
             <Card className="border-none shadow-2xl premium-shadow rounded-[2.5rem] bg-white/80 backdrop-blur-xl p-4 relative z-10 overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-indigo-600"></div>
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#EF4444] to-primary"></div>
               <CardHeader className="pt-10 pb-6 text-center">
                 <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">
                   {isLogin ? 'Welcome Back' : 'Get Started'}

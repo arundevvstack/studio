@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -108,11 +107,10 @@ export default function InvoiceDetailPage() {
           <div className="flex flex-col md:flex-row justify-between items-start gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                 <div className="w-16 h-16 relative">
-                    {/* Placeholder for Marzelz Lifestyle Logo */}
-                    <div className="w-full h-full bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center">
-                       <Building2 className="text-slate-300" size={32} />
-                    </div>
+                 <div className="w-16 h-16 relative flex items-center justify-center">
+                    <svg viewBox="0 0 100 100" className="w-full h-full text-[#EF4444]" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M15 85 V35 C15 15 50 15 50 45 C50 15 85 15 85 35 V85" />
+                    </svg>
                  </div>
                  <div>
                     <h2 className="text-3xl font-light text-slate-400 tracking-tight leading-none">MARZELZ</h2>
