@@ -36,6 +36,14 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -54,7 +62,8 @@ import {
   Trash2,
   Layers,
   Settings2,
-  User as UserIcon
+  User as UserIcon,
+  UserPlus
 } from 'lucide-react';
 import { summarizeProjectStatus } from '@/ai/flows/summarize-project-status';
 import Link from 'next/link';
@@ -237,6 +246,26 @@ export default function ProjectDetailPage() {
     updateDoc(phaseRef, { completed: !phase.completed, updatedAt: serverTimestamp() });
   };
 
+  const handleToggleTaskAssignee = (phaseId: string, memberId: string, currentAssignees: string[]) => {
+    if (!db) return;
+    const phaseRef = doc(db, 'projects', id, 'tasks', phaseId);
+    const newAssignees = currentAssignees.includes(memberId)
+      ? currentAssignees.filter(uid => uid !== memberId)
+      : [...currentAssignees, memberId];
+    
+    updateDoc(phaseRef, { 
+      assignedTeamMemberIds: newAssignees, 
+      updatedAt: serverTimestamp() 
+    }).catch(err => {
+      const permissionError = new FirestorePermissionError({
+        path: phaseRef.path,
+        operation: 'update',
+        requestResourceData: { assignedTeamMemberIds: newAssignees }
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
+  };
+
   const deletePhase = (phaseId: string) => {
     if (!db) return;
     const phaseRef = doc(db, 'projects', id, 'tasks', phaseId);
@@ -267,7 +296,7 @@ export default function ProjectDetailPage() {
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
-  const handleToggleMember = (uid: string) => {
+  const handleToggleMemberSelection = (uid: string) => {
     setSelectedPhaseTeamMembers(prev => 
       prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]
     );
@@ -431,11 +460,14 @@ export default function ProjectDetailPage() {
                       ) : (
                         phases.map((phase) => (
                           <div key={phase.id} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition-all group">
-                             <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => togglePhaseStatus(phase)}>
-                                <div className={cn(
-                                  "w-5 h-5 rounded-[3px] border-2 flex items-center justify-center transition-all",
-                                  phase.completed ? "bg-primary border-primary text-white" : "border-slate-200 group-hover:border-primary/50"
-                                )}>
+                             <div className="flex items-center gap-4 flex-1">
+                                <div 
+                                  className={cn(
+                                    "w-5 h-5 rounded-[3px] border-2 flex items-center justify-center transition-all cursor-pointer",
+                                    phase.completed ? "bg-primary border-primary text-white" : "border-slate-200 group-hover:border-primary/50"
+                                  )}
+                                  onClick={() => togglePhaseStatus(phase)}
+                                >
                                   {phase.completed && <CheckSquare size={12} strokeWidth={3} />}
                                 </div>
                                 <div className="space-y-0.5">
@@ -444,25 +476,50 @@ export default function ProjectDetailPage() {
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
                                       <Clock size={10} /> Target: {phase.dueDate ? formatDeadline(phase.dueDate) : 'No Deadline'}
                                     </p>
-                                    <div className="flex items-center -space-x-1.5">
-                                      {phase.assignedTeamMemberIds?.map(uid => {
-                                        const member = allTeamMembers?.find(m => m.id === uid);
-                                        return (
-                                          <div key={uid} className="w-5 h-5 rounded-full border border-white bg-slate-100 overflow-hidden" title={member?.name}>
-                                            <img src={member?.photoURL || `https://picsum.photos/seed/${uid}/50/50`} className="w-full h-full object-cover" />
-                                          </div>
-                                        );
-                                      })}
-                                      {(!phase.assignedTeamMemberIds || phase.assignedTeamMemberIds.length === 0) && (
-                                        <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest ml-1">Unassigned</span>
-                                      )}
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex items-center -space-x-1.5">
+                                        {phase.assignedTeamMemberIds?.map(uid => {
+                                          const member = allTeamMembers?.find(m => m.id === uid);
+                                          return (
+                                            <div key={uid} className="w-5 h-5 rounded-full border border-white bg-slate-100 overflow-hidden" title={member?.name}>
+                                              <img src={member?.photoURL || `https://picsum.photos/seed/${uid}/50/50`} className="w-full h-full object-cover" />
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button variant="ghost" size="icon" className="h-5 w-5 rounded-full bg-slate-50 hover:bg-primary/10 text-slate-400 hover:text-primary transition-all">
+                                            <UserPlus size={10} />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-56 rounded-[5px] border-none shadow-2xl" align="start">
+                                          <DropdownMenuLabel className="text-[9px] font-black uppercase tracking-widest text-slate-400">Manage Assignees</DropdownMenuLabel>
+                                          <DropdownMenuSeparator />
+                                          {allTeamMembers?.map(member => (
+                                            <DropdownMenuCheckboxItem
+                                              key={member.id}
+                                              checked={phase.assignedTeamMemberIds?.includes(member.id)}
+                                              onCheckedChange={() => handleToggleTaskAssignee(phase.id, member.id, phase.assignedTeamMemberIds || [])}
+                                              className="font-bold text-xs py-2"
+                                            >
+                                              <div className="flex items-center gap-2">
+                                                <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-100">
+                                                  <img src={member.photoURL || `https://picsum.photos/seed/${member.id}/50/50`} className="w-full h-full object-cover" />
+                                                </div>
+                                                {member.name}
+                                              </div>
+                                            </DropdownMenuCheckboxItem>
+                                          ))}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
                                     </div>
                                   </div>
                                 </div>
                              </div>
                              <div className="flex items-center gap-2">
                                <Badge className={cn(
-                                 "rounded-[3px] text-[8px] font-black uppercase tracking-widest px-2 h-5 border-none",
+                                 "rounded-[3px] text-[8px] font-black uppercase tracking-widest border-none px-1.5 h-4",
                                  phase.completed ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"
                                )}>{phase.completed ? 'Success' : 'Active'}</Badge>
                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-rose-500" onClick={() => deletePhase(phase.id)}>
@@ -528,7 +585,7 @@ export default function ProjectDetailPage() {
                                    <div key={member.id} className="flex items-center gap-3 p-2 hover:bg-white rounded-[3px] transition-colors">
                                       <Checkbox 
                                         checked={selectedPhaseTeamMembers.includes(member.id)}
-                                        onCheckedChange={() => handleToggleMember(member.id)}
+                                        onCheckedChange={() => handleToggleMemberSelection(member.id)}
                                         className="rounded-[3px] border-slate-300"
                                       />
                                       <div className="flex items-center gap-2">
