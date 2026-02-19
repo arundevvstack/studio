@@ -11,19 +11,19 @@
     --card-foreground: 240 10% 12%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 12%;
-    --primary: 211 100% 52%; /* iOS System Blue #0A84FF */
+    --primary: 356 89% 60%; /* Updated to #f43f4a */
     --primary-foreground: 0 0% 100%;
     --secondary: 240 10% 96%;
     --secondary-foreground: 240 10% 12%;
     --muted: 240 10% 96%;
     --muted-foreground: 240 5% 45%;
-    --accent: 211 100% 52%;
+    --accent: 356 89% 60%; /* Updated to match primary */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 5% 90%;
     --input: 240 5% 90%;
-    --ring: 211 100% 52%;
+    --ring: 356 89% 60%;
     --radius: 1.5rem;
   }
 }
@@ -76,7 +76,7 @@
   pointer-events: none;
 }
 
-.blob-blue { background: #0A84FF; top: -10%; right: -10%; }
+.blob-primary { background: #f43f4a; top: -10%; right: -10%; }
 .blob-indigo { background: #5E5CE6; bottom: -10%; left: -10%; }
 
 ::-webkit-scrollbar {

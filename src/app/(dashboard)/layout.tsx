@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -30,7 +31,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-[#F5F5F7] overflow-hidden selection:bg-primary/20">
-      <div className="ambient-blob blob-blue"></div>
+      <div className="ambient-blob blob-primary"></div>
       <div className="ambient-blob blob-indigo"></div>
       
       <Sidebar />
