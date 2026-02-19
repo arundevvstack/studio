@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -113,8 +114,8 @@ export default function InvoiceDetailPage() {
                     </svg>
                  </div>
                  <div>
-                    <h2 className="text-3xl font-light text-slate-400 tracking-tight leading-none text-red-500">MARZELZ</h2>
-                    <p className="text-xs font-bold text-slate-400 tracking-[0.3em] uppercase mt-1">LIFESTYLE</p>
+                    <h2 className="text-3xl font-light text-[#EF4444] tracking-tight leading-none">MARZELZ</h2>
+                    <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase mt-1">LIFESTYLE</p>
                  </div>
               </div>
             </div>
@@ -234,8 +235,8 @@ export default function InvoiceDetailPage() {
                    </div>
                 </div>
 
-                {/* Branded Official Stamp */}
-                <div className="absolute -left-12 -bottom-16 w-48 h-48 opacity-80 pointer-events-none select-none print:opacity-100">
+                {/* Branded Official Stamp - Positioned exactly near the total area */}
+                <div className="absolute -left-12 bottom-0 w-48 h-48 opacity-80 pointer-events-none select-none print:opacity-100">
                   <div className="relative w-full h-full flex items-center justify-center">
                     {/* The Circular Stamp SVG */}
                     <svg viewBox="0 0 200 200" className="w-full h-full text-[#1A365D] -rotate-12">
