@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -20,7 +21,8 @@ import {
   Calendar as CalendarIcon, 
   ShieldCheck,
   Users,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,10 +33,12 @@ import { useAuth } from '@/lib/firebase/auth-context';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { Project } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const db = useFirestore();
+  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
 
@@ -74,6 +78,53 @@ export default function DashboardPage() {
     return { total, active, atRisk, delivered, avgProgress };
   }, [projects]);
 
+  const handleExport = () => {
+    if (!projects || projects.length === 0) {
+      toast({
+        title: "Export Failed",
+        description: "No production data available for export.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const headers = ['Project Name', 'Client', 'Stage', 'Progress', 'Budget', 'Priority', 'Deadline'];
+      const csvContent = [
+        headers.join(','),
+        ...projects.map(p => [
+          `"${p.projectName || 'Untitled'}"`,
+          `"${p.client || 'N/A'}"`,
+          `"${p.stage}"`,
+          `${p.progress}%`,
+          `${p.budget}`,
+          `"${p.priority}"`,
+          `"${p.deadline?.seconds ? new Date(p.deadline.seconds * 1000).toLocaleDateString() : 'N/A'}"`
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `mediaflow_report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export Success",
+        description: "Portfolio data has been synthesized into a CSV report.",
+      });
+    } catch (e) {
+      toast({
+        title: "Export Error",
+        description: "Failed to generate report document.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const kpis = [
     { title: 'Portfolio', value: stats.total.toString(), icon: Layers, trend: 'Total Volume', trendType: 'up', color: 'text-blue-500', bg: 'bg-blue-50' },
     { title: 'Active', value: stats.active.toString(), icon: TrendingUp, trend: 'Production', trendType: 'up', color: 'text-indigo-500', bg: 'bg-indigo-50' },
@@ -110,7 +161,11 @@ export default function DashboardPage() {
             <CalendarIcon size={18} />
             {currentTime}
           </Button>
-          <Button className="rounded-2xl h-12 px-8 shadow-xl shadow-primary/25 font-black bg-primary hover:scale-[1.02] transition-all">
+          <Button 
+            onClick={handleExport}
+            className="rounded-2xl h-12 px-8 shadow-xl shadow-primary/25 font-black bg-primary hover:scale-[1.02] transition-all"
+          >
+            <Download size={18} className="mr-2" />
             Export Report
           </Button>
         </div>
@@ -224,3 +279,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+    

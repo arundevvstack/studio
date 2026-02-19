@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -43,6 +44,7 @@ import {
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, where } from 'firebase/firestore';
 import { Project } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 const COLORS = ['#A0D2EB', '#6366f1', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -50,6 +52,7 @@ export default function ReportsPage() {
   const [isMounted, setIsMounted] = useState(false);
   const { user, isAdmin, isUserLoading } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsMounted(true);
@@ -59,7 +62,6 @@ export default function ReportsPage() {
     if (!db || !user || isUserLoading) return null;
     
     const projectsRef = collection(db, 'projects');
-    // Admins can see the whole studio, members only see their assigned ones.
     if (!isAdmin) {
       return query(
         projectsRef,
@@ -72,6 +74,47 @@ export default function ReportsPage() {
   }, [db, user?.uid, isAdmin, isUserLoading]);
 
   const { data: projects, isLoading } = useCollection<Project>(projectsQuery);
+
+  const handleExportData = () => {
+    if (!projects || projects.length === 0) {
+      toast({
+        title: "No Data",
+        description: "There are no production records to export.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const headers = ['ID', 'Project Name', 'Client', 'Stage', 'Status', 'Priority', 'Budget', 'Progress', 'Created At'];
+    const csvRows = [
+      headers.join(','),
+      ...projects.map(p => [
+        `"${p.id}"`,
+        `"${p.projectName || 'Untitled'}"`,
+        `"${p.client || 'N/A'}"`,
+        `"${p.stage}"`,
+        `"${p.status}"`,
+        `"${p.priority}"`,
+        `${p.budget}`,
+        `${p.progress}%`,
+        `"${p.createdAt?.seconds ? new Date(p.createdAt.seconds * 1000).toISOString() : 'N/A'}"`
+      ].join(','))
+    ];
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `mediaflow_data_export_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export Success",
+      description: "Production database has been exported successfully.",
+    });
+  };
 
   // Aggregate data for charts
   const stageData = projects ? Object.entries(
@@ -102,7 +145,11 @@ export default function ReportsPage() {
           <p className="text-muted-foreground text-lg">Visualizing studio performance and financial throughput.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-2xl h-12 px-6 border-slate-200 font-bold gap-2">
+          <Button 
+            variant="outline" 
+            className="rounded-2xl h-12 px-6 border-slate-200 font-bold gap-2"
+            onClick={handleExportData}
+          >
             <Download size={18} /> Export Data
           </Button>
           <Button className="rounded-2xl h-12 px-8 shadow-xl shadow-primary/20 font-black bg-primary">
@@ -272,3 +319,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+    
