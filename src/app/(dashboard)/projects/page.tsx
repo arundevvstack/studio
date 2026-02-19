@@ -12,7 +12,8 @@ import {
   ShieldAlert,
   RotateCcw,
   RefreshCcw,
-  User as UserIcon
+  User as UserIcon,
+  ArrowUpDown
 } from 'lucide-react';
 import { 
   Table, 
@@ -36,6 +37,7 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 export default function ProjectsPage() {
   const [view, setView] = useState<'grid' | 'table'>('table');
   const [search, setSearch] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [isMounted, setIsMounted] = useState(false);
   
   const { user, isAdmin, isUserLoading } = useUser();
@@ -59,15 +61,19 @@ export default function ProjectsPage() {
     p.client?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const groupedByClient = useMemo(() => {
+  const sortedAndGroupedByClient = useMemo(() => {
     const groups: Record<string, Project[]> = {};
     filteredProjects.forEach(p => {
       const client = p.client || 'General';
       if (!groups[client]) groups[client] = [];
       groups[client].push(p);
     });
-    return groups;
-  }, [filteredProjects]);
+
+    return Object.entries(groups).sort((a, b) => {
+      if (sortOrder === 'asc') return a[0].localeCompare(b[0]);
+      return b[0].localeCompare(a[0]);
+    });
+  }, [filteredProjects, sortOrder]);
 
   const getStageColor = (stage: string) => {
     switch(stage) {
@@ -151,10 +157,20 @@ export default function ProjectsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button variant="ghost" className="glass-pill h-10 px-6 gap-2 border-slate-200 hover:bg-white font-black text-xs ios-clickable">
-          <Filter size={16} />
-          Refine
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            className="glass-pill h-10 px-4 gap-2 border-slate-200 hover:bg-white font-black text-[10px] uppercase tracking-widest ios-clickable"
+            onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+          >
+            <ArrowUpDown size={14} className="text-primary" />
+            Client {sortOrder === 'asc' ? 'A-Z' : 'Z-A'}
+          </Button>
+          <Button variant="ghost" className="glass-pill h-10 px-6 gap-2 border-slate-200 hover:bg-white font-black text-xs ios-clickable">
+            <Filter size={16} />
+            Refine
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -163,14 +179,14 @@ export default function ProjectsPage() {
             <div key={i} className="h-64 rounded-[5px] animate-pulse bg-white/50 border-none shadow-sm" />
           ))}
         </div>
-      ) : Object.keys(groupedByClient).length === 0 ? (
+      ) : sortedAndGroupedByClient.length === 0 ? (
         <div className="h-48 flex flex-col items-center justify-center text-slate-400 bg-white/40 rounded-[5px] border border-dashed">
            <p className="text-sm font-medium italic">No projects found.</p>
            <Button variant="link" className="mt-1 font-bold text-xs" asChild><Link href="/projects/new">Create your first production</Link></Button>
         </div>
       ) : (
         <div className="space-y-8">
-          {Object.entries(groupedByClient).map(([client, clientProjects]) => (
+          {sortedAndGroupedByClient.map(([client, clientProjects]) => (
             <div key={client} className="space-y-3">
               <div className="flex items-center gap-2 px-2">
                 <div className="w-7 h-7 rounded-[3px] bg-white shadow-sm flex items-center justify-center text-primary">
