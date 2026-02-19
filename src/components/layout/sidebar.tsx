@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -13,7 +14,8 @@ import {
   LogOut,
   ChevronRight,
   Zap,
-  Workflow
+  Workflow,
+  ReceiptRussianRuble
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,6 +27,7 @@ const navItems = [
   { name: 'Projects', href: '/projects', icon: FolderKanban },
   { name: 'Board', href: '/kanban', icon: Trello },
   { name: 'Schedule', href: '/calendar', icon: Calendar },
+  { name: 'Billing', href: '/invoices', icon: ReceiptRussianRuble },
   { name: 'Intelligence', href: '/reports', icon: BarChart3 },
 ];
 

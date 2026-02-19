@@ -1,3 +1,4 @@
+
 import { 
   collection, 
   setDoc, 
@@ -12,17 +13,13 @@ import {
   Firestore,
   where
 } from 'firebase/firestore';
-import { Project } from '../types';
+import { Project, Invoice } from '../types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 const PROJECTS_COLLECTION = 'projects';
+const INVOICES_COLLECTION = 'invoices';
 
-/**
- * Initiates the creation of a new project.
- * Uses a non-blocking pattern where the write is initiated and errors are handled asynchronously.
- * @returns the ID of the new project document.
- */
 export const createProject = (db: Firestore, userId: string, data: Partial<Project>) => {
   const newProjectRef = doc(collection(db, PROJECTS_COLLECTION));
   const projectData = {
@@ -43,7 +40,6 @@ export const createProject = (db: Firestore, userId: string, data: Partial<Proje
     recurringDay: data.recurringDay || null,
   };
 
-  // Initiate write operation without awaiting
   setDoc(newProjectRef, projectData)
     .catch((error) => {
       const permissionError = new FirestorePermissionError({
@@ -57,10 +53,6 @@ export const createProject = (db: Firestore, userId: string, data: Partial<Proje
   return newProjectRef.id;
 };
 
-/**
- * Initiates an update to an existing project.
- * Uses a non-blocking pattern.
- */
 export const updateProject = (db: Firestore, id: string, data: Partial<Project>) => {
   const projectRef = doc(db, PROJECTS_COLLECTION, id);
   const updateData = {
@@ -79,22 +71,38 @@ export const updateProject = (db: Firestore, id: string, data: Partial<Project>)
     });
 };
 
-/**
- * Retrieves a single project document.
- */
-export const getProject = async (db: Firestore, id: string): Promise<Project | null> => {
-  const projectRef = doc(db, PROJECTS_COLLECTION, id);
-  try {
-    const snapshot = await getDoc(projectRef);
-    if (snapshot.exists()) {
-      return { id: snapshot.id, ...snapshot.data() } as Project;
-    }
-  } catch (error) {
-    const permissionError = new FirestorePermissionError({
-      path: projectRef.path,
-      operation: 'get'
+export const createInvoice = (db: Firestore, userId: string, data: Partial<Invoice>) => {
+  const newInvoiceRef = doc(collection(db, INVOICES_COLLECTION));
+  const invoiceData = {
+    ...data,
+    id: newInvoiceRef.id,
+    creatorId: userId,
+    createdAt: serverTimestamp(),
+    status: data.status || 'Draft',
+  };
+
+  setDoc(newInvoiceRef, invoiceData)
+    .catch((error) => {
+      const permissionError = new FirestorePermissionError({
+        path: newInvoiceRef.path,
+        operation: 'create',
+        requestResourceData: invoiceData
+      });
+      errorEmitter.emit('permission-error', permissionError);
     });
-    errorEmitter.emit('permission-error', permissionError);
-  }
-  return null;
+
+  return newInvoiceRef.id;
+};
+
+export const updateInvoice = (db: Firestore, id: string, data: Partial<Invoice>) => {
+  const invoiceRef = doc(db, INVOICES_COLLECTION, id);
+  updateDoc(invoiceRef, data)
+    .catch((error) => {
+      const permissionError = new FirestorePermissionError({
+        path: invoiceRef.path,
+        operation: 'update',
+        requestResourceData: data
+      });
+      errorEmitter.emit('permission-error', permissionError);
+    });
 };

@@ -1,3 +1,4 @@
+
 export type ProjectStage = 'Pitch' | 'Discussion' | 'Pre Production' | 'Production' | 'Post Production' | 'Released';
 export type ProjectPriority = 'Low' | 'Medium' | 'High';
 
@@ -33,11 +34,22 @@ export interface Task {
   updatedAt: any;
 }
 
-export interface ProjectNote {
+export interface InvoiceItem {
+  description: string;
+  amount: number;
+  projectId?: string;
+  isRecurringGroup?: boolean;
+}
+
+export type InvoiceStatus = 'Draft' | 'Sent' | 'Paid' | 'Overdue';
+
+export interface Invoice {
   id: string;
-  projectId: string;
-  content: string;
-  authorId: string;
-  projectAssignedTeamMemberIds: string[]; 
+  clientName: string;
+  status: InvoiceStatus;
+  totalAmount: number;
+  dueDate: any;
+  items: InvoiceItem[];
   createdAt: any;
+  creatorId: string;
 }
