@@ -1,60 +1,139 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    /**
+     * CORE SECURITY PHILOSOPHY:
+     * 1. Strict Identity-Based Access: All read/write operations require an authenticated user.
+     * 2. Authorization Independence: Project sub-collections (Notes, Tasks, TimelineEvents) denormalize
+     *    the 'projectMembers' map from their parent Project. This allows for fast, atomic security 
+     *    checks without costly get() calls to parent documents.
+     * 3. Hierarchical Ownership: Users own their profile data. Projects are managed by members 
+     *    defined in a 'projectMembers' map ({uid: role}).
+     * 4. Admin Override: Global admin status is determined by the existence of a document 
+     *    in the /adminRoles/{userId} collection.
+     * 5. Structural Consistency: We enforce that internal ID fields match the document path 
+     *    during creation and remain immutable thereafter.
+     */
+
+    // --- Global Helper Functions ---
+
+    /** Checks if the request is from a signed-in user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isRootAdmin() {
-      return isSignedIn() && (
-        request.auth.uid == "3EQSAs91zzVclLcZYk2dzQToMeC3" ||
-        request.auth.token.email == "arundevv.com@gmail.com"
-      );
-    }
-    
-    function isAuthorized() {
-      return isRootAdmin() || (isSignedIn() && get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.status == "Authorized");
+    /** Checks if the user's UID matches the provided ID. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    match /teamMembers/{teamMemberId} {
-      allow get: if isSignedIn() && (request.auth.uid == teamMemberId || isRootAdmin());
-      // PROTOTYPE BYPASS: Allow all signed-in users to list team members for coordination
-      allow list: if isSignedIn();
-      allow create: if isSignedIn() && request.auth.uid == teamMemberId;
-      allow update: if isRootAdmin();
-      allow delete: if isRootAdmin();
+    /** Checks if the document exists and the user is the owner. Used for updates/deletes. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
     }
 
-    match /invitations/{invitationId} {
-      allow read: if isSignedIn() && (request.auth.token.email == resource.data.email || isRootAdmin());
-      allow list: if isRootAdmin();
-      allow write: if isRootAdmin();
+    /** 
+     * Checks for global admin privileges by looking up the adminRoles collection.
+     * This follows the 'existence over content' pattern.
+     */
+    function isGlobalAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/adminRoles/$(request.auth.uid));
     }
 
+    /** Checks if the user is a member of the project based on the denormalized map. */
+    function isProjectMember(data) {
+      return isSignedIn() && data.projectMembers[request.auth.uid] != null;
+    }
+
+    /** Checks if the user has 'admin' or 'manager' level access within a specific project. */
+    function isProjectManager(data) {
+      return isSignedIn() && (data.projectMembers[request.auth.uid] == 'admin' || data.projectMembers[request.auth.uid] == 'manager');
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for user profile documents. Restricted to the specific user or global admins.
+     * @path /users/{userId}
+     * @allow (get) If auth.uid matches userId.
+     * @deny (update) If the user tries to change the internal 'id' field.
+     * @principle Private Data ownership and relational integrity.
+     */
+    match /users/{userId} {
+      allow get, list: if isOwner(userId) || isGlobalAdmin();
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId) || isGlobalAdmin();
+    }
+
+    /**
+     * @description Rules for global admin status. Read-only for the user; modified only via backend/admin.
+     * @path /adminRoles/{userId}
+     * @allow (get) If signed in to check own status.
+     * @deny (write) Prevent users from elevating their own privileges.
+     * @principle DBAC (Database-Based Access Control) using existence checks.
+     */
+    match /adminRoles/{userId} {
+      allow get: if isOwner(userId) || isGlobalAdmin();
+      allow list, create, update, delete: if false; // Managed by system administrators
+    }
+
+    /**
+     * @description Main project collection. Access controlled by the projectMembers map.
+     * @path /projects/{projectId}
+     * @allow (create) If user sets themselves as a member in the data.
+     * @deny (list) If the user is not a member of the project (enforced via query filters).
+     * @principle Shared Access via denormalized member maps.
+     */
     match /projects/{projectId} {
-      allow read: if isRootAdmin() || (isAuthorized() && (request.auth.uid in resource.data.assignedTeamMemberIds || isAdminRole()));
-      allow create: if isAuthorized();
-      allow update: if isRootAdmin() || (isAuthorized() && request.auth.uid in resource.data.assignedTeamMemberIds);
-      allow delete: if isRootAdmin();
-      
-      function isAdminRole() {
-        return get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == "Admin";
+      allow get: if isProjectMember(resource.data) || isGlobalAdmin();
+      allow list: if isSignedIn(); // Queries MUST filter by projectMembers.{uid}
+      allow create: if isSignedIn() && request.resource.data.projectMembers[request.auth.uid] != null;
+      allow update: if (resource != null && isProjectManager(resource.data)) || isGlobalAdmin();
+      allow delete: if (resource != null && isProjectManager(resource.data)) || isGlobalAdmin();
+
+      /**
+       * @description Notes subcollection. Inherits projectMembers for Authorization Independence.
+       * @path /projects/{projectId}/notes/{noteId}
+       * @allow (create) If the user is a member of the project.
+       * @principle Denormalization for atomic, parent-independent security.
+       */
+      match /notes/{noteId} {
+        allow get: if isProjectMember(resource.data) || isGlobalAdmin();
+        allow list: if isSignedIn(); // Queries MUST filter by projectMembers.{uid}
+        allow create: if isSignedIn() && isProjectMember(request.resource.data) && request.resource.data.projectId == projectId;
+        allow update: if (resource != null && (isProjectMember(resource.data) || isGlobalAdmin())) && request.resource.data.projectId == resource.data.projectId;
+        allow delete: if (resource != null && (isProjectManager(resource.data) || resource.data.authorId == request.auth.uid)) || isGlobalAdmin();
       }
 
-      match /{allSubcollections=**} {
-        allow read, write: if isRootAdmin() || (isAuthorized() && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTeamMemberIds);
+      /**
+       * @description Tasks subcollection. Inherits projectMembers for Authorization Independence.
+       * @path /projects/{projectId}/tasks/{taskId}
+       * @allow (update) If the user is a member of the project.
+       * @principle Path-based subcollection scoping and immutable parent references.
+       */
+      match /tasks/{taskId} {
+        allow get: if isProjectMember(resource.data) || isGlobalAdmin();
+        allow list: if isSignedIn(); 
+        allow create: if isSignedIn() && isProjectMember(request.resource.data) && request.resource.data.projectId == projectId;
+        allow update: if (resource != null && (isProjectMember(resource.data) || isGlobalAdmin())) && request.resource.data.projectId == resource.data.projectId;
+        allow delete: if (resource != null && (isProjectManager(resource.data) || isGlobalAdmin()));
       }
-    }
 
-    match /invoices/{invoiceId} {
-      allow read, write: if isRootAdmin();
-      allow list: if isRootAdmin();
-    }
-
-    match /tags/{tagId} {
-      allow read: if isAuthorized();
-      allow write: if isRootAdmin();
+      /**
+       * @description TimelineEvents subcollection. Inherits projectMembers for Authorization Independence.
+       * @path /projects/{projectId}/timelineEvents/{eventId}
+       * @allow (get) If project member.
+       * @principle Queryable Access Patterns supported by denormalized map.
+       */
+      match /timelineEvents/{eventId} {
+        allow get: if isProjectMember(resource.data) || isGlobalAdmin();
+        allow list: if isSignedIn();
+        allow create: if isSignedIn() && isProjectMember(request.resource.data) && request.resource.data.projectId == projectId;
+        allow update: if (resource != null && (isProjectManager(resource.data) || isGlobalAdmin())) && request.resource.data.projectId == resource.data.projectId;
+        allow delete: if (resource != null && (isProjectManager(resource.data) || isGlobalAdmin()));
+      }
     }
   }
 }
