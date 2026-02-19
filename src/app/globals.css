@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 224 71% 4%;
+    --background: 240 10% 97%; /* #F5F5F7 */
+    --foreground: 240 10% 12%; /* #1D1D1F */
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 240 10% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 212 100% 50%; /* iOS System Blue #007AFF */
+    --popover-foreground: 240 10% 12%;
+    --primary: 211 100% 52%; /* iOS System Blue #0A84FF */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 20% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 20% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 212 100% 50%;
-    --radius: 2rem;
+    --secondary: 240 10% 96%;
+    --secondary-foreground: 240 10% 12%;
+    --muted: 240 10% 96%;
+    --muted-foreground: 240 5% 45%;
+    --accent: 211 100% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5% 90%;
+    --input: 240 5% 90%;
+    --ring: 211 100% 52%;
+    --radius: 1.5rem;
   }
 }
 
@@ -32,30 +32,79 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#F2F2F7] text-foreground antialiased selection:bg-primary/30;
+    @apply bg-[#F5F5F7] text-foreground antialiased selection:bg-primary/30;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-.premium-shadow {
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 0 0 1px 0 rgba(0, 0, 0, 0.1);
+/* Apple iOS 26.3 Glassmorphism */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
 }
 
-.ios-blur {
-  @apply bg-white/70 backdrop-blur-3xl border border-white/40;
+.glass-pill {
+  @apply glass-panel rounded-full;
 }
 
-.ios-card {
-  @apply rounded-[2.5rem] premium-shadow ios-blur overflow-hidden;
+.glass-card {
+  @apply glass-panel rounded-[2rem];
 }
 
-.hero-gradient {
-  background: radial-gradient(circle at 0% 0%, hsla(var(--primary), 0.08), transparent 40%),
-              radial-gradient(circle at 100% 100%, hsla(var(--primary), 0.05), transparent 40%);
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Tactile Micro-interactions */
+.ios-clickable {
+  @apply transition-all duration-300 ease-in-out cursor-pointer active:scale-95 hover:brightness-105;
+}
+
+.ios-card-hover {
+  @apply transition-all duration-300 ease-in-out hover:scale-[1.02] hover:shadow-2xl hover:shadow-black/5;
+}
+
+/* Typography Hierarchy */
+.text-ios-heading {
+  @apply font-black tracking-tight text-slate-900 leading-[1.1];
+}
+
+.text-ios-body {
+  @apply font-medium text-slate-500 leading-relaxed;
+}
+
+/* Ambient Lighting */
+.ambient-blob {
+  position: fixed;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  z-index: -1;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.blob-blue { background: #0A84FF; top: -10%; right: -10%; }
+.blob-indigo { background: #5E5CE6; bottom: -10%; left: -10%; }
+
+/* Scroll-based Blur Intensity */
+.scroll-header {
+  @apply sticky top-0 z-50 transition-all duration-500;
+}
+
+.scroll-header[data-scrolled="true"] {
+  @apply glass-panel border-b shadow-sm;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -63,15 +112,6 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300/50 rounded-full hover:bg-slate-400/50 transition-colors;
-}
-
-/* iOS-style tactile interactions */
-.ios-interactive {
-  @apply transition-all duration-200 cursor-pointer active:scale-95 active:opacity-80;
-}
-
-/* Ensure links are always above background blurs */
-a {
-  @apply relative z-10;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
 }

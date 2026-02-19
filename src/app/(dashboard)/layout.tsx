@@ -22,18 +22,22 @@ export default function DashboardLayout({
 
   if (loading || !user) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#F2F2F7]">
-        <div className="w-12 h-12 rounded-2xl border-4 border-primary/20 border-t-primary animate-spin" />
+      <div className="h-screen w-screen flex items-center justify-center bg-[#F5F5F7]">
+        <div className="w-10 h-10 rounded-2xl border-4 border-primary/20 border-t-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
+    <div className="flex h-screen bg-[#F5F5F7] overflow-hidden selection:bg-primary/20">
+      <div className="ambient-blob blob-blue"></div>
+      <div className="ambient-blob blob-indigo"></div>
+      
       <Sidebar />
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative z-10">
+      
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative z-10 ml-80 mr-6">
         <Topbar />
-        <main className="flex-1 overflow-y-auto p-8 scroll-smooth relative z-0">
+        <main className="flex-1 overflow-y-auto p-8 pt-4 scroll-smooth scrollbar-hide">
           {children}
         </main>
       </div>
