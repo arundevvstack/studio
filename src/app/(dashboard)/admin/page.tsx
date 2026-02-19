@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -103,7 +102,7 @@ export default function AdminConsole() {
                       <img src={member.photoURL || `https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} className="object-cover w-full h-full" />
                     </div>
                     <div>
-                      <div className="font-black text-slate-900 text-sm tracking-tight">{member.name}</div>
+                      <div className="font-arial font-black text-slate-900 text-[12px] tracking-tight">{member.name}</div>
                       <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{member.email}</div>
                     </div>
                   </div>

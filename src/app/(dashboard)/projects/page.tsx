@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -201,7 +200,7 @@ export default function ProjectsPage() {
                           <TableCell className="pl-6">
                             <Link href={`/projects/${project.id}`} className="block group ios-clickable">
                               <div className="flex items-center gap-2">
-                                <div className="font-black text-slate-900 group-hover:text-primary transition-colors text-sm tracking-tight">{project.projectName}</div>
+                                <div className="font-arial font-black text-slate-900 group-hover:text-primary transition-colors text-[12px] tracking-tight">{project.projectName}</div>
                                 {project.isRecurring && (
                                   <Badge className="bg-primary/5 text-primary border-none rounded-[3px] h-4 px-1 flex items-center gap-0.5">
                                     <RefreshCcw size={8} />
@@ -213,7 +212,7 @@ export default function ProjectsPage() {
                             </Link>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={cn("rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-widest border-none", getStageColor(project.stage))}>
+                            <Badge variant="outline" className={cn("rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-widest border-none", getStageColor(project.stage))}>
                               {project.stage}
                             </Badge>
                           </TableCell>
@@ -269,7 +268,7 @@ export default function ProjectsPage() {
                       <div className="p-5 space-y-4">
                         <div>
                           <Link href={`/projects/${project.id}`} className="ios-clickable inline-block">
-                            <h3 className="font-black text-lg group-hover:text-primary transition-colors tracking-tight text-slate-900">{project.projectName}</h3>
+                            <h3 className="font-arial font-black text-[12px] group-hover:text-primary transition-colors tracking-tight text-slate-900">{project.projectName}</h3>
                           </Link>
                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Phase: {project.stage}</p>
                         </div>

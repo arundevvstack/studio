@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -177,14 +176,14 @@ export default function InvoiceDetailPage() {
                 <tbody className="divide-y divide-slate-100">
                    {invoice.items.map((item, index) => (
                      <tr key={index} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-5 text-sm font-bold text-slate-400">{index + 1}</td>
-                        <td className="px-6 py-5">
-                           <p className="text-sm font-black text-slate-900">{item.description}</p>
+                        <td className="px-6 py-3 text-[12px] font-arial font-bold text-slate-400">{index + 1}</td>
+                        <td className="px-6 py-3">
+                           <p className="text-[12px] font-arial font-black text-slate-900">{item.description}</p>
                            {item.isRecurringGroup && <Badge variant="secondary" className="mt-1 text-[8px] font-black bg-primary/5 text-primary">RECURRING GROUP</Badge>}
                         </td>
-                        <td className="px-6 py-5 text-sm font-bold text-slate-900 text-right">₹{item.amount.toLocaleString()}</td>
-                        <td className="px-6 py-5 text-sm font-bold text-slate-900 text-center">1</td>
-                        <td className="px-6 py-5 text-sm font-black text-slate-900 text-right">₹{item.amount.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-[12px] font-arial font-bold text-slate-900 text-right">₹{item.amount.toLocaleString()}</td>
+                        <td className="px-6 py-3 text-[12px] font-arial font-bold text-slate-900 text-center">1</td>
+                        <td className="px-6 py-3 text-[12px] font-arial font-black text-slate-900 text-right">₹{item.amount.toLocaleString()}</td>
                      </tr>
                    ))}
                 </tbody>

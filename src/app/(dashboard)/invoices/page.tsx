@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -153,15 +152,15 @@ export default function InvoicesPage() {
                 <TableRow key={invoice.id} className="hover:bg-white/40 transition-all border-b border-slate-200/20 last:border-0 h-14">
                   <TableCell className="pl-6">
                     <Link href={`/invoices/${invoice.id}`} className="group flex flex-col">
-                      <div className="font-black text-slate-900 tracking-tighter text-sm group-hover:text-primary transition-colors uppercase">INV-{invoice.id.slice(0, 6)}</div>
+                      <div className="font-arial font-black text-slate-900 tracking-tighter text-[12px] group-hover:text-primary transition-colors uppercase">INV-{invoice.id.slice(0, 6)}</div>
                       <div className="text-[8px] text-slate-400 font-black uppercase tracking-widest">Issued: {invoice.createdAt?.seconds ? new Date(invoice.createdAt.seconds * 1000).toLocaleDateString() : '---'}</div>
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <div className="font-bold text-slate-700 text-xs">{invoice.clientName}</div>
+                    <div className="font-arial font-bold text-slate-700 text-[12px]">{invoice.clientName}</div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-black text-slate-900 tracking-tight">₹{invoice.totalAmount.toLocaleString()}</div>
+                    <div className="font-arial text-[12px] font-black text-slate-900 tracking-tight">₹{invoice.totalAmount.toLocaleString()}</div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className={cn("rounded-full px-2.5 py-0.5 text-[8px] font-black uppercase tracking-widest border-none", getStatusColor(invoice.status))}>

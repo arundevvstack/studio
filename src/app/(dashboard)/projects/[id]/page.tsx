@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -517,7 +516,7 @@ export default function ProjectDetailPage() {
                                   {phase.completed && <CheckSquare size={10} strokeWidth={3} />}
                                 </div>
                                 <div className="space-y-0.5">
-                                  <p className={cn("text-sm font-black text-slate-900", phase.completed && "line-through text-slate-400 opacity-60")}>{phase.name}</p>
+                                  <p className={cn("text-[12px] font-arial font-black text-slate-900", phase.completed && "line-through text-slate-400 opacity-60")}>{phase.name}</p>
                                   <div className="flex items-center gap-2">
                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
                                       <Clock size={8} /> {phase.dueDate ? formatDeadline(phase.dueDate) : 'No Deadline'}

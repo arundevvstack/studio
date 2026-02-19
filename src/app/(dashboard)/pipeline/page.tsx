@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -164,7 +163,7 @@ export default function PipelinePage() {
                 <TableRow key={project.id} className="hover:bg-white/40 transition-all border-b border-slate-50 last:border-0 group h-14">
                   <TableCell className="pl-6">
                     <Link href={`/projects/${project.id}`} className="block group">
-                      <div className="font-black text-slate-900 group-hover:text-primary transition-colors text-sm tracking-tight">{project.projectName}</div>
+                      <div className="font-arial font-black text-slate-900 group-hover:text-primary transition-colors text-[12px] tracking-tight">{project.projectName}</div>
                       <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{project.client}</div>
                     </Link>
                   </TableCell>
