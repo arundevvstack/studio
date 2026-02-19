@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/firebase/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
   const { user, isAdmin, resetPassword, updateDisplayName, updatePhotoURL, loading } = useAuth();
@@ -41,11 +42,15 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (profileData.name !== user?.displayName) {
-      await updateDisplayName(profileData.name);
-    }
-    if (profileData.photoURL !== user?.photoURL) {
-      await updatePhotoURL(profileData.photoURL);
+    try {
+      if (profileData.name !== user?.displayName) {
+        await updateDisplayName(profileData.name);
+      }
+      if (profileData.photoURL !== user?.photoURL) {
+        await updatePhotoURL(profileData.photoURL);
+      }
+    } catch (err) {
+      // Errors handled in AuthContext toasts
     }
   };
 
@@ -104,7 +109,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl overflow-hidden">
               <CardHeader className="pt-6 px-6 pb-4 border-b border-slate-50">
-                <CardTitle className="text-lg font-black">Executive Identity</CardTitle>
+                <CardTitle className="text-lg font-black text-slate-900">Executive Identity</CardTitle>
                 <CardDescription className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Public profile metadata within the studio network.</CardDescription>
               </CardHeader>
               <CardContent className="p-6 space-y-8">
@@ -244,7 +249,7 @@ export default function SettingsPage() {
                       <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-lg shadow-emerald-500/20"></div>
                       <div>
                         <p className="text-xs font-black text-slate-700">Current Workstation</p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active • Trivandrum Node</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active • Live Node</p>
                       </div>
                     </div>
                     <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-emerald-200 text-emerald-600 bg-emerald-50/50">Primary</Badge>
