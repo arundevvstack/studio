@@ -10,7 +10,7 @@ import {
   TabsContent, 
   TabsList, 
   TabsTrigger 
-} from '@/tabs';
+} from '@/components/ui/tabs';
 import { 
   Card, 
   CardContent, 
@@ -459,7 +459,7 @@ export default function ProjectDetailPage() {
           <Tabs defaultValue="objectives" className="w-full">
             <TabsList className="bg-transparent h-auto p-0 gap-4 border-b rounded-none w-full justify-start mb-4">
               <TabsTrigger value="objectives" className="rounded-none pb-2 px-0 font-black text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-slate-900 transition-all">
-                <Layers size={12} className="mr-1.5" /> Objectives
+                <Layers size={12} className="mr-1.5" /> Mission Objectives
               </TabsTrigger>
               <TabsTrigger value="history" className="rounded-none pb-2 px-0 font-black text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-slate-900 transition-all">
                 <History size={12} className="mr-1.5" /> Log History
@@ -517,7 +517,7 @@ export default function ProjectDetailPage() {
                                   {phase.completed && <CheckSquare size={10} strokeWidth={3} />}
                                 </div>
                                 <div className="space-y-0.5">
-                                  <p className={cn("text-xs font-black text-slate-900", phase.completed && "line-through text-slate-400 opacity-60")}>{phase.name}</p>
+                                  <p className={cn("text-sm font-black text-slate-900", phase.completed && "line-through text-slate-400 opacity-60")}>{phase.name}</p>
                                   <div className="flex items-center gap-2">
                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
                                       <Clock size={8} /> {phase.dueDate ? formatDeadline(phase.dueDate) : 'No Deadline'}
