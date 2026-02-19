@@ -113,8 +113,8 @@ export default function InvoiceDetailPage() {
                     </svg>
                  </div>
                  <div>
-                    <h2 className="text-3xl font-light text-slate-400 tracking-tight leading-none">MARZELZ</h2>
-                    <p className="text-xs font-bold text-slate-300 tracking-[0.3em] uppercase mt-1">LIFESTYLE</p>
+                    <h2 className="text-3xl font-light text-slate-400 tracking-tight leading-none text-red-500">MARZELZ</h2>
+                    <p className="text-xs font-bold text-slate-400 tracking-[0.3em] uppercase mt-1">LIFESTYLE</p>
                  </div>
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function InvoiceDetailPage() {
             </div>
 
             <div className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-               <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-3">BILL TO</p>
+               <p className="text-[10px] font-black text-[#EF4444] uppercase tracking-widest mb-3">BILL TO</p>
                <h4 className="text-base font-black text-slate-900 leading-tight">{invoice.clientName}</h4>
                <p className="text-sm font-medium text-slate-500 mt-2 max-w-[250px] leading-relaxed">
                  Strategic Production Partner<br />
@@ -196,7 +196,7 @@ export default function InvoiceDetailPage() {
           </div>
 
           {/* Totals and Stamp */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-12 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-12 pt-8 relative">
              <div className="flex-1 space-y-8">
                 <div className="space-y-4">
                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Account Details</h5>
@@ -218,7 +218,7 @@ export default function InvoiceDetailPage() {
                 </div>
              </div>
 
-             <div className="w-full md:w-[350px] space-y-6">
+             <div className="w-full md:w-[400px] space-y-6 relative">
                 <div className="bg-slate-50 rounded-3xl p-6 space-y-4">
                    <div className="flex justify-between items-center">
                       <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total</span>
@@ -234,21 +234,39 @@ export default function InvoiceDetailPage() {
                    </div>
                 </div>
 
-                <div className="flex justify-center pt-8">
-                   <div className="relative w-32 h-32 opacity-20 hover:opacity-100 transition-opacity cursor-help">
-                      {/* Company Stamp Placeholder */}
-                      <div className="w-full h-full border-4 border-dashed border-blue-600 rounded-full flex flex-col items-center justify-center text-blue-600 rotate-12 p-2">
-                         <div className="text-[8px] font-black uppercase text-center leading-none">Marzelz Lifestyle PVT LTD</div>
-                         <div className="text-[10px] font-black my-1">AUTHORISED</div>
-                         <div className="text-[8px] font-bold">SIGNATORY</div>
-                      </div>
-                   </div>
+                {/* Branded Official Stamp */}
+                <div className="absolute -left-12 -bottom-16 w-48 h-48 opacity-80 pointer-events-none select-none print:opacity-100">
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {/* The Circular Stamp SVG */}
+                    <svg viewBox="0 0 200 200" className="w-full h-full text-[#1A365D] -rotate-12">
+                      <circle cx="100" cy="100" r="85" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="5,2" />
+                      <circle cx="100" cy="100" r="80" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                      
+                      {/* Marzelz Logo in Stamp */}
+                      <path d="M75 125 V95 C75 80 100 80 100 100 C100 80 125 80 125 95 V125" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                      
+                      {/* Text on path */}
+                      <defs>
+                        <path id="stampTextPath" d="M 100, 100 m -65, 0 a 65,65 0 1,1 130,0 a 65,65 0 1,1 -130,0" />
+                      </defs>
+                      <text className="text-[11px] font-black uppercase tracking-widest fill-current">
+                        <textPath href="#stampTextPath" startOffset="0%">MARZELZ LIFESTYLE PVT. LTD. ★ TRIVANDRUM ★ 695003 ★</textPath>
+                      </text>
+                      
+                      {/* Center labels */}
+                      <text x="100" y="145" textAnchor="middle" className="text-[9px] font-black fill-current uppercase tracking-wider">Authorised Signatory</text>
+                      
+                      {/* Simulated Blue Signature Line */}
+                      <path d="M40 110 Q 70 80, 100 105 T 160 90" fill="none" stroke="#2563EB" strokeWidth="2" className="opacity-70" />
+                      <path d="M45 115 Q 75 85, 105 110 T 165 95" fill="none" stroke="#1E40AF" strokeWidth="1" className="opacity-50" />
+                    </svg>
+                  </div>
                 </div>
              </div>
           </div>
 
           {/* Footer Address */}
-          <div className="pt-16 border-t border-slate-100 flex flex-col md:flex-row justify-between gap-8 text-slate-400">
+          <div className="pt-24 border-t border-slate-100 flex flex-col md:flex-row justify-between gap-8 text-slate-400">
              <div className="space-y-4 max-w-sm">
                 <h5 className="text-xs font-black text-slate-900 uppercase tracking-widest">MARZELZ LIFESTYLE PRIVATE LIMITED</h5>
                 <p className="text-[10px] font-bold leading-relaxed">
