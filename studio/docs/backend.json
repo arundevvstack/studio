@@ -1,0 +1,404 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile information within the application, used for displaying user details and associating actions. Actual authentication is handled by an external system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity. This typically corresponds to the user ID from the external authentication system (e.g., Firebase Auth UID)."
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The user's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The user's last name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address. Used for display purposes and communication, not for authentication. (Format: email)",
+          "format": "email"
+        },
+        "profileImageUrl": {
+          "type": "string",
+          "description": "URL to the user's profile picture. (Format: uri)",
+          "format": "uri"
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the organization or project (e.g., 'Project Manager', 'Editor', 'Designer', 'Client Liaison')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was created. (Format: date-time)",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was last updated. (Format: date-time)",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "firstName",
+        "lastName",
+        "email",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Represents a media production project from idea to release, including its status, progress, and team assignments.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Project entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the project."
+        },
+        "clientName": {
+          "type": "string",
+          "description": "The name of the client associated with the project."
+        },
+        "stage": {
+          "type": "string",
+          "description": "The current stage of the project. Allowed values include: 'Discussion', 'Pre Production', 'Production', 'Post Production', 'Released'."
+        },
+        "status": {
+          "type": "string",
+          "description": "The overall status of the project (e.g., 'Active', 'On Hold', 'Completed', 'Archived')."
+        },
+        "priority": {
+          "type": "string",
+          "description": "The priority level of the project. Allowed values include: 'Low', 'Medium', 'High'."
+        },
+        "deadline": {
+          "type": "string",
+          "description": "The target completion date for the project. (Format: date-time)",
+          "format": "date-time"
+        },
+        "progress": {
+          "type": "number",
+          "description": "The completion percentage of the project, ranging from 0 to 100."
+        },
+        "budget": {
+          "type": "number",
+          "description": "The allocated budget for the project."
+        },
+        "assignedTeamMemberIds": {
+          "type": "array",
+          "description": "References to UserProfile entities representing the team members assigned to this project. (Relationship: Project N:N UserProfile)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the project."
+        },
+        "tags": {
+          "type": "array",
+          "description": "A list of tags or keywords associated with the project for categorization and search.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the project was created. (Format: date-time)",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the project was last updated. (Format: date-time)",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "clientName",
+        "stage",
+        "status",
+        "priority",
+        "deadline",
+        "progress",
+        "budget",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Task": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Task",
+      "type": "object",
+      "description": "Represents an individual task that is part of a larger project, with details on its status, assignment, and due date.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Task entity."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Reference to the Project this task belongs to. (Relationship: Project 1:N Task)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name or brief title of the task."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the task."
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "The date and time by which the task is expected to be completed. (Format: date-time)",
+          "format": "date-time"
+        },
+        "assignedToId": {
+          "type": "string",
+          "description": "Reference to the UserProfile entity assigned to this task. (Relationship: UserProfile 1:N Task)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the task. Allowed values include: 'To Do', 'In Progress', 'Done'."
+        },
+        "priority": {
+          "type": "string",
+          "description": "The priority level of the task. Allowed values include: 'Low', 'Medium', 'High'."
+        },
+        "isCompleted": {
+          "type": "boolean",
+          "description": "Indicates whether the task has been marked as completed."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the task was created. (Format: date-time)",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the task was last updated. (Format: date-time)",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "name",
+        "status",
+        "priority",
+        "isCompleted",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Note": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Note",
+      "type": "object",
+      "description": "Represents a free-form note or comment associated with a project.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Note entity."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Reference to the Project this note belongs to. (Relationship: Project 1:N Note)"
+        },
+        "title": {
+          "type": "string",
+          "description": "A short title for the note."
+        },
+        "content": {
+          "type": "string",
+          "description": "The main content of the note."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "Reference to the UserProfile entity who created this note. (Relationship: UserProfile 1:N Note)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the note was created. (Format: date-time)",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the note was last updated. (Format: date-time)",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "title",
+        "content",
+        "authorId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TimelineEvent": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TimelineEvent",
+      "type": "object",
+      "description": "Records significant events or activities related to a project, forming an activity timeline.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the TimelineEvent entity."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Reference to the Project this event is associated with. (Relationship: Project 1:N TimelineEvent)"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of event (e.g., 'ProjectStageChange', 'TaskCompleted', 'NoteAdded', 'CommentPosted', 'BudgetUpdated', 'DeadlineChanged')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A descriptive summary of what happened in this event."
+        },
+        "eventDate": {
+          "type": "string",
+          "description": "The date and time when the event occurred. (Format: date-time)",
+          "format": "date-time"
+        },
+        "actorId": {
+          "type": "string",
+          "description": "Reference to the UserProfile entity who initiated or was involved in this event. (Relationship: UserProfile 1:N TimelineEvent)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the timeline event record was created in the system. (Format: date-time)",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "type",
+        "description",
+        "eventDate",
+        "actorId",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "userProfiles/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores individual user profile information. Access is primarily restricted to the user themselves (read/write), with limited read access for other authenticated users. The 'id' field in the document MUST match the '{userId}' path parameter. Includes 'role' field for descriptive purposes, which can be used for DBAC but does not grant hierarchical access.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, corresponding to Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Stores details for each media production project. Authorization is managed via the 'assignedTeamMemberIds' array within each document. Only users whose UID is in this array can access the project. This enables efficient QAPs for listing projects.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier for a project."
+            }
+          ]
+        }
+      },
+      {
+        "path": "projects/{projectId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": {
+            "$ref": "#/backend/entities/Task"
+          },
+          "description": "Stores tasks associated with a specific project. Includes denormalized 'assignedTeamMemberIds' from the parent Project for authorization independence, allowing rules to check access without a 'get()' call. Also includes 'projectId' for contextual querying and 'assignedToId' for task-specific assignment.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the parent project."
+            },
+            {
+              "name": "taskId",
+              "description": "The unique identifier for a task."
+            }
+          ]
+        }
+      },
+      {
+        "path": "projects/{projectId}/notes/{noteId}",
+        "definition": {
+          "entityName": "Note",
+          "schema": {
+            "$ref": "#/backend/entities/Note"
+          },
+          "description": "Stores notes and comments linked to a specific project. Includes denormalized 'assignedTeamMemberIds' from the parent Project for authorization independence. Also includes 'projectId' and 'authorId' to identify the note's context and creator.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the parent project."
+            },
+            {
+              "name": "noteId",
+              "description": "The unique identifier for a note."
+            }
+          ]
+        }
+      },
+      {
+        "path": "projects/{projectId}/timelineEvents/{timelineEventId}",
+        "definition": {
+          "entityName": "TimelineEvent",
+          "schema": {
+            "$ref": "#/backend/entities/TimelineEvent"
+          },
+          "description": "Records significant events and activities within a project. Includes denormalized 'assignedTeamMemberIds' from the parent Project for authorization independence. Also includes 'projectId' and 'actorId' for contextual information and event initiator tracking.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the parent project."
+            },
+            {
+              "name": "timelineEventId",
+              "description": "The unique identifier for a timeline event."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and consistent Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence (CRITICAL):** The primary mechanism for authorization independence, especially for subcollections, is through strategic denormalization. For every document within subcollections (`/projects/{projectId}/tasks/{taskId}`, `/projects/{projectId}/notes/{noteId}`, `/projects/{projectId}/timelineEvents/{timelineEventId}`), the `assignedTeamMemberIds` array from the parent `Project` document will be copied. This ensures that security rules for `Task`, `Note`, and `TimelineEvent` documents can evaluate access directly from the `resource.data` of the document itself, without needing any `get()` calls to the parent `Project` document. For example, a rule for a task would simply check `request.auth.uid in resource.data.assignedTeamMemberIds`. This eliminates hierarchical authorization dependencies, supports atomic operations, and greatly simplifies rule debugging.\n\n**QAPs (Queries as Authorization Policies):**\n1.  **`/userProfiles/{userId}`:** This collection stores individual user profiles. Access is path-based, primarily allowing users to read/write their own profile (`request.auth.uid == userId`). For `list` operations, authenticated users might be allowed to list profiles or specific fields of other users (e.g., for team member selection), but write access is strictly self-restricted. This naturally supports QAPs as `list` queries implicitly filter by authenticated status.\n2.  **`/projects/{projectId}`:** This collection stores project-level data. Access is controlled by the `assignedTeamMemberIds` array within each `Project` document. A user can only read or write a project if their UID is present in this array. For `list` operations (e.g., displaying a user's dashboard of projects), `Firestore` queries can leverage `array-contains` to filter projects where `assignedTeamMemberIds` contains `request.auth.uid`. The security rules will then enforce that any `list` operation must include such a filter, ensuring QAPs are met.\n3.  **Subcollections (`/projects/{projectId}/tasks/{taskId}`, `/projects/{projectId}/notes/{noteId}`, `/projects/{projectId}/timelineEvents/{timelineEventId}`):** Due to the denormalization of `assignedTeamMemberIds` into each document of these subcollections, `list` operations on tasks, notes, or timeline events within a specific project can be secured with rules that check `request.auth.uid in resource.data.assignedTeamMemberIds`. This allows clients to `list` documents within a project, and the rules enforce that the requesting user is an authorized team member of that project, fulfilling the QAP requirement without exposing unauthorized data.\n\n**Structural Segregation:** Each collection (`userProfiles`, `projects`, and their subcollections `tasks`, `notes`, `timelineEvents`) maintains a homogeneous security posture. For example, all documents in `/projects/{projectId}/tasks` share the same authorization logic: membership in the `assignedTeamMemberIds`. This prevents mixing data with different access requirements in the same collection, simplifying rule sets significantly.\n\n**Access Modeling:**\n*   **Private Data:** `userProfiles/{userId}` follows path-based ownership for individual users.\n*   **Collaborative Data:** `projects/{projectId}` and its subcollections (`tasks`, `notes`, `timelineEvents`) use the `assignedTeamMemberIds` array as a membership map. This array is consistently denormalized into subcollection documents to maintain authorization independence.\n*   **DBAC:** While the `UserProfile` has a `role` field, its primary use in this design is descriptive or for internal application logic. All critical access control relies on explicit membership in `assignedTeamMemberIds` or path-based ownership (`userId` matching `request.auth.uid`). If global roles were needed for broader access (e.g., a super-admin who can see all projects), a dedicated, separate collection (e.g., `/appRoles/adminUsers/{uid}`) would be used to enable `exists()` checks in rules, adhering to the "
+  }
+}

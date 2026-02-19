@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Core Philosophy: This ruleset implements a hybrid security model. User profiles are secured via a 
+     * strict ownership model (path-based). Collaborative project data and all associated sub-resources (tasks, notes, 
+     * timeline events) are secured using a Shared Access pattern via a denormalized membership list.
+     *
+     * @description Data Structure: User profiles are at the root `/userProfiles`. Projects are at the root `/projects`. 
+     * Tasks, Notes, and TimelineEvents are nested subcollections under each Project.
+     *
+     * @description Key Security Decisions:
+     * 1. Authorization Independence: To ensure high performance and avoid costly `get()` calls in subcollections, the 
+     *    `assignedTeamMemberIds` array is denormalized from the Project document into every Task, Note, and TimelineEvent.
+     * 2. Public Visibility: User profiles are readable by any authenticated user to facilitate team discovery and assignment.
+     * 3. Relational Integrity: On creation, rules enforce that document IDs and parent IDs (e.g., projectId) match the 
+     *    Firestore path parameters.
+     */
+
+    // --- Global Helper Functions ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    function isProjectMember(data) {
+      return isSignedIn() && request.auth.uid in data.assignedTeamMemberIds;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for user profile documents. Allows users to manage their own profiles while allowing 
+     * others to view profiles for collaboration purposes.
+     * @path /userProfiles/{userId}
+     * @allow (get) Any authenticated user can view a profile.
+     * @allow (create) User 'abc' can create document '/userProfiles/abc' if the internal 'id' is also 'abc'.
+     * @deny (update) User 'abc' cannot update document '/userProfiles/xyz'.
+     * @principle Path-based ownership for writes; limited public read for authenticated discovery.
+     */
+    match /userProfiles/{userId} {
+      allow get, list: if isSignedIn();
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for media production projects. Access is governed by the 'assignedTeamMemberIds' array.
+     * @path /projects/{projectId}
+     * @allow (list) User 'abc' can list projects where 'assignedTeamMemberIds' contains 'abc'.
+     * @allow (create) User 'abc' can create a project if they include themselves in 'assignedTeamMemberIds'.
+     * @deny (update) User 'abc' cannot update project 'p1' if they are not in the 'assignedTeamMemberIds' list.
+     * @principle Shared access via membership array.
+     */
+    match /projects/{projectId} {
+      allow get, list: if isProjectMember(resource.data);
+      allow create: if isProjectMember(request.resource.data) && request.resource.data.id == projectId;
+      allow update: if isProjectMember(resource.data) && request.resource.data.id == resource.data.id;
+      allow delete: if resource != null && isProjectMember(resource.data);
+      
+      /**
+       * @description Rules for tasks within a project. Uses denormalized membership for authorization independence.
+       * @path /projects/{projectId}/tasks/{taskId}
+       * @allow (get) Project members can view tasks.
+       * @allow (create) Member 'abc' can create a task for project 'p1' if the task's 'projectId' field is 'p1'.
+       * @deny (create) Member 'abc' cannot create a task if they remove themselves from the denormalized member list.
+       * @principle Authorization independence via denormalization.
+       */
+      match /tasks/{taskId} {
+        allow get, list: if isProjectMember(resource.data);
+        allow create: if isProjectMember(request.resource.data) && request.resource.data.projectId == projectId;
+        allow update: if isProjectMember(resource.data) && request.resource.data.projectId == resource.data.projectId;
+        allow delete: if resource != null && isProjectMember(resource.data);
+      }
+
+      /**
+       * @description Rules for project notes. Authorship is validated on creation.
+       * @path /projects/{projectId}/notes/{noteId}
+       * @allow (create) Member 'abc' can create a note if 'authorId' is 'abc'.
+       * @deny (update) Member 'abc' cannot update a note if they are no longer in the project's member list.
+       * @principle Combined membership check and creator validation.
+       */
+      match /notes/{noteId} {
+        allow get, list: if isProjectMember(resource.data);
+        allow create: if isProjectMember(request.resource.data) && request.resource.data.authorId == request.auth.uid && request.resource.data.projectId == projectId;
+        allow update: if isProjectMember(resource.data) && request.resource.data.projectId == resource.data.projectId;
+        allow delete: if resource != null && isProjectMember(resource.data);
+      }
+
+      /**
+       * @description Rules for timeline events. Tracks project activity.
+       * @path /projects/{projectId}/timelineEvents/{timelineEventId}
+       * @allow (get) Members can view project history.
+       * @allow (create) Member 'abc' can record an event if 'actorId' is 'abc'.
+       * @deny (delete) Deletions are typically restricted for audit logs, but allowed here for project members during prototyping.
+       * @principle Path consistency and actor verification.
+       */
+      match /timelineEvents/{timelineEventId} {
+        allow get, list: if isProjectMember(resource.data);
+        allow create: if isProjectMember(request.resource.data) && request.resource.data.actorId == request.auth.uid && request.resource.data.projectId == projectId;
+        allow update: if isProjectMember(resource.data) && request.resource.data.projectId == resource.data.projectId;
+        allow delete: if resource != null && isProjectMember(resource.data);
+      }
+    }
+  }
+}

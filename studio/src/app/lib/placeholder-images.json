@@ -1,0 +1,14 @@
+{
+  "hero": {
+    "url": "https://picsum.photos/seed/studio-hero/1200/600",
+    "width": 1200,
+    "height": 600,
+    "hint": "modern studio workspace"
+  },
+  "avatar-placeholder": {
+    "url": "https://picsum.photos/seed/avatar-default/128/128",
+    "width": 128,
+    "height": 128,
+    "hint": "professional avatar"
+  }
+}
