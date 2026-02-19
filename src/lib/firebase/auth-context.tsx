@@ -7,7 +7,8 @@ import {
   signOut,
   setPersistence,
   browserLocalPersistence,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { useFirebase, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,7 @@ interface AuthContextType {
   signIn: (email: string, pass: string) => Promise<void>;
   signUp: (email: string, pass: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -92,6 +94,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      setInternalLoading(true);
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: "Reset Link Dispatched",
+        description: `A secure password reset link has been sent to ${email}.`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Reset Failed",
+        description: error.message || "Could not process password reset request.",
+      });
+      throw error;
+    } finally {
+      setInternalLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -99,7 +121,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading: isUserLoading || internalLoading, 
       signIn, 
       signUp, 
-      logOut 
+      logOut,
+      resetPassword
     }}>
       {children}
     </AuthContext.Provider>
