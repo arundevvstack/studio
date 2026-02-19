@@ -100,7 +100,7 @@ export default function ProjectsPage() {
           <ShieldAlert size={48} />
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Access Restricted</h2>
+          <h2 className="text-2xl font-black text-slate-700 tracking-tight">Access Restricted</h2>
           <p className="text-slate-500 text-sm font-medium max-w-xl opacity-70">
             Project data requires higher clearance.
           </p>
@@ -116,7 +116,7 @@ export default function ProjectsPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
         <div className="space-y-0.5">
-          <h1 className="text-3xl font-black tracking-tighter text-slate-900 leading-tight">Projects</h1>
+          <h1 className="text-3xl font-black tracking-tighter text-slate-700 leading-tight">Projects</h1>
           <p className="text-slate-500 text-sm font-medium opacity-80">Managing global production assets grouped by client.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -193,7 +193,7 @@ export default function ProjectsPage() {
                   <UserIcon size={14} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-slate-900 tracking-tight">{client}</h2>
+                  <h2 className="text-lg font-black text-slate-700 tracking-tight">{client}</h2>
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">{clientProjects.length} active projects</p>
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function ProjectsPage() {
                           <TableCell className="pl-6">
                             <Link href={`/projects/${project.id}`} className="block group ios-clickable">
                               <div className="flex items-center gap-2">
-                                <div className="font-arial font-black text-slate-900 group-hover:text-primary transition-colors text-[12px] tracking-tight">{project.projectName}</div>
+                                <div className="font-arial font-black text-slate-700 group-hover:text-primary transition-colors text-[12px] tracking-tight">{project.projectName}</div>
                                 {project.isRecurring && (
                                   <Badge className="bg-primary/5 text-primary border-none rounded-[3px] h-4 px-1 flex items-center gap-0.5">
                                     <RefreshCcw size={8} />
@@ -284,7 +284,7 @@ export default function ProjectsPage() {
                       <div className="p-5 space-y-4">
                         <div>
                           <Link href={`/projects/${project.id}`} className="ios-clickable inline-block">
-                            <h3 className="font-arial font-black text-[12px] group-hover:text-primary transition-colors tracking-tight text-slate-900">{project.projectName}</h3>
+                            <h3 className="font-arial font-black text-[12px] group-hover:text-primary transition-colors tracking-tight text-slate-700">{project.projectName}</h3>
                           </Link>
                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Phase: {project.stage}</p>
                         </div>

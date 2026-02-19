@@ -90,7 +90,7 @@ export default function PipelinePage() {
           <AlertCircle size={48} />
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-2xl font-black text-slate-900">Pipeline Sync Error</h2>
+          <h2 className="text-2xl font-black text-slate-700">Pipeline Sync Error</h2>
           <p className="text-muted-foreground text-sm font-medium max-w-md">
             {error.message.includes('permission') 
               ? "Clearance level restriction."
@@ -109,7 +109,7 @@ export default function PipelinePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-0.5">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">Strategic Pipeline</h1>
+            <h1 className="text-3xl font-black tracking-tight text-slate-700">Strategic Pipeline</h1>
             <Badge className="bg-purple-100 text-purple-700 border-none rounded-[3px] px-2 py-0.5 font-bold text-[8px] uppercase flex items-center gap-1">
               <Sparkles size={10} /> Early Stage
             </Badge>
@@ -163,7 +163,7 @@ export default function PipelinePage() {
                 <TableRow key={project.id} className="hover:bg-white/40 transition-all border-b border-slate-50 last:border-0 group h-14">
                   <TableCell className="pl-6">
                     <Link href={`/projects/${project.id}`} className="block group">
-                      <div className="font-arial font-black text-slate-900 group-hover:text-primary transition-colors text-[12px] tracking-tight">{project.projectName}</div>
+                      <div className="font-arial font-black text-slate-700 group-hover:text-primary transition-colors text-[12px] tracking-tight">{project.projectName}</div>
                       <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{project.client}</div>
                     </Link>
                   </TableCell>

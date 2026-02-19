@@ -335,7 +335,7 @@ export default function ProjectDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <ShieldAlert size={48} className="text-rose-500" />
-        <h2 className="text-xl font-black text-slate-900">Entity Not Found</h2>
+        <h2 className="text-xl font-black text-slate-700">Entity Not Found</h2>
         <Button asChild variant="outline" className="rounded-[3px] h-9 text-xs">
           <Link href="/projects">Return to Pipeline</Link>
         </Button>
@@ -352,7 +352,7 @@ export default function ProjectDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-2">
-               <h1 className="text-xl font-black tracking-tight text-slate-900">{project.projectName}</h1>
+               <h1 className="text-xl font-black tracking-tight text-slate-700">{project.projectName}</h1>
                <Badge className="rounded-[2px] bg-primary/5 text-primary border-none text-[8px] font-black uppercase tracking-widest px-1.5 h-4">
                  #{id.slice(0, 6)}
                </Badge>
@@ -379,7 +379,7 @@ export default function ProjectDetailPage() {
         <div className="lg:col-span-3 space-y-4">
           <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl overflow-hidden">
              <CardHeader className="flex flex-row items-center justify-between py-3 px-5 border-b border-slate-50">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-900">Throughput Analysis</CardTitle>
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-700">Throughput Analysis</CardTitle>
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -396,7 +396,7 @@ export default function ProjectDetailPage() {
                   <div className="p-3 rounded-[3px] bg-slate-50 border border-slate-100">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Lifecycle Phase</p>
                     <Select value={project.stage} onValueChange={handleStageChange}>
-                      <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-sm text-slate-900 focus:ring-0 shadow-none">
+                      <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-sm text-slate-700 focus:ring-0 shadow-none">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-[5px] border-none shadow-2xl">
@@ -409,7 +409,7 @@ export default function ProjectDetailPage() {
                   <div className="p-3 rounded-[3px] bg-slate-50 border border-slate-100">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Criticality</p>
                     <Select value={project.priority} onValueChange={handlePriorityChange}>
-                      <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-sm text-slate-900 focus:ring-0 shadow-none">
+                      <SelectTrigger className="border-none bg-transparent p-0 h-auto font-black text-sm text-slate-700 focus:ring-0 shadow-none">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-[5px] border-none shadow-2xl">
@@ -421,13 +421,13 @@ export default function ProjectDetailPage() {
                   </div>
                   <div className="p-3 rounded-[3px] bg-slate-50 border border-slate-100">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Cap-Ex Budget</p>
-                    <p className="text-sm font-black text-slate-900">${(project.budget || 0).toLocaleString()}</p>
+                    <p className="text-sm font-black text-slate-700">${(project.budget || 0).toLocaleString()}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-end justify-between px-1">
-                    <h4 className="text-[8px] font-black uppercase tracking-widest text-slate-900">Optimization Progress</h4>
+                    <h4 className="text-[8px] font-black uppercase tracking-widest text-slate-700">Optimization Progress</h4>
                     <span className="text-xl font-black text-primary tracking-tighter">
                       {localProgress !== null ? localProgress : project.progress || 0}%
                     </span>
@@ -457,10 +457,10 @@ export default function ProjectDetailPage() {
 
           <Tabs defaultValue="objectives" className="w-full">
             <TabsList className="bg-transparent h-auto p-0 gap-4 border-b rounded-none w-full justify-start mb-4">
-              <TabsTrigger value="objectives" className="rounded-none pb-2 px-0 font-black text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-slate-900 transition-all">
+              <TabsTrigger value="objectives" className="rounded-none pb-2 px-0 font-black text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-slate-700 transition-all">
                 <Layers size={12} className="mr-1.5" /> Mission Objectives
               </TabsTrigger>
-              <TabsTrigger value="history" className="rounded-none pb-2 px-0 font-black text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-slate-900 transition-all">
+              <TabsTrigger value="history" className="rounded-none pb-2 px-0 font-black text-[9px] uppercase tracking-widest text-slate-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-slate-700 transition-all">
                 <History size={12} className="mr-1.5" /> Log History
               </TabsTrigger>
             </TabsList>
@@ -473,7 +473,7 @@ export default function ProjectDetailPage() {
                           <Trophy size={18} />
                        </div>
                        <div>
-                          <h3 className="text-sm font-black text-slate-900 tracking-tight">Phase Cleared</h3>
+                          <h3 className="text-sm font-black text-slate-700 tracking-tight">Phase Cleared</h3>
                           <p className="text-[10px] text-slate-500 font-medium">All components for <span className="font-bold text-emerald-600">{project.stage}</span> synced.</p>
                        </div>
                     </div>
@@ -490,7 +490,7 @@ export default function ProjectDetailPage() {
                  <CardHeader className="py-3 px-5 border-b border-slate-50 flex flex-row items-center justify-between">
                     <div>
                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Active Elements</p>
-                       <h4 className="text-xs font-black text-slate-900">{project.stage} Objectives</h4>
+                       <h4 className="text-xs font-black text-slate-700">{project.stage} Objectives</h4>
                     </div>
                     <Badge className="bg-primary/5 text-primary border-none rounded-[2px] text-[8px] font-black uppercase px-1.5 py-0.5">
                        {currentStagePhases?.filter(p => p.completed).length || 0} / {currentStagePhases?.length || 0} SYNCED
@@ -516,7 +516,7 @@ export default function ProjectDetailPage() {
                                   {phase.completed && <CheckSquare size={10} strokeWidth={3} />}
                                 </div>
                                 <div className="space-y-0.5">
-                                  <p className={cn("text-[12px] font-arial font-black text-slate-900", phase.completed && "line-through text-slate-400 opacity-60")}>{phase.name}</p>
+                                  <p className={cn("text-[12px] font-arial font-black text-slate-700", phase.completed && "line-through text-slate-400 opacity-60")}>{phase.name}</p>
                                   <div className="flex items-center gap-2">
                                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
                                       <Clock size={8} /> {phase.dueDate ? formatDeadline(phase.dueDate) : 'No Deadline'}
@@ -584,7 +584,7 @@ export default function ProjectDetailPage() {
                          </DialogTrigger>
                          <DialogContent className="rounded-[5px] border-none shadow-2xl max-w-sm">
                            <DialogHeader>
-                             <DialogTitle className="text-lg font-black text-slate-900 tracking-tight">New Objective</DialogTitle>
+                             <DialogTitle className="text-lg font-black text-slate-700 tracking-tight">New Objective</DialogTitle>
                            </DialogHeader>
                            <form onSubmit={handleCreatePhase} className="space-y-4 pt-1">
                              <div className="space-y-1">
@@ -663,7 +663,7 @@ export default function ProjectDetailPage() {
                   <CardContent className="p-6 text-center space-y-2">
                      <History size={32} className="mx-auto text-slate-200" />
                      <div>
-                        <p className="text-xs font-black text-slate-900">Logs Synchronizing</p>
+                        <p className="text-xs font-black text-slate-700">Logs Synchronizing</p>
                         <p className="text-[10px] text-slate-400 font-medium">History tracking is pending initialization.</p>
                      </div>
                   </CardContent>
@@ -684,7 +684,7 @@ export default function ProjectDetailPage() {
                         <img src={member.photoURL || `https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} className="object-cover w-full h-full" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black text-slate-900 group-hover:text-primary transition-colors leading-tight">{member.name}</p>
+                        <p className="text-[10px] font-black text-slate-700 group-hover:text-primary transition-colors leading-tight">{member.name}</p>
                         <p className="text-[7px] font-black uppercase tracking-widest text-slate-400 mt-0.5">{member.role}</p>
                       </div>
                    </div>
@@ -721,7 +721,7 @@ export default function ProjectDetailPage() {
       <Dialog open={isModifyScopeOpen} onOpenChange={setIsModifyScopeOpen}>
         <DialogContent className="rounded-[5px] border-none shadow-2xl max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-slate-900 tracking-tight">Modify Parameters</DialogTitle>
+            <DialogTitle className="text-lg font-black text-slate-700 tracking-tight">Modify Parameters</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleUpdateScope} className="space-y-4 pt-1">
             <div className="grid grid-cols-2 gap-3">

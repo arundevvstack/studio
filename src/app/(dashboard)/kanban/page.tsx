@@ -116,7 +116,7 @@ export default function KanbanPage() {
         <div className="p-8 rounded-[2.5rem] bg-rose-50/50 text-rose-600 border border-rose-100">
           <ShieldAlert size={48} />
         </div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Access Restricted</h2>
+        <h2 className="text-3xl font-black text-slate-700 tracking-tight">Access Restricted</h2>
         <p className="text-muted-foreground text-center max-w-md font-medium">
           Board visibility is restricted based on production clearance levels.
         </p>
@@ -128,7 +128,7 @@ export default function KanbanPage() {
     <div className="h-full flex flex-col space-y-10 overflow-hidden animate-in fade-in duration-700 max-w-[1800px] mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
         <div className="space-y-1">
-          <h1 className="text-5xl font-black tracking-tighter text-slate-900 leading-tight">Board</h1>
+          <h1 className="text-5xl font-black tracking-tighter text-slate-700 leading-tight">Board</h1>
           <p className="text-slate-500 text-lg font-medium opacity-80">Visualize and manage your production pipeline.</p>
         </div>
         <Button className="glass-pill h-14 px-8 shadow-2xl shadow-primary/25 font-black bg-primary ios-clickable" asChild>
@@ -191,7 +191,7 @@ export default function KanbanPage() {
                     <CardContent className="p-6 space-y-5">
                       <div className="flex items-start justify-between gap-3">
                         <Link href={`/projects/${project.id}`} className="flex-1">
-                          <h4 className="font-black text-base text-slate-900 group-hover:text-primary transition-colors tracking-tight leading-snug">
+                          <h4 className="font-black text-base text-slate-700 group-hover:text-primary transition-colors tracking-tight leading-snug">
                             {project.projectName}
                           </h4>
                         </Link>
