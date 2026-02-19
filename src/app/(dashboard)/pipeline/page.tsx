@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Workflow,
   Search,
@@ -42,35 +42,37 @@ export default function PipelinePage() {
     setIsMounted(true);
   }, []);
 
+  /**
+   * REFACTORED: To avoid "Composite Index Required" errors, 
+   * we use a simple base query and filter for the 'Pitch' and 'Discussion' 
+   * stages on the client side.
+   */
   const pipelineQuery = useMemoFirebase(() => {
     if (!db || !user || isUserLoading) return null;
     
     const baseRef = collection(db, 'projects');
     
-    // For Admins, we query all early stage projects
     if (isAdmin) {
-      return query(
-        baseRef,
-        where('stage', 'in', ['Pitch', 'Discussion']),
-        orderBy('createdAt', 'desc')
-      );
+      return query(baseRef, orderBy('createdAt', 'desc'));
     }
 
-    // For standard users, we filter by their assigned ID
     return query(
       baseRef,
-      where('stage', 'in', ['Pitch', 'Discussion']),
       where('assignedTeamMemberIds', 'array-contains', user.uid),
       orderBy('createdAt', 'desc')
     );
   }, [db, user?.uid, isAdmin, isUserLoading]);
 
-  const { data: projects, isLoading, error } = useCollection<Project>(pipelineQuery);
+  const { data: allProjects, isLoading, error } = useCollection<Project>(pipelineQuery);
 
-  const filteredProjects = (projects || []).filter(p => 
-    p.projectName?.toLowerCase().includes(search.toLowerCase()) ||
-    p.client?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredProjects = useMemo(() => {
+    return (allProjects || [])
+      .filter(p => ['Pitch', 'Discussion'].includes(p.stage))
+      .filter(p => 
+        p.projectName?.toLowerCase().includes(search.toLowerCase()) ||
+        p.client?.toLowerCase().includes(search.toLowerCase())
+      );
+  }, [allProjects, search]);
 
   const getStageColor = (stage: string) => {
     switch(stage) {
@@ -93,7 +95,7 @@ export default function PipelinePage() {
           <AlertCircle size={48} />
         </div>
         <div className="text-center space-y-2">
-          <h2 className="text-3xl font-black text-slate-900">Pipeline Access Restricted</h2>
+          <h2 className="text-3xl font-black text-slate-900">Pipeline Sync Error</h2>
           <p className="text-muted-foreground text-center max-w-md font-medium">
             {error.message.includes('permission') 
               ? "Your current clearance level does not allow access to the strategic pipeline."
@@ -101,7 +103,7 @@ export default function PipelinePage() {
           </p>
         </div>
         <Button onClick={() => window.location.reload()} className="rounded-2xl px-8 h-12 font-black">
-          Retry Clearance Check
+          Retry Sync
         </Button>
       </div>
     );
@@ -147,13 +149,13 @@ export default function PipelinePage() {
         <Card className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-md">
           <CardContent className="pt-8">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Pitch Volume</p>
-            <div className="text-4xl font-black text-slate-900">{isLoading ? '...' : (projects || []).filter(p => p.stage === 'Pitch').length}</div>
+            <div className="text-4xl font-black text-slate-900">{isLoading ? '...' : filteredProjects.filter(p => p.stage === 'Pitch').length}</div>
           </CardContent>
         </Card>
         <Card className="border-none shadow-sm premium-shadow rounded-[2rem] bg-white/70 backdrop-blur-md">
           <CardContent className="pt-8">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Discussion Active</p>
-            <div className="text-4xl font-black text-slate-900">{isLoading ? '...' : (projects || []).filter(p => p.stage === 'Discussion').length}</div>
+            <div className="text-4xl font-black text-slate-900">{isLoading ? '...' : filteredProjects.filter(p => p.stage === 'Discussion').length}</div>
           </CardContent>
         </Card>
       </div>

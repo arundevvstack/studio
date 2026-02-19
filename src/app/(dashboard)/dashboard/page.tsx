@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -157,9 +156,11 @@ export default function DashboardPage() {
           <p className="text-slate-500 text-xl font-medium">Hello, {user?.displayName?.split(' ')[0] || 'User'}. Here's your studio overview.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-2xl h-12 px-6 border-slate-200 bg-white/50 backdrop-blur-xl font-bold gap-2">
-            <CalendarIcon size={18} />
-            {currentTime}
+          <Button variant="outline" className="rounded-2xl h-12 px-6 border-slate-200 bg-white/50 backdrop-blur-xl font-bold gap-2" asChild>
+            <Link href="/calendar">
+              <CalendarIcon size={18} />
+              {currentTime}
+            </Link>
           </Button>
           <Button 
             onClick={handleExport}
@@ -279,4 +280,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-    
