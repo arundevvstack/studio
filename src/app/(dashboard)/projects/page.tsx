@@ -84,7 +84,7 @@ export default function ProjectsPage() {
         <div className="text-center space-y-3">
           <h2 className="text-4xl font-black text-slate-900 tracking-tight">Access Restricted</h2>
           <p className="text-slate-500 text-lg font-medium max-w-xl opacity-70">
-            Portfolio data requires higher clearance.
+            Project data requires higher clearance.
           </p>
         </div>
         <Button variant="outline" className="glass-pill h-14 px-8 font-black ios-clickable" onClick={() => window.location.reload()}>
@@ -98,7 +98,7 @@ export default function ProjectsPage() {
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 px-2">
         <div className="space-y-1">
-          <h1 className="text-5xl font-black tracking-tighter text-slate-900 leading-tight">Portfolio</h1>
+          <h1 className="text-5xl font-black tracking-tighter text-slate-900 leading-tight">Projects</h1>
           <p className="text-slate-500 text-lg font-medium opacity-80">Global production assets.</p>
         </div>
         <div className="flex items-center gap-4">
@@ -123,7 +123,7 @@ export default function ProjectsPage() {
           <Button className="glass-pill h-14 px-10 shadow-2xl shadow-primary/25 font-black bg-primary ios-clickable" asChild>
             <Link href="/projects/new">
               <Plus size={22} className="mr-3" strokeWidth={3} />
-              Add Entity
+              Add Project
             </Link>
           </Button>
         </div>
@@ -167,7 +167,7 @@ export default function ProjectsPage() {
               {filteredProjects.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-64 text-center text-slate-400 italic text-lg font-medium">
-                    No matching records.
+                    No matching projects.
                   </TableCell>
                 </TableRow>
               ) : (

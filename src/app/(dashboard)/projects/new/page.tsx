@@ -81,7 +81,7 @@ export default function NewProjectPage() {
     
     toast({ 
       title: "Production Provisioned", 
-      description: `Project "${formData.projectName}" has been successfully added to the portfolio.` 
+      description: `Project "${formData.projectName}" has been successfully added to the projects.` 
     });
     
     // Navigate immediately (Optimistic UI)

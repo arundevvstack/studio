@@ -87,7 +87,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
         <div className="space-y-1">
           <h1 className="text-5xl font-black tracking-tighter text-slate-900 leading-tight">Workspace</h1>
-          <p className="text-slate-500 text-lg font-medium opacity-80">Hello, {user?.displayName?.split(' ')[0] || 'User'}. Portfolio overview.</p>
+          <p className="text-slate-500 text-lg font-medium opacity-80">Hello, {user?.displayName?.split(' ')[0] || 'User'}. Projects overview.</p>
         </div>
         <div className="flex items-center gap-4">
           <Button variant="ghost" className="glass-pill h-12 px-6 font-bold gap-2 ios-clickable" asChild>

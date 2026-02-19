@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -167,7 +166,7 @@ export default function ReportsPage() {
               </div>
               <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-none rounded-lg text-[10px] font-black uppercase">Healthy</Badge>
             </div>
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Portfolio Value</p>
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Projects Value</p>
             <div className="text-3xl font-black text-slate-900">${totalBudget.toLocaleString()}</div>
           </CardContent>
         </Card>
@@ -206,7 +205,7 @@ export default function ReportsPage() {
               </div>
               <Badge variant="outline" className="bg-slate-50 text-slate-600 border-none rounded-lg text-[10px] font-black uppercase">Live</Badge>
             </div>
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Total Entities</p>
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-1">Total Projects</p>
             <div className="text-3xl font-black text-slate-900">{projects?.length || 0}</div>
           </CardContent>
         </Card>
@@ -319,4 +318,3 @@ export default function ReportsPage() {
     </div>
   );
 }
-    

@@ -22,7 +22,7 @@ import { useAuth } from '@/lib/firebase/auth-context';
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Pipeline', href: '/pipeline', icon: Workflow },
-  { name: 'Portfolio', href: '/projects', icon: FolderKanban },
+  { name: 'Projects', href: '/projects', icon: FolderKanban },
   { name: 'Board', href: '/kanban', icon: Trello },
   { name: 'Schedule', href: '/calendar', icon: Calendar },
   { name: 'Intelligence', href: '/reports', icon: BarChart3 },

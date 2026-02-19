@@ -300,7 +300,7 @@ export default function ProjectDetailPage() {
           This project identifier does not exist or you lack sufficient clearance to access its assets.
         </p>
         <Button asChild variant="outline" className="rounded-xl">
-          <Link href="/projects">Return to Portfolio</Link>
+          <Link href="/projects">Return to Projects</Link>
         </Button>
       </div>
     );
