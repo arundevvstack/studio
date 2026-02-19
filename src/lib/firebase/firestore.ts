@@ -39,6 +39,8 @@ export const createProject = (db: Firestore, userId: string, data: Partial<Proje
     client: data.client || 'Internal',
     budget: Number(data.budget) || 0,
     description: data.description || '',
+    isRecurring: data.isRecurring || false,
+    recurringDay: data.recurringDay || null,
   };
 
   // Initiate write operation without awaiting

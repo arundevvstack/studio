@@ -11,9 +11,11 @@ export interface Project {
   deadline: any; // Firebase Timestamp
   progress: number;
   budget: number;
-  assignedTeamMemberIds: string[]; // Matches backend.json and security rules
+  assignedTeamMemberIds: string[]; 
   description: string;
   tags: string[];
+  isRecurring: boolean;
+  recurringDay?: number;
   createdAt: any;
   updatedAt: any;
 }
@@ -26,7 +28,7 @@ export interface Task {
   completed: boolean;
   priority: ProjectPriority;
   dueDate: any;
-  projectAssignedTeamMemberIds: string[]; // Required for security rules denormalization
+  projectAssignedTeamMemberIds: string[]; 
   createdAt: any;
   updatedAt: any;
 }
@@ -36,6 +38,6 @@ export interface ProjectNote {
   projectId: string;
   content: string;
   authorId: string;
-  projectAssignedTeamMemberIds: string[]; // Required for security rules denormalization
+  projectAssignedTeamMemberIds: string[]; 
   createdAt: any;
 }

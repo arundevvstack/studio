@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { 
   Select, 
   SelectContent, 
@@ -16,7 +17,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Wand2, Rocket } from 'lucide-react';
+import { ChevronLeft, Wand2, Rocket, RefreshCcw } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { generateProjectDescription } from '@/ai/flows/generate-project-description';
@@ -31,6 +32,8 @@ export default function NewProjectPage() {
     priority: 'Medium' as ProjectPriority,
     budget: '',
     description: '',
+    isRecurring: false,
+    recurringDay: 1,
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,6 +48,7 @@ export default function NewProjectPage() {
 
   const handleStageChange = (val: string) => setFormData({ ...formData, stage: val as ProjectStage });
   const handlePriorityChange = (val: string) => setFormData({ ...formData, priority: val as ProjectPriority });
+  const toggleRecurring = (checked: boolean) => setFormData({ ...formData, isRecurring: checked });
 
   const handleGenerateDescription = async () => {
     if (!formData.projectName) {
@@ -77,14 +81,17 @@ export default function NewProjectPage() {
     setIsSubmitting(true);
     
     // Non-blocking mutation call
-    createProject(db, user.uid, formData);
+    createProject(db, user.uid, {
+      ...formData,
+      budget: Number(formData.budget),
+      recurringDay: formData.isRecurring ? Number(formData.recurringDay) : undefined
+    });
     
     toast({ 
       title: "Production Provisioned", 
-      description: `Project "${formData.projectName}" has been successfully added to the projects.` 
+      description: `Project "${formData.projectName}" for ${formData.client} has been successfully added.` 
     });
     
-    // Navigate immediately (Optimistic UI)
     router.push('/projects');
   };
 
@@ -167,6 +174,38 @@ export default function NewProjectPage() {
                   onChange={handleChange} 
                   placeholder="e.g. 50000" 
                   className="rounded-2xl border-slate-200 bg-white/50 focus:bg-white h-14 text-lg font-bold px-6 transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-white shadow-sm text-primary">
+                  <RefreshCcw size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-slate-900">Monthly Recurring Project</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Automate recurring production cycles</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                {formData.isRecurring && (
+                  <div className="flex items-center gap-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Day:</Label>
+                    <Input 
+                      type="number" 
+                      min="1" 
+                      max="31" 
+                      className="w-16 h-10 rounded-xl font-bold text-center"
+                      value={formData.recurringDay}
+                      onChange={(e) => setFormData({ ...formData, recurringDay: Number(e.target.value) })}
+                    />
+                  </div>
+                )}
+                <Switch 
+                  checked={formData.isRecurring} 
+                  onCheckedChange={toggleRecurring}
+                  className="data-[state=checked]:bg-primary"
                 />
               </div>
             </div>
