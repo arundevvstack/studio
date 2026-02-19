@@ -16,7 +16,9 @@ import {
   CheckCircle2,
   Sun,
   Moon,
-  Laptop
+  Laptop,
+  Image as ImageIcon,
+  Camera
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,9 +35,10 @@ import { useAuth } from '@/lib/firebase/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useTheme } from "next-themes";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function SettingsPage() {
-  const { user, isAdmin, resetPassword, updateDisplayName, loading } = useAuth();
+  const { user, isAdmin, resetPassword, updateDisplayName, updatePhotoURL, loading } = useAuth();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -47,6 +50,7 @@ export default function SettingsPage() {
   const [profileData, setProfileData] = useState({
     name: user?.displayName || '',
     email: user?.email || '',
+    photoURL: user?.photoURL || '',
     studioName: 'Marzelz Lifestyle',
   });
 
@@ -57,25 +61,29 @@ export default function SettingsPage() {
     security: true,
   });
 
-  // Keep local state in sync if user object changes
   useEffect(() => {
     if (user) {
       setProfileData(prev => ({
         ...prev,
         name: user.displayName || prev.name,
-        email: user.email || prev.email
+        email: user.email || prev.email,
+        photoURL: user.photoURL || prev.photoURL
       }));
     }
   }, [user]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (profileData.name === user?.displayName) return;
+    const nameChanged = profileData.name !== user?.displayName;
+    const photoChanged = profileData.photoURL !== user?.photoURL;
+
+    if (!nameChanged && !photoChanged) return;
     
     try {
-      await updateDisplayName(profileData.name);
+      if (nameChanged) await updateDisplayName(profileData.name);
+      if (photoChanged) await updatePhotoURL(profileData.photoURL);
     } catch (err) {
-      // Error handled in updateDisplayName
+      // Errors handled in AuthContext
     }
   };
 
@@ -90,11 +98,13 @@ export default function SettingsPage() {
 
   if (!mounted) return null;
 
+  const hasProfileChanges = profileData.name !== user?.displayName || profileData.photoURL !== user?.photoURL;
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700 max-w-5xl mx-auto pb-10">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 px-1">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">System Settings</h1>
+          <h1 className="text-3xl font-black tracking-tight text-slate-700 dark:text-slate-100">System Settings</h1>
           <p className="text-slate-500 text-base font-medium opacity-80">Manage workspace parameters and strategic preferences.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -102,7 +112,11 @@ export default function SettingsPage() {
             <RotateCcw size={16} />
             Reset Defaults
           </Button>
-          <Button className="rounded-[5px] h-10 px-6 shadow-md shadow-primary/10 font-black bg-primary text-white text-xs" onClick={handleSaveProfile} disabled={loading || profileData.name === user?.displayName}>
+          <Button 
+            className="rounded-[5px] h-10 px-6 shadow-md shadow-primary/10 font-black bg-primary text-white text-xs" 
+            onClick={handleSaveProfile} 
+            disabled={loading || !hasProfileChanges}
+          >
             <Save size={16} className="mr-2" />
             {loading ? 'Syncing...' : 'Save Changes'}
           </Button>
@@ -128,12 +142,41 @@ export default function SettingsPage() {
         <TabsContent value="profile" className="animate-in fade-in slide-in-from-top-1 duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 border-none shadow-sm rounded-[5px] bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl overflow-hidden">
-              <CardHeader className="pt-6 px-6 pb-4">
+              <CardHeader className="pt-6 px-6 pb-4 border-b border-slate-50 dark:border-slate-800/50">
                 <CardTitle className="text-lg font-black">Executive Identity</CardTitle>
                 <CardDescription className="text-xs font-medium">Update public presence in the production network.</CardDescription>
               </CardHeader>
-              <CardContent className="p-6 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <CardContent className="p-6 space-y-8">
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                  <div className="relative group">
+                    <Avatar className="w-24 h-24 rounded-[5px] border-2 border-white dark:border-slate-800 shadow-xl ring-1 ring-slate-100 dark:ring-slate-800">
+                      <AvatarImage src={profileData.photoURL} className="object-cover" />
+                      <AvatarFallback className="bg-slate-100 text-slate-400 font-black text-2xl uppercase">
+                        {profileData.name?.[0] || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute inset-0 bg-black/40 rounded-[5px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <Camera className="text-white w-6 h-6" />
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-4 w-full">
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Thumbnail URL</Label>
+                      <div className="relative">
+                        <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input 
+                          placeholder="https://image-service.com/photo.jpg"
+                          value={profileData.photoURL}
+                          onChange={(e) => setProfileData({...profileData, photoURL: e.target.value})}
+                          className="pl-10 rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-50/50 dark:bg-slate-800/50 text-sm"
+                        />
+                      </div>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-1 px-1">Provide a direct link to your professional portrait.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4">
                   <div className="space-y-1.5">
                     <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Display Name</Label>
                     <div className="relative">
@@ -156,13 +199,6 @@ export default function SettingsPage() {
                       />
                     </div>
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-0.5">Short Bio / Status</Label>
-                  <Input 
-                    placeholder="e.g. Lead Producer at Marzelz Lifestyle"
-                    className="rounded-[5px] border-slate-200 dark:border-slate-800 h-11 font-bold bg-slate-50/50 dark:bg-slate-800/50 text-sm"
-                  />
                 </div>
               </CardContent>
             </Card>
@@ -248,7 +284,7 @@ export default function SettingsPage() {
                     >
                       <div className="w-7 h-7 rounded-[3px] shadow-inner" style={{ backgroundColor: color.hex }} />
                       <div className="text-left">
-                        <p className="text-[10px] font-black text-slate-900 dark:text-slate-100">{color.name}</p>
+                        <p className="text-[10px] font-black text-slate-700 dark:text-slate-100">{color.name}</p>
                         <p className="text-[8px] font-bold text-slate-400">{color.hex}</p>
                       </div>
                       {color.hex === '#f43f4a' && <CheckCircle2 size={14} className="text-primary absolute -top-1.5 -right-1.5 bg-white dark:bg-slate-900 rounded-full shadow-sm" />}
@@ -279,7 +315,7 @@ export default function SettingsPage() {
                       <item.icon size={18} />
                     </div>
                     <div>
-                      <p className="text-xs font-black text-slate-900 dark:text-slate-100">{item.title}</p>
+                      <p className="text-xs font-black text-slate-700 dark:text-slate-100">{item.title}</p>
                       <p className="text-[10px] font-medium text-slate-500">{item.desc}</p>
                     </div>
                   </div>

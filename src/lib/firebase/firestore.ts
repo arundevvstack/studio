@@ -139,7 +139,6 @@ export const ensureTeamMember = async (db: Firestore, user: any) => {
       const invData = invSnap.docs[0].data() as Invitation;
       status = 'Authorized';
       role = invData.role;
-      // Mark invitation as fulfilled if needed, though typically we just keep it or delete it
     }
 
     const memberData: TeamMember = {
@@ -199,6 +198,17 @@ export const updateTeamMemberRole = (db: Firestore, userId: string, role: TeamRo
       path: memberRef.path,
       operation: 'update',
       requestResourceData: { role }
+    }));
+  });
+};
+
+export const updateTeamMemberPhoto = (db: Firestore, userId: string, photoURL: string) => {
+  const memberRef = doc(db, TEAM_COLLECTION, userId);
+  updateDoc(memberRef, { photoURL }).catch((error) => {
+    errorEmitter.emit('permission-error', new FirestorePermissionError({
+      path: memberRef.path,
+      operation: 'update',
+      requestResourceData: { photoURL }
     }));
   });
 };

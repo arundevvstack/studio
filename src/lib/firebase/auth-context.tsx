@@ -16,7 +16,7 @@ import {
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { useFirebase, useUser, useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { ensureTeamMember } from './firestore';
+import { ensureTeamMember, updateTeamMemberPhoto } from './firestore';
 import { TeamMember } from '../types';
 
 interface AuthContextType {
@@ -31,6 +31,7 @@ interface AuthContextType {
   logOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateDisplayName: (newName: string) => Promise<void>;
+  updatePhotoURL: (newUrl: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -143,6 +144,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updatePhotoURL = async (newUrl: string) => {
+    if (!auth.currentUser) return;
+    try {
+      setInternalLoading(true);
+      await updateProfile(auth.currentUser, { photoURL: newUrl });
+      
+      // Update Firestore record
+      if (db) {
+        updateTeamMemberPhoto(db, auth.currentUser.uid, newUrl);
+      }
+      
+      await auth.currentUser.reload();
+      toast({ title: "Thumbnail Updated", description: "Your profile visual has been synchronized." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Sync Failed", description: error.message });
+      throw error;
+    } finally {
+      setInternalLoading(false);
+    }
+  };
+
   const isAuthorized = isAdmin || (!!teamMember && teamMember.status === 'Authorized');
 
   return (
@@ -157,7 +179,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUp, 
       logOut,
       resetPassword,
-      updateDisplayName
+      updateDisplayName,
+      updatePhotoURL
     }}>
       {children}
     </AuthContext.Provider>
@@ -166,6 +189,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
+  if (context === undefined) throw new Error('useAuth must be used within AuthProvider');
   return context;
 }
