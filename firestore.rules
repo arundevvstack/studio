@@ -19,18 +19,28 @@ service cloud.firestore {
 
     match /teamMembers/{teamMemberId} {
       allow get: if isSignedIn() && (request.auth.uid == teamMemberId || isRootAdmin());
-      allow list: if isRootAdmin();
+      allow list: if isAuthorized() || isRootAdmin();
       allow create: if isSignedIn() && request.auth.uid == teamMemberId;
       allow update: if isRootAdmin();
       allow delete: if isRootAdmin();
     }
 
+    match /invitations/{invitationId} {
+      allow read: if isSignedIn() && (request.auth.token.email == resource.data.email || isRootAdmin());
+      allow list: if isRootAdmin();
+      allow write: if isRootAdmin();
+    }
+
     match /projects/{projectId} {
-      allow read: if isRootAdmin() || (isAuthorized() && request.auth.uid in resource.data.assignedTeamMemberIds);
+      allow read: if isRootAdmin() || (isAuthorized() && (request.auth.uid in resource.data.assignedTeamMemberIds || isAdminRole()));
       allow create: if isAuthorized();
       allow update: if isRootAdmin() || (isAuthorized() && request.auth.uid in resource.data.assignedTeamMemberIds);
       allow delete: if isRootAdmin();
       
+      function isAdminRole() {
+        return get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.role == "Admin";
+      }
+
       match /{allSubcollections=**} {
         allow read, write: if isRootAdmin() || (isAuthorized() && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTeamMemberIds);
       }

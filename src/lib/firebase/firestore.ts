@@ -10,16 +10,18 @@ import {
   onSnapshot,
   serverTimestamp,
   getDoc,
+  getDocs,
   Firestore,
   where
 } from 'firebase/firestore';
-import { Project, Invoice, TeamMember, TeamStatus, TeamRole } from '../types';
+import { Project, Invoice, TeamMember, TeamStatus, TeamRole, Invitation } from '../types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 const PROJECTS_COLLECTION = 'projects';
 const INVOICES_COLLECTION = 'invoices';
 const TEAM_COLLECTION = 'teamMembers';
+const INVITATIONS_COLLECTION = 'invitations';
 
 export const createProject = (db: Firestore, userId: string, data: Partial<Project>) => {
   const newProjectRef = doc(collection(db, PROJECTS_COLLECTION));
@@ -126,13 +128,27 @@ export const ensureTeamMember = async (db: Firestore, user: any) => {
   const snap = await getDoc(memberRef);
   
   if (!snap.exists()) {
+    // Check for pre-existing invitation
+    const invQuery = query(collection(db, INVITATIONS_COLLECTION), where('email', '==', user.email));
+    const invSnap = await getDocs(invQuery);
+    
+    let status: TeamStatus = 'Pending';
+    let role: TeamRole = 'Editor';
+    
+    if (!invSnap.empty) {
+      const invData = invSnap.docs[0].data() as Invitation;
+      status = 'Authorized';
+      role = invData.role;
+      // Mark invitation as fulfilled if needed, though typically we just keep it or delete it
+    }
+
     const memberData: TeamMember = {
       id: user.uid,
       name: user.displayName || 'New Member',
       email: user.email || '',
       photoURL: user.photoURL || '',
-      role: 'Editor',
-      status: 'Pending',
+      role: role,
+      status: status,
       createdAt: serverTimestamp()
     };
     
@@ -144,6 +160,25 @@ export const ensureTeamMember = async (db: Firestore, user: any) => {
       }));
     });
   }
+};
+
+export const createInvitation = (db: Firestore, adminUid: string, email: string, role: TeamRole) => {
+  const invRef = doc(collection(db, INVITATIONS_COLLECTION));
+  const invData: Invitation = {
+    id: invRef.id,
+    email,
+    role,
+    invitedBy: adminUid,
+    createdAt: serverTimestamp()
+  };
+
+  return setDoc(invRef, invData).catch((error) => {
+    errorEmitter.emit('permission-error', new FirestorePermissionError({
+      path: invRef.path,
+      operation: 'create',
+      requestResourceData: invData
+    }));
+  });
 };
 
 export const updateTeamMemberStatus = (db: Firestore, userId: string, status: TeamStatus) => {

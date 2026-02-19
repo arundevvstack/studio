@@ -68,3 +68,11 @@ export interface TeamMember {
   status: TeamStatus;
   createdAt: any;
 }
+
+export interface Invitation {
+  id: string;
+  email: string;
+  role: TeamRole;
+  invitedBy: string;
+  createdAt: any;
+}
