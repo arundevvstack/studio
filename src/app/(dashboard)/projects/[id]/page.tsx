@@ -63,7 +63,9 @@ import {
   Layers,
   Settings2,
   User as UserIcon,
-  UserPlus
+  UserPlus,
+  ArrowRightCircle,
+  Trophy
 } from 'lucide-react';
 import { summarizeProjectStatus } from '@/ai/flows/summarize-project-status';
 import Link from 'next/link';
@@ -156,6 +158,10 @@ export default function ProjectDetailPage() {
     }
   }, [project]);
 
+  const allPhasesCompleted = phases && phases.length > 0 && phases.every(p => p.completed);
+  const currentStageIndex = project ? STAGES.indexOf(project.stage) : -1;
+  const nextStage = (project && currentStageIndex < STAGES.length - 1) ? STAGES[currentStageIndex + 1] : null;
+
   const handleSliderChange = (val: number[]) => {
     setLocalProgress(val[0]);
   };
@@ -174,6 +180,16 @@ export default function ProjectDetailPage() {
     updateProject(db, id, { stage: nextStage, progress: newProgress });
     setLocalProgress(newProgress);
     toast({ title: "Lifecycle Updated", description: `Production phase shifted to ${nextStage}.` });
+  };
+
+  const handleAdvanceStage = () => {
+    if (!nextStage) return;
+    handleStageChange(nextStage);
+    toast({ 
+      title: "Strategic Advancement", 
+      description: `Project has successfully transitioned to ${nextStage}.`,
+      variant: "default"
+    });
   };
 
   const handlePriorityChange = (val: string) => {
@@ -450,13 +466,42 @@ export default function ProjectDetailPage() {
             </TabsList>
             
             <TabsContent value="objectives" className="mt-0 focus-visible:ring-0">
+               {allPhasesCompleted && nextStage && (
+                 <div className="mb-6 p-6 rounded-[5px] bg-emerald-50 border border-emerald-100 flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4 duration-500">
+                    <div className="flex items-center gap-4">
+                       <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+                          <Trophy size={24} />
+                       </div>
+                       <div>
+                          <h3 className="text-lg font-black text-slate-900 tracking-tight">Mission Objective Cleared</h3>
+                          <p className="text-sm text-slate-500 font-medium">All components for <span className="font-bold text-emerald-600">{project.stage}</span> are 100% synchronized.</p>
+                       </div>
+                    </div>
+                    <Button 
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest px-6 h-11 rounded-[5px] gap-2 shadow-lg shadow-emerald-200"
+                      onClick={handleAdvanceStage}
+                    >
+                      Advance to {nextStage} <ArrowRightCircle size={16} />
+                    </Button>
+                 </div>
+               )}
+
                <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl">
+                 <CardHeader className="py-4 px-6 border-b border-slate-50 flex flex-row items-center justify-between">
+                    <div>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Phase Elements</p>
+                       <h4 className="text-sm font-black text-slate-900">{project.stage} Objectives</h4>
+                    </div>
+                    <Badge className="bg-primary/5 text-primary border-none rounded-[3px] text-[9px] font-black uppercase px-2 py-0.5">
+                       {phases?.filter(p => p.completed).length || 0} / {phases?.length || 0} SYNCED
+                    </Badge>
+                 </CardHeader>
                  <CardContent className="p-0">
                     <div className="divide-y divide-slate-50">
                       {isPhasesLoading ? (
                         <div className="p-8 text-center animate-pulse font-black text-[10px] uppercase tracking-widest text-slate-400">Syncing Objectives...</div>
                       ) : !phases || phases.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 font-bold text-xs italic">No mission objectives defined.</div>
+                        <div className="p-8 text-center text-slate-400 font-bold text-xs italic">No mission objectives defined for this phase.</div>
                       ) : (
                         phases.map((phase) => (
                           <div key={phase.id} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition-all group">
@@ -610,6 +655,18 @@ export default function ProjectDetailPage() {
                        </Dialog>
                     </div>
                  </CardContent>
+               </Card>
+            </TabsContent>
+            
+            <TabsContent value="history" className="mt-0 focus-visible:ring-0">
+               <Card className="border-none shadow-sm rounded-[5px] bg-white/70 backdrop-blur-xl">
+                  <CardContent className="p-8 text-center space-y-4">
+                     <History size={40} className="mx-auto text-slate-200" />
+                     <div>
+                        <p className="text-sm font-black text-slate-900">Deployment Logs</p>
+                        <p className="text-xs text-slate-400 font-medium">History tracking for mission parameters is currently being synchronized.</p>
+                     </div>
+                  </CardContent>
                </Card>
             </TabsContent>
           </Tabs>
